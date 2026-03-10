@@ -1,7 +1,7 @@
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import styles from './Navbar.module.css'
 
-const links = [
+const defaultLinks = [
   { to: '/home', label: 'Home' },
   { to: '/riders', label: 'Riders' },
   { to: '/stations', label: 'Stations' },
@@ -9,10 +9,13 @@ const links = [
   { to: '/add-credit', label: 'Add Credit' },
 ]
 
-function Navbar() {
+function Navbar({ title = 'Boda Credit Tracker', links = defaultLinks }) {
   return (
     <header className={styles.navbar}>
-      <div className={styles.brand}>Boda Credit Tracker</div>
+      <Link to="/home" className={styles.brand}>
+        {title}
+      </Link>
+
       <nav className={styles.navLinks} aria-label="Main navigation">
         {links.map((link) => (
           <NavLink

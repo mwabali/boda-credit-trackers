@@ -11,6 +11,7 @@
 }
 
 .brand {
+  text-decoration: none;
   font-weight: 700;
   font-size: 1.05rem;
   color: #432818;
