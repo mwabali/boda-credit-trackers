@@ -1,0 +1,40 @@
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff3e6;
+  border: 1px solid #f5d7ba;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #432818;
+}
+
+.navLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.navLink {
+  text-decoration: none;
+  color: #5f4b3e;
+  background: #ffffff;
+  border: 1px solid #f2dec9;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.active {
+  background: #edc9a3;
+  color: #2b2118;
+  border-color: #edc9a3;
+}
