@@ -1,16 +1,47 @@
-# React + Vite
+# Boda Credit Tracker Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend foundation for the Boda Credit Tracker project.
 
-Currently, two official plugins are available:
+## Current Scope (Frontend Lead Phase)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This frontend is intentionally prepared for handoff and later expansion:
 
-## React Compiler
+- Vite React app scaffold with clean starter cleanup
+- React Router configured for core routes
+- Shared layout and navigation foundation
+- Page skeletons with intentional placeholder content
+- CSS Modules structure for component/page styling
+- Home dashboard skeleton with static navigation cards
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+No live backend integration is included yet.
 
-## Expanding the ESLint configuration
+## Routes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `/home`
+- `/riders`
+- `/stations`
+- `/transactions`
+- `/add-credit`
+
+`/` and unknown routes redirect to `/home`.
+
+## Structure
+
+- `src/components`: shared UI building blocks (e.g., navbar)
+- `src/layout`: shared route layout wrapper
+- `src/pages`: route-level page components
+- `src/styles`: reserved for shared styling tokens/utilities
+- `src/assets`: reserved for static assets used by future components
+
+## Run
+
+```bash
+npm install
+npm run dev
+```
+
+## Handoff Notes For Taran
+
+- Keep route pages in `src/pages` and place reusable UI in `src/components`.
+- Continue using CSS Modules for page/component styling.
+- API service wiring should be added in a later integration phase.

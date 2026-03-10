@@ -1,10 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import MainLayout from './layout/MainLayout'
+import AddCreditPage from './pages/AddCreditPage'
 import HomePage from './pages/HomePage'
 import RidersPage from './pages/RidersPage'
 import StationsPage from './pages/StationsPage'
 import TransactionsPage from './pages/TransactionsPage'
-import AddCreditPage from './pages/AddCreditPage'
 
 function App() {
   return (
@@ -17,6 +17,7 @@ function App() {
         <Route path="/transactions" element={<TransactionsPage />} />
         <Route path="/add-credit" element={<AddCreditPage />} />
       </Route>
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )
 }
