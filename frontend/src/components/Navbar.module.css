@@ -11,10 +11,14 @@
 }
 
 .brand {
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: #432818;
+  display: inline-flex;
+  align-items: center;
+}
+
+.logo {
+  width: auto;
+  height: 80px;
+  object-fit: contain;
 }
 
 .navLinks {
@@ -48,7 +52,10 @@
 
   .brand {
     width: 100%;
-    font-size: 1rem;
+  }
+
+  .logo {
+    height: 62px;
   }
 
   .navLinks {
