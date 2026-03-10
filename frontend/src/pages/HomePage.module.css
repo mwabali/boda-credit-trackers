@@ -1,6 +1,15 @@
 .page {
   display: grid;
-  gap: 0.75rem;
+  gap: 1.25rem;
+}
+
+.hero {
+  display: grid;
+  gap: 0.6rem;
+  background: linear-gradient(125deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  padding: 1.1rem;
 }
 
 .title {
@@ -12,12 +21,73 @@
 .description {
   margin: 0;
   color: #4b5563;
-  max-width: 70ch;
+  max-width: 75ch;
 }
 
-.leadCard {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.statCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.9rem;
+}
+
+.statCard h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.statCard p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.navCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.navCard h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.05rem;
+}
+
+.navCard p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.94rem;
+}
+
+.cardLink {
+  justify-self: start;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #7c2d12;
+  background: #ffedd5;
+  border: 1px solid #fdba74;
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+}
+
+.cardLink:hover {
+  background: #fed7aa;
 }
