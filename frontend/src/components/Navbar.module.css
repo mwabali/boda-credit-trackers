@@ -13,19 +13,12 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: #432818;
 }
 
 .logo {
-  width: 34px;
-  height: 34px;
+  width: auto;
+  height: 80px;
   object-fit: contain;
-  border-radius: 8px;
-  background: #fff;
-  border: 1px solid #f2dec9;
 }
 
 .navLinks {
@@ -59,12 +52,10 @@
 
   .brand {
     width: 100%;
-    font-size: 1rem;
   }
 
   .logo {
-    width: 30px;
-    height: 30px;
+    height: 62px;
   }
 
   .navLinks {

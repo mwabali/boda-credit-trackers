@@ -15,7 +15,6 @@ function Navbar() {
     <header className={styles.navbar}>
       <div className={styles.brand}>
         <img src={logo} alt="Boda Credit Tracker logo" className={styles.logo} />
-        <span>Boda Credit Tracker</span>
       </div>
       <nav className={styles.navLinks} aria-label="Main navigation">
         {links.map((link) => (
