@@ -1,11 +1,15 @@
 import styles from './StationList.module.css'
-function StationList({ stations = [] }) {
+
+function StationList({ stations = [], className = '' }) {
   if (!stations.length) {
     return <p className={styles.emptyState}>No fuel stations available</p>
   }
 
   return (
-    <section className={styles.wrapper} aria-label="Fuel stations list">
+    <section
+      className={`${styles.wrapper} ${className}`.trim()}
+      aria-label="Fuel stations list"
+    >
       <table className={styles.table}>
         <thead>
           <tr>
@@ -19,7 +23,7 @@ function StationList({ stations = [] }) {
             <tr key={station.id}>
               <td>{station.name}</td>
               <td>{station.location}</td>
-              <td>{station.phone_number}</td>
+              <td>{station.phone}</td>
             </tr>
           ))}
         </tbody>

@@ -44,19 +44,20 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
       <form className={styles.form} onSubmit={handleSubmit}>
         <label className={styles.field} htmlFor="rider">
           Rider
-          <select
+          <input
             id="rider"
             name="rider"
+            type="text"
             value={formData.rider}
             onChange={handleChange}
-          >
-            <option value="">Select rider</option>
+            placeholder="Enter rider name or ID"
+            list="riderList"
+          />
+          <datalist id="riderList">
             {riders.map((rider) => (
-              <option key={rider.id} value={rider.id}>
-                {rider.name}
-              </option>
+              <option key={rider.id} value={rider.name} />
             ))}
-          </select>
+          </datalist>
         </label>
 
         <label className={styles.field} htmlFor="station">
@@ -114,5 +115,4 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
 }
 
 export default CreditForm
-
 

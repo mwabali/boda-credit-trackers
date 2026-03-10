@@ -1,48 +1,6 @@
 import CreditTable from '../components/CreditTable'
 import styles from './TransactionsPage.module.css'
-
-const transactions = [
-  {
-    id: 'TXN-2026-03-01-1001',
-    rider: 'James Kamau (R001)',
-    station: 'City Centre Petro (FS001)',
-    amount: 'KES 11,000',
-    litres: '25L',
-    status: 'Paid',
-  },
-  {
-    id: 'TXN-2026-03-01-1002',
-    rider: 'Mary Wambui (R002)',
-    station: 'Karen Total (FS002)',
-    amount: 'KES 22,000',
-    litres: '50L',
-    status: 'Unpaid',
-  },
-  {
-    id: 'TXN-2026-03-01-1003',
-    rider: 'David Ochieng (R003)',
-    station: 'Kasarani Rubis (FS003)',
-    amount: 'KES 15,000',
-    litres: '12L',
-    status: 'Pending',
-  },
-  {
-    id: 'TXN-2026-03-01-1004',
-    rider: 'Faith Njeri (R004)',
-    station: 'Westlands Shell (FS004)',
-    amount: 'KES 9,500',
-    litres: '9L',
-    status: 'Paid',
-  },
-  {
-    id: 'TXN-2026-03-01-1005',
-    rider: 'Peter Mwangi (R005)',
-    station: 'Syokimau Petro (FS005)',
-    amount: 'KES 14,200',
-    litres: '14L',
-    status: 'Pending',
-  },
-]
+import { transactions } from '../data/mockData'
 
 function TransactionsPage() {
   // Transform transactions data for CreditTable component

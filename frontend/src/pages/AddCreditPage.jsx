@@ -1,5 +1,6 @@
 import CreditForm from '../components/CreditForm'
 import styles from './AddCreditPage.module.css'
+import { riders as sampleRiders, stations as sampleStations } from '../data/mockData'
 
 function AddCreditPage() {
   const handleSubmit = (formData) => {
@@ -16,10 +17,10 @@ function AddCreditPage() {
         </p>
       </header>
 
-      <CreditForm 
-        riders={[]} 
-        stations={[]} 
-        onSubmit={handleSubmit} 
+      <CreditForm
+        riders={sampleRiders}
+        stations={sampleStations}
+        onSubmit={handleSubmit}
       />
     </main>
   )
