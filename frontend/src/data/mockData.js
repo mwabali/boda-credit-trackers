@@ -1,0 +1,95 @@
+export const riders = [
+  { id: 'R001', name: 'James Kamau' },
+  { id: 'R002', name: 'Mary Wambui' },
+  { id: 'R003', name: 'David Ochieng' },
+  { id: 'R004', name: 'Faith Njeri' },
+  { id: 'R005', name: 'Peter Mwangi' },
+]
+
+export const stations = [
+  {
+    id: 'FS001',
+    name: 'City Centre Petro',
+    location: 'Nairobi CBD',
+    phone: '+254 711 111 001',
+    owed: 'KES 95,000',
+  },
+  {
+    id: 'FS002',
+    name: 'Karen Total',
+    location: 'Nairobi Karen',
+    phone: '+254 711 111 002',
+    owed: 'KES 115,000',
+  },
+  {
+    id: 'FS003',
+    name: 'Kasarani Rubis',
+    location: 'Nairobi Kasarani',
+    phone: '+254 711 111 003',
+    owed: 'KES 75,200',
+  },
+  {
+    id: 'FS004',
+    name: 'Westlands Shell',
+    location: 'Nairobi Westlands',
+    phone: '+254 711 111 004',
+    owed: 'KES 62,500',
+  },
+  {
+    id: 'FS005',
+    name: 'Syokimau Petro',
+    location: 'Machakos Syokimau',
+    phone: '+254 711 111 005',
+    owed: 'KES 88,300',
+  },
+  {
+    id: 'FS006',
+    name: 'Ngong Highway Oryx',
+    location: 'Kajiado Ngong Road',
+    phone: '+254 711 111 006',
+    owed: 'KES 54,800',
+  },
+]
+
+export const transactions = [
+  {
+    id: 'TXN-2026-03-01-1001',
+    rider: 'James Kamau (R001)',
+    station: 'City Centre Petro (FS001)',
+    amount: 'KES 11,000',
+    litres: '25L',
+    status: 'Paid',
+  },
+  {
+    id: 'TXN-2026-03-01-1002',
+    rider: 'Mary Wambui (R002)',
+    station: 'Karen Total (FS002)',
+    amount: 'KES 22,000',
+    litres: '50L',
+    status: 'Unpaid',
+  },
+  {
+    id: 'TXN-2026-03-01-1003',
+    rider: 'David Ochieng (R003)',
+    station: 'Kasarani Rubis (FS003)',
+    amount: 'KES 15,000',
+    litres: '12L',
+    status: 'Pending',
+  },
+  {
+    id: 'TXN-2026-03-01-1004',
+    rider: 'Faith Njeri (R004)',
+    station: 'Westlands Shell (FS004)',
+    amount: 'KES 9,500',
+    litres: '9L',
+    status: 'Paid',
+  },
+  {
+    id: 'TXN-2026-03-01-1005',
+    rider: 'Peter Mwangi (R005)',
+    station: 'Syokimau Petro (FS005)',
+    amount: 'KES 14,200',
+    litres: '14L',
+    status: 'Pending',
+  },
+]

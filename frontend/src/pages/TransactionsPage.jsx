@@ -1,49 +1,19 @@
+import CreditTable from '../components/CreditTable'
 import styles from './TransactionsPage.module.css'
-
-const transactions = [
-  {
-    id: 'TXN-2026-03-01-1001',
-    rider: 'James Kamau (R001)',
-    station: 'City Centre Petro (FS001)',
-    amount: 'KES 11,000',
-    litres: '25L',
-    status: 'Paid',
-  },
-  {
-    id: 'TXN-2026-03-01-1002',
-    rider: 'Mary Wambui (R002)',
-    station: 'Karen Total (FS002)',
-    amount: 'KES 22,000',
-    litres: '50L',
-    status: 'Unpaid',
-  },
-  {
-    id: 'TXN-2026-03-01-1003',
-    rider: 'David Ochieng (R003)',
-    station: 'Kasarani Rubis (FS003)',
-    amount: 'KES 15,000',
-    litres: '12L',
-    status: 'Pending',
-  },
-  {
-    id: 'TXN-2026-03-01-1004',
-    rider: 'Faith Njeri (R004)',
-    station: 'Westlands Shell (FS004)',
-    amount: 'KES 9,500',
-    litres: '9L',
-    status: 'Paid',
-  },
-  {
-    id: 'TXN-2026-03-01-1005',
-    rider: 'Peter Mwangi (R005)',
-    station: 'Syokimau Petro (FS005)',
-    amount: 'KES 14,200',
-    litres: '14L',
-    status: 'Pending',
-  },
-]
+import { transactions } from '../data/mockData'
 
 function TransactionsPage() {
+  // Transform transactions data for CreditTable component
+  const tableTransactions = transactions.map(tx => ({
+    id: tx.id,
+    rider: tx.rider,
+    station: tx.station,
+    amount: tx.amount,
+    litres: tx.litres,
+    date: tx.id.split('-').slice(0,3).join('-'),
+    status: tx.status
+  }))
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -69,36 +39,7 @@ function TransactionsPage() {
         </article>
       </section>
 
-      <section className={styles.tableShell} aria-label="Transactions list">
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Txn ID</th>
-              <th>Rider</th>
-              <th>Station</th>
-              <th>Amount</th>
-              <th>Litres</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((tx) => (
-              <tr key={tx.id}>
-                <td>{tx.id}</td>
-                <td>{tx.rider}</td>
-                <td>{tx.station}</td>
-                <td>{tx.amount}</td>
-                <td>{tx.litres}</td>
-                <td>
-                  <span className={`${styles.badge} ${styles[tx.status.toLowerCase()]}`}>
-                    {tx.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <CreditTable transactions={tableTransactions} />
     </main>
   )
 }
