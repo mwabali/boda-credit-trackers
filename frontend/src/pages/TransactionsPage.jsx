@@ -1,3 +1,4 @@
+import CreditTable from '../components/CreditTable'
 import styles from './TransactionsPage.module.css'
 
 const transactions = [
@@ -44,6 +45,17 @@ const transactions = [
 ]
 
 function TransactionsPage() {
+  // Transform transactions data for CreditTable component
+  const tableTransactions = transactions.map(tx => ({
+    id: tx.id,
+    rider: tx.rider,
+    station: tx.station,
+    amount: tx.amount,
+    litres: tx.litres,
+    date: tx.id.split('-').slice(0,3).join('-'),
+    status: tx.status
+  }))
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -69,36 +81,7 @@ function TransactionsPage() {
         </article>
       </section>
 
-      <section className={styles.tableShell} aria-label="Transactions list">
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Txn ID</th>
-              <th>Rider</th>
-              <th>Station</th>
-              <th>Amount</th>
-              <th>Litres</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((tx) => (
-              <tr key={tx.id}>
-                <td>{tx.id}</td>
-                <td>{tx.rider}</td>
-                <td>{tx.station}</td>
-                <td>{tx.amount}</td>
-                <td>{tx.litres}</td>
-                <td>
-                  <span className={`${styles.badge} ${styles[tx.status.toLowerCase()]}`}>
-                    {tx.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      <CreditTable transactions={tableTransactions} />
     </main>
   )
 }
