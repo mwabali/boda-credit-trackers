@@ -1,13 +1,104 @@
 import styles from './TransactionsPage.module.css'
 
+const transactions = [
+  {
+    id: 'TXN-2026-03-01-1001',
+    rider: 'James Kamau (R001)',
+    station: 'City Centre Petro (FS001)',
+    amount: 'KES 11,000',
+    litres: '25L',
+    status: 'Paid',
+  },
+  {
+    id: 'TXN-2026-03-01-1002',
+    rider: 'Mary Wambui (R002)',
+    station: 'Karen Total (FS002)',
+    amount: 'KES 22,000',
+    litres: '50L',
+    status: 'Unpaid',
+  },
+  {
+    id: 'TXN-2026-03-01-1003',
+    rider: 'David Ochieng (R003)',
+    station: 'Kasarani Rubis (FS003)',
+    amount: 'KES 15,000',
+    litres: '12L',
+    status: 'Pending',
+  },
+  {
+    id: 'TXN-2026-03-01-1004',
+    rider: 'Faith Njeri (R004)',
+    station: 'Westlands Shell (FS004)',
+    amount: 'KES 9,500',
+    litres: '9L',
+    status: 'Paid',
+  },
+  {
+    id: 'TXN-2026-03-01-1005',
+    rider: 'Peter Mwangi (R005)',
+    station: 'Syokimau Petro (FS005)',
+    amount: 'KES 14,200',
+    litres: '14L',
+    status: 'Pending',
+  },
+]
+
 function TransactionsPage() {
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>Credit Transactions</h1>
-      <p className={styles.description}>
-        This page will present credit transaction history and help teams review
-        payment and reconciliation progress.
-      </p>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Credit Transaction Log</h1>
+        <p className={styles.description}>
+          Placeholder transaction table for future filters, pagination, and
+          backend-powered reconciliation workflows.
+        </p>
+      </header>
+
+      <section className={styles.statsGrid} aria-label="Transaction summary">
+        <article className={styles.statCard}>
+          <h2>Total Credit Transactions</h2>
+          <p>110,000+</p>
+        </article>
+        <article className={styles.statCard}>
+          <h2>Monthly KES Pumped</h2>
+          <p>KES 500,000</p>
+        </article>
+        <article className={styles.statCard}>
+          <h2>Pending Payments</h2>
+          <p>15,000</p>
+        </article>
+      </section>
+
+      <section className={styles.tableShell} aria-label="Transactions list">
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Txn ID</th>
+              <th>Rider</th>
+              <th>Station</th>
+              <th>Amount</th>
+              <th>Litres</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions.map((tx) => (
+              <tr key={tx.id}>
+                <td>{tx.id}</td>
+                <td>{tx.rider}</td>
+                <td>{tx.station}</td>
+                <td>{tx.amount}</td>
+                <td>{tx.litres}</td>
+                <td>
+                  <span className={`${styles.badge} ${styles[tx.status.toLowerCase()]}`}>
+                    {tx.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </main>
   )
 }
