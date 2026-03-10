@@ -95,3 +95,15 @@
   background: #fef3c7;
   color: #92400e;
 }
+
+@media (max-width: 640px) {
+  .table {
+    min-width: 680px;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.65rem;
+    font-size: 0.84rem;
+  }
+}

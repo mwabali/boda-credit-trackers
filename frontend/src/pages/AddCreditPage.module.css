@@ -65,3 +65,17 @@
 .submitButton:hover {
   background: #fed7aa;
 }
+
+@media (max-width: 640px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .formShell {
+    padding: 0.85rem;
+  }
+
+  .submitButton {
+    width: 100%;
+  }
+}
