@@ -6,6 +6,8 @@ const initialValues = {
   station: '',
   amount: '',
   litres: '',
+  number_plate: '',
+  phone: '',
 }
 
 function CreditForm({ riders = [], stations = [], onSubmit }) {
@@ -21,8 +23,8 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
   const handleSubmit = (event) => {
     event.preventDefault()
 
-    const { rider, station, amount, litres } = formData
-    if (!rider || !station || !amount || !litres) {
+    const { rider, station, amount, litres, number_plate, phone } = formData
+    if (!rider || !station || !amount || !litres || !number_plate || !phone) {
       setError('All fields are required')
       return
     }
@@ -31,6 +33,8 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
       onSubmit({
         rider,
         station,
+        number_plate,
+        phone,
         amount: Number(amount),
         litres: Number(litres),
       })
@@ -58,6 +62,30 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
               <option key={rider.id} value={rider.name} />
             ))}
           </datalist>
+        </label>
+
+        <label className={styles.field} htmlFor="number_plate">
+          Number Plate
+          <input
+            id="number_plate"
+            name="number_plate"
+            type="text"
+            value={formData.number_plate}
+            onChange={handleChange}
+            placeholder="Enter rider number plate"
+          />
+        </label>
+
+        <label className={styles.field} htmlFor="phone">
+          Phone Number
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="Enter rider phone"
+          />
         </label>
 
         <label className={styles.field} htmlFor="station">
@@ -116,3 +144,6 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
 
 export default CreditForm
 
+// TODO: Add rider details (phone, number plate)
+// TODO:Link the credit form details to the riders management and to transacion table
+// TODO: Restyling
