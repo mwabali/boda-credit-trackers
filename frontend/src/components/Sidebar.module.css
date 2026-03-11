@@ -1,0 +1,89 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 10px 0 40px rgba(15, 23, 42, 0.12);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.logo {
+  width: 180px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(120, 53, 15, 0.16));
+}
+
+.navLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.navLink {
+  text-decoration: none;
+  color: #0c1f3a;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.95rem;
+  border-radius: 999px;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navLink:hover {
+  background: rgba(191, 90, 16, 0.14);
+  color: #7c2d12;
+}
+
+.active {
+  background: linear-gradient(135deg, #c96d15 0%, #a54e0c 100%);
+  color: #fff7ed;
+  box-shadow: 0 10px 24px rgba(165, 78, 12, 0.28);
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    box-shadow: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .navLinks {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .navLink {
+    border-radius: 12px;
+  }
+
+  .logo {
+    width: 160px;
+  }
+}
+
+@media (max-width: 640px) {
+  .logo {
+    width: 145px;
+  }
+}

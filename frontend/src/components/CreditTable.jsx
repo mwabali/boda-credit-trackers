@@ -1,6 +1,6 @@
 import styles from './CreditTable.module.css'
 
-function CreditTable({ transactions = [] }) {
+function CreditTable({ transactions = [], showPhone = true, showNumberPlate = true }) {
   if (!transactions.length) {
     return <p className={styles.emptyState}>No transactions recorded</p>
   }
@@ -11,6 +11,8 @@ function CreditTable({ transactions = [] }) {
         <thead>
           <tr>
             <th>Rider</th>
+            {showPhone && <th>Phone</th>}
+            {showNumberPlate && <th>Number Plate</th>}
             <th>Station</th>
             <th>Amount</th>
             <th>Litres</th>
@@ -22,6 +24,8 @@ function CreditTable({ transactions = [] }) {
           {transactions.map((tx) => (
             <tr key={tx.id}>
               <td>{tx.rider}</td>
+              {showPhone && <td>{tx.phone}</td>}
+              {showNumberPlate && <td>{tx.number_plate}</td>}
               <td>{tx.station}</td>
               <td>{tx.amount}</td>
               <td>{tx.litres}</td>
