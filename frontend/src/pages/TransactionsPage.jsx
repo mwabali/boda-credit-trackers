@@ -41,7 +41,7 @@ function TransactionsPage() {
         </article>
       </section>
 
-      <CreditTable transactions={tableTransactions} />
+      <CreditTable transactions={tableTransactions} showPhone={false} />
     </main>
   )
 }

@@ -1,22 +1,23 @@
 import { NavLink } from 'react-router-dom'
 import logo from '../assets/Boda_Credit_logo.svg'
-import styles from './Navbar.module.css'
+import styles from './Sidebar.module.css'
 
 const links = [
-  { to: '/home', label: 'Home' },
+  { to: '/home', label: 'Dashboard' },
   { to: '/riders', label: 'Riders' },
-  { to: '/stations', label: 'Stations' },
+  { to: '/stations', label: 'Fuel Stations' },
   { to: '/transactions', label: 'Transactions' },
   { to: '/add-credit', label: 'Add Credit' },
 ]
 
-function Navbar() {
+function Sidebar() {
   return (
-    <header className={styles.navbar}>
-      <div className={styles.brand}>
-        <img src={logo} alt="Boda Credit Tracker logo" className={styles.logo} />
-      </div>
-      <nav className={styles.navLinks} aria-label="Main navigation">
+  <aside className={styles.sidebar}>
+    <div className={styles.brand}>
+      <img src={logo} alt="Boda Credit Tracker logo" className={styles.logo} />
+    </div>
+
+      <nav className={styles.navLinks} aria-label="Primary navigation">
         {links.map((link) => (
           <NavLink
             key={link.to}
@@ -29,8 +30,8 @@ function Navbar() {
           </NavLink>
         ))}
       </nav>
-    </header>
+    </aside>
   )
 }
 
-export default Navbar
+export default Sidebar
