@@ -11,6 +11,8 @@ function CreditTable({ transactions = [] }) {
         <thead>
           <tr>
             <th>Rider</th>
+            <th>Phone</th>
+            <th>Number Plate</th>
             <th>Station</th>
             <th>Amount</th>
             <th>Litres</th>
@@ -22,6 +24,8 @@ function CreditTable({ transactions = [] }) {
           {transactions.map((tx) => (
             <tr key={tx.id}>
               <td>{tx.rider}</td>
+              <td>{tx.phone}</td>
+              <td>{tx.number_plate}</td>
               <td>{tx.station}</td>
               <td>{tx.amount}</td>
               <td>{tx.litres}</td>

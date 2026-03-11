@@ -8,6 +8,8 @@ function TransactionsPage() {
     id: tx.id,
     rider: tx.rider,
     station: tx.station,
+    number_plate: tx.number_plate,
+    phone: tx.phone,
     amount: tx.amount,
     litres: tx.litres,
     date: tx.id.split('-').slice(0,3).join('-'),
