@@ -84,7 +84,7 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
             type="tel"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="Enter rider phone"
+            placeholder="+254 7xx xxx xxx"
           />
         </label>
 
@@ -147,3 +147,4 @@ export default CreditForm
 // TODO: Add rider details (phone, number plate)
 // TODO:Link the credit form details to the riders management and to transacion table
 // TODO: Restyling
+// TODO: Remove Placeholders

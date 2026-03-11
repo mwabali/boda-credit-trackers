@@ -17,11 +17,13 @@ function AddCreditPage() {
         </p>
       </header>
 
-      <CreditForm
-        riders={sampleRiders}
-        stations={sampleStations}
-        onSubmit={handleSubmit}
-      />
+      <section className={styles.formShell}>
+        <CreditForm
+          riders={sampleRiders}
+          stations={sampleStations}
+          onSubmit={handleSubmit}
+        />
+      </section>
     </main>
   )
 }
