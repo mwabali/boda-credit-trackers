@@ -112,7 +112,7 @@ function HomePage() {
             already visible here for quick validation.
           </p>
         </div>
-        <CreditTable transactions={tableTransactions} />
+        <CreditTable transactions={tableTransactions} showPhone={false} />
       </section>
 
       <section className={styles.cardGrid} aria-label="Primary navigation">
