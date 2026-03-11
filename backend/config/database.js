@@ -22,10 +22,10 @@ const sequelize = new Sequelize(
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Database connected.');
+    console.log('Database connected.');
     return true;
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
+    console.error('Database connection failed:', error.message);
     return false;
   }
 };
