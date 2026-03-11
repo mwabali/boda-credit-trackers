@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import logo from '../assets/Boda_Credit_logo.svg'
 import styles from './Navbar.module.css'
 
 const links = [
@@ -12,7 +13,9 @@ const links = [
 function Navbar() {
   return (
     <header className={styles.navbar}>
-      <div className={styles.brand}>Boda Credit Tracker</div>
+      <div className={styles.brand}>
+        <img src={logo} alt="Boda Credit Tracker logo" className={styles.logo} />
+      </div>
       <nav className={styles.navLinks} aria-label="Main navigation">
         {links.map((link) => (
           <NavLink

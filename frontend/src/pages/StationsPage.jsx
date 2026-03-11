@@ -1,13 +1,6 @@
 import styles from './StationsPage.module.css'
-
-const stations = [
-  { id: 'FS001', name: 'City Centre Petro', location: 'Nairobi CBD', phone: '+254 711 111 001', owed: 'KES 95,000' },
-  { id: 'FS002', name: 'Karen Total', location: 'Nairobi Karen', phone: '+254 711 111 002', owed: 'KES 115,000' },
-  { id: 'FS003', name: 'Kasarani Rubis', location: 'Nairobi Kasarani', phone: '+254 711 111 003', owed: 'KES 75,200' },
-  { id: 'FS004', name: 'Westlands Shell', location: 'Nairobi Westlands', phone: '+254 711 111 004', owed: 'KES 62,500' },
-  { id: 'FS005', name: 'Syokimau Petro', location: 'Machakos Syokimau', phone: '+254 711 111 005', owed: 'KES 88,300' },
-  { id: 'FS006', name: 'Ngong Highway Oryx', location: 'Kajiado Ngong Road', phone: '+254 711 111 006', owed: 'KES 54,800' },
-]
+import StationList from '../components/StationList'
+import { stations } from '../data/mockData'
 
 function StationsPage() {
   return (
@@ -55,6 +48,16 @@ function StationsPage() {
           </article>
         ))}
       </section>
+
+      <div className={styles.listSection}>
+        <div>
+          <h2 className={styles.listHeading}>Station directory</h2>
+          <p className={styles.listDescription}>
+            Track the active stations in a tabular view for quick reference.
+          </p>
+        </div>
+        <StationList stations={stations} />
+      </div>
     </main>
   )
 }

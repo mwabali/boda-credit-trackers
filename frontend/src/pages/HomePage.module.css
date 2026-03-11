@@ -92,6 +92,58 @@
   background: #fed7aa;
 }
 
+.extensionGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.extensionCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.8rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+}
+
+.sectionHeader {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.sectionHeader p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.sectionTag {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b45309;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tableSection {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+}
+
 @media (max-width: 640px) {
   .page {
     gap: 0.9rem;
@@ -105,5 +157,14 @@
 
   .cardGrid {
     grid-template-columns: 1fr;
+  }
+
+  .extensionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .extensionCard,
+  .tableSection {
+    padding: 0.85rem;
   }
 }
