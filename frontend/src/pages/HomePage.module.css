@@ -37,11 +37,55 @@
   padding: 0.9rem;
 }
 
+.statCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.55rem;
+}
+
 .statCard h2 {
-  margin: 0 0 0.45rem;
+  margin: 0;
   font-size: 0.95rem;
   color: #7c2d12;
   letter-spacing: 0.02em;
+}
+
+.statIconBadge {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.ridersBadge {
+  background: #ffedd5;
+}
+
+.stationsBadge {
+  background: #fef3c7;
+}
+
+.transactionsBadge {
+  background: #fde7d8;
+}
+
+.statIcon {
+  width: 1.55rem;
+  height: 1.55rem;
+  display: inline-block;
+  background-color: #b45309;
+  mask-image: var(--icon-url);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: var(--icon-url);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 .statValue {
