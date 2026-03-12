@@ -16,10 +16,10 @@ const seed = async () => {
     console.log(`✅ ${riders.length} riders seeded`);
 
     const stations = await Station.bulkCreate([
-      { name: 'Kampala Road', companyName: 'Total', location: 'Kampala Road, Central', managerName: 'Robert Kayongo', status: 'active' },
-      { name: 'Jinja Road', companyName: 'Total', location: 'Jinja Road, Nakawa', managerName: 'Mary Nantongo', status: 'active' },
-      { name: 'Bombo Road', companyName: 'Total', location: 'Bombo Road, Kawempe', managerName: 'James Ssekito', status: 'active' },
-      { name: 'Entebbe Road', companyName: 'Total', location: 'Entebbe Road, Makindye', managerName: 'Susan Kigozi', status: 'active' }
+      { name: 'Kampala Road', companyName: 'Total', location: 'Kampala Road, Central', managerName: 'Robert Kayongo', managerPhone: '+256770111001', status: 'active' },
+      { name: 'Jinja Road', companyName: 'Total', location: 'Jinja Road, Nakawa', managerName: 'Mary Nantongo', managerPhone: '+256770111002', status: 'active' },
+      { name: 'Bombo Road', companyName: 'Total', location: 'Bombo Road, Kawempe', managerName: 'James Ssekito', managerPhone: '+256770111003', status: 'active' },
+      { name: 'Entebbe Road', companyName: 'Total', location: 'Entebbe Road, Makindye', managerName: 'Susan Kigozi', managerPhone: '+256770111004', status: 'active' }
     ]);
     console.log(`✅ ${stations.length} stations seeded`);
 
