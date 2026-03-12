@@ -168,6 +168,22 @@
   color: #374151;
 }
 
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.statusSelect {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.88rem;
+  color: #111827;
+  background: #ffffff;
+}
+
 @media (max-width: 640px) {
   .stationForm {
     grid-template-columns: 1fr;

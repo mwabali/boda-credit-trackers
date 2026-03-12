@@ -24,6 +24,7 @@ function mapTransactionToRow(transaction) {
     litres: formatLitres(transaction.liters),
     date: formatDate(transaction.createdAt),
     status: formatStatus(transaction.status),
+    statusValue: transaction.status,
   }
 }
 

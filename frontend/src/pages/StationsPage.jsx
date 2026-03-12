@@ -18,6 +18,7 @@ function StationsPage() {
   const [stations, setStations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [formValues, setFormValues] = useState(initialStationValues)
@@ -87,6 +88,37 @@ function StationsPage() {
       })),
     [stations]
   )
+
+  const handleStatusChange = async (stationId, status) => {
+    try {
+      setIsUpdatingStatus(true)
+      setError('')
+
+      const currentStation = stations.find((station) => station.id === stationId)
+      if (!currentStation) return
+
+      await request(`/stations/${stationId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: currentStation.name,
+          location: currentStation.location,
+          managerName: currentStation.managerName,
+          managerPhone: currentStation.managerPhone,
+          status,
+        }),
+      })
+
+      setStations((prev) =>
+        prev.map((station) =>
+          station.id === stationId ? { ...station, status } : station
+        )
+      )
+    } catch (updateError) {
+      setError(updateError.message)
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
 
   return (
     <main className={styles.page}>
@@ -204,6 +236,22 @@ function StationsPage() {
                   </li>
                   <li>
                     <strong>Phone:</strong> {station.managerPhone || '--'}
+                  </li>
+                  <li className={styles.statusRow}>
+                    <strong>Status:</strong>
+                    <select
+                      className={styles.statusSelect}
+                      value={station.status}
+                      onChange={(event) =>
+                        handleStatusChange(station.id, event.target.value)
+                      }
+                      disabled={isUpdatingStatus}
+                      aria-label={`Update ${station.name} status`}
+                    >
+                      <option value="active">Active</option>
+                      <option value="maintenance">Maintenance</option>
+                      <option value="closed">Closed</option>
+                    </select>
                   </li>
                 </ul>
               </article>

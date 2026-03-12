@@ -9,6 +9,7 @@ function TransactionsPage() {
   const [transactions, setTransactions] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
   const [isLoading, setIsLoading] = useState(true)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -52,6 +53,40 @@ function TransactionsPage() {
     }, 0)
   }, [transactions])
 
+  const handleStatusChange = async (transactionId, status) => {
+    try {
+      setIsUpdatingStatus(true)
+      setError('')
+
+      await request(`/transactions/${transactionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      })
+
+      setTransactions((prev) =>
+        prev.map((transaction) =>
+          transaction.id === transactionId ? { ...transaction, status } : transaction
+        )
+      )
+
+      setStats((prev) => {
+        const nextTransactions = transactions.map((transaction) =>
+          transaction.id === transactionId ? { ...transaction, status } : transaction
+        )
+
+        return {
+          total: nextTransactions.length,
+          pending: nextTransactions.filter((transaction) => transaction.status === 'pending').length,
+          paid: nextTransactions.filter((transaction) => transaction.status === 'paid').length,
+        }
+      })
+    } catch (updateError) {
+      setError(updateError.message)
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -80,7 +115,12 @@ function TransactionsPage() {
       {error ? <p className={styles.errorMessage}>{error}</p> : null}
 
       {!isLoading && !error ? (
-        <CreditTable transactions={tableTransactions} showPhone={false} />
+        <CreditTable
+          transactions={tableTransactions}
+          showPhone={false}
+          onStatusChange={handleStatusChange}
+          isUpdatingStatus={isUpdatingStatus}
+        />
       ) : null}
     </main>
   )

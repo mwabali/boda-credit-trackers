@@ -10,6 +10,7 @@ function formatRiderId(id) {
 function RidersPage() {
   const [riders, setRiders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -38,6 +39,7 @@ function RidersPage() {
         phone: rider.phone,
         debt: formatCurrency(rider.currentBalance),
         status: formatStatus(rider.status),
+        statusValue: rider.status,
       })),
     [riders]
   )
@@ -51,6 +53,34 @@ function RidersPage() {
     () => riders.filter((rider) => rider.status === 'active').length,
     [riders]
   )
+
+  const handleStatusChange = async (riderId, status) => {
+    try {
+      setIsUpdatingStatus(true)
+      setError('')
+
+      const currentRider = riders.find((rider) => rider.id === riderId)
+      if (!currentRider) return
+
+      await request(`/riders/${riderId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: currentRider.name,
+          phone: currentRider.phone,
+          licensePlate: currentRider.licensePlate,
+          status,
+        }),
+      })
+
+      setRiders((prev) =>
+        prev.map((rider) => (rider.id === riderId ? { ...rider, status } : rider))
+      )
+    } catch (updateError) {
+      setError(updateError.message)
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
 
   return (
     <main className={styles.page}>
@@ -105,9 +135,19 @@ function RidersPage() {
                   <td>{rider.phone}</td>
                   <td>{rider.debt}</td>
                   <td>
-                    <span className={`${styles.badge} ${styles[rider.status.toLowerCase()]}`}>
-                      {rider.status}
-                    </span>
+                    <select
+                      className={styles.statusSelect}
+                      value={rider.statusValue}
+                      onChange={(event) =>
+                        handleStatusChange(Number(rider.id.slice(1)), event.target.value)
+                      }
+                      disabled={isUpdatingStatus}
+                      aria-label={`Update ${rider.name} status`}
+                    >
+                      <option value="active">Active</option>
+                      <option value="suspended">Suspended</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                   </td>
                 </tr>
               ))}

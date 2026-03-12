@@ -33,3 +33,12 @@
   color: #4b5563;
   background: #ffffff;
 }
+
+.statusSelect {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.88rem;
+  color: #111827;
+  background: #ffffff;
+}
