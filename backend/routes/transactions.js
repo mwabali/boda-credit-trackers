@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { Op } = require('sequelize');
 const { Transaction, Rider, Station } = require('../models');
 
 // GET /transactions/stats/dashboard - MUST BE FIRST
@@ -36,8 +35,16 @@ router.get('/', async (req, res) => {
     const includeOptions = [];
     if (include === 'all') {
       includeOptions.push(
-        { model: Rider, as: 'rider', attributes: ['id', 'name', 'phone'] },
-        { model: Station, as: 'station', attributes: ['id', 'name'] }
+        {
+          model: Rider,
+          as: 'rider',
+          attributes: ['id', 'name', 'phone', 'licensePlate'],
+        },
+        {
+          model: Station,
+          as: 'station',
+          attributes: ['id', 'name', 'location'],
+        }
       );
     }
     
@@ -56,13 +63,19 @@ router.get('/', async (req, res) => {
 // POST /transactions - Create
 router.post('/', async (req, res) => {
   try {
-    const { riderId, stationId, amount, notes } = req.body;
+    const { riderId, stationId, amount, liters, notes } = req.body;
     
     if (!riderId || !stationId || !amount) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
     
-    const transaction = await Transaction.create({ riderId, stationId, amount, notes });
+    const transaction = await Transaction.create({
+      riderId,
+      stationId,
+      amount,
+      liters,
+      notes,
+    });
     res.status(201).json({ success: true, data: transaction });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

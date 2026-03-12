@@ -1,15 +1,24 @@
 const express = require('express');
 const router = express.Router();
+const { Op, fn, col, where: sequelizeWhere } = require('sequelize');
 const { Rider, Transaction } = require('../models');
 
 // GET /riders - List all (with optional search)
 router.get('/', async (req, res) => {
   try {
-    const { search, status = 'active' } = req.query;
-    const where = { status };
+    const { search, status } = req.query;
+    const where = {};
+
+    if (status) {
+      where.status = status;
+    }
     
     if (search) {
-      where.name = { [require('sequelize').Op.iLike]: `%${search}%` };
+      where[Op.and] = [
+        sequelizeWhere(fn('LOWER', col('name')), {
+          [Op.like]: `%${search.toLowerCase()}%`,
+        }),
+      ];
     }
     
     const riders = await Rider.findAll({ 

@@ -5,8 +5,15 @@ const { Station } = require('../models');
 // GET /stations
 router.get('/', async (req, res) => {
   try {
+    const { status } = req.query;
+    const where = {};
+
+    if (status) {
+      where.status = status;
+    }
+
     const stations = await Station.findAll({
-      where: { status: 'active' },
+      where,
       order: [['created_at', 'DESC']]
     });
     
