@@ -2,41 +2,61 @@ import { useState } from 'react'
 import styles from './CreditForm.module.css'
 
 const initialValues = {
-  rider: '',
-  station: '',
+  riderId: '',
+  stationId: '',
   amount: '',
   litres: '',
   number_plate: '',
   phone: '',
 }
 
-function CreditForm({ riders = [], stations = [], onSubmit }) {
+function CreditForm({
+  riders = [],
+  stations = [],
+  onSubmit,
+  submitLabel = 'Save Credit',
+  isSubmitting = false,
+}) {
   const [formData, setFormData] = useState(initialValues)
   const [error, setError] = useState('')
 
   const handleChange = (event) => {
     const { name, value } = event.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    if (name === 'riderId') {
+      const selectedRider = riders.find((rider) => String(rider.id) === value)
+
+      setFormData((prev) => ({
+        ...prev,
+        riderId: value,
+        number_plate:
+          selectedRider?.licensePlate || selectedRider?.number_plate || '',
+        phone: selectedRider?.phone || selectedRider?.phone_number || '',
+      }))
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+    }
+
     if (error) setError('')
   }
 
   const handleSubmit = (event) => {
     event.preventDefault()
 
-    const { rider, station, amount, litres, number_plate, phone } = formData
-    if (!rider || !station || !amount || !litres || !number_plate || !phone) {
-      setError('All fields are required')
+    const { riderId, stationId, amount, litres, number_plate, phone } = formData
+    if (!riderId || !stationId || !amount || !litres) {
+      setError('Rider, station, amount, and litres are required')
       return
     }
 
     if (typeof onSubmit === 'function') {
       onSubmit({
-        rider,
-        station,
+        riderId: Number(riderId),
+        stationId: Number(stationId),
         number_plate,
         phone,
         amount: Number(amount),
-        litres: Number(litres),
+        liters: Number(litres),
       })
     }
 
@@ -46,22 +66,21 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
   return (
     <section className={styles.wrapper} aria-label="Credit entry form">
       <form className={styles.form} onSubmit={handleSubmit}>
-        <label className={styles.field} htmlFor="rider">
+        <label className={styles.field} htmlFor="riderId">
           Rider
-          <input
-            id="rider"
-            name="rider"
-            type="text"
-            value={formData.rider}
+          <select
+            id="riderId"
+            name="riderId"
+            value={formData.riderId}
             onChange={handleChange}
-            placeholder="Enter rider name or ID"
-            list="riderList"
-          />
-          <datalist id="riderList">
+          >
+            <option value="">Select rider</option>
             {riders.map((rider) => (
-              <option key={rider.id} value={rider.name} />
+              <option key={rider.id} value={rider.id}>
+                {rider.name}
+              </option>
             ))}
-          </datalist>
+          </select>
         </label>
 
         <label className={styles.field} htmlFor="number_plate">
@@ -71,8 +90,8 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
             name="number_plate"
             type="text"
             value={formData.number_plate}
-            onChange={handleChange}
-            placeholder="Enter rider number plate"
+            readOnly
+            placeholder="Auto-filled from rider"
           />
         </label>
 
@@ -83,17 +102,17 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
             name="phone"
             type="tel"
             value={formData.phone}
-            onChange={handleChange}
-            placeholder="+254 7xx xxx xxx"
+            readOnly
+            placeholder="Auto-filled from rider"
           />
         </label>
 
-        <label className={styles.field} htmlFor="station">
+        <label className={styles.field} htmlFor="stationId">
           Station
           <select
-            id="station"
-            name="station"
-            value={formData.station}
+            id="stationId"
+            name="stationId"
+            value={formData.stationId}
             onChange={handleChange}
           >
             <option value="">Select station</option>
@@ -134,8 +153,8 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
 
         {error ? <p className={styles.error}>{error}</p> : null}
 
-        <button type="submit" className={styles.submitButton}>
-          Save Credit
+        <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving...' : submitLabel}
         </button>
       </form>
     </section>
@@ -143,8 +162,3 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
 }
 
 export default CreditForm
-
-// TODO: Add rider details (phone, number plate)
-// TODO:Link the credit form details to the riders management and to transacion table
-// TODO: Restyling
-// TODO: Remove Placeholders

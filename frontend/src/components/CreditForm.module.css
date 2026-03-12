@@ -53,6 +53,11 @@
   background: #fed7aa;
 }
 
+.submitButton:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
 @media (max-width: 640px) {
   .form {
     grid-template-columns: 1fr;
@@ -62,5 +67,4 @@
     width: 100%;
   }
 }
-
 
