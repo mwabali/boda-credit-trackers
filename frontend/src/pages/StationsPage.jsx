@@ -240,7 +240,7 @@ function StationsPage() {
                   <li className={styles.statusRow}>
                     <strong>Status:</strong>
                     <select
-                      className={styles.statusSelect}
+                      className={`${styles.statusSelect} ${styles[station.status]}`}
                       value={station.status}
                       onChange={(event) =>
                         handleStatusChange(station.id, event.target.value)

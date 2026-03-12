@@ -136,7 +136,7 @@ function RidersPage() {
                   <td>{rider.debt}</td>
                   <td>
                     <select
-                      className={styles.statusSelect}
+                      className={`${styles.statusSelect} ${styles[rider.statusValue]}`}
                       value={rider.statusValue}
                       onChange={(event) =>
                         handleStatusChange(Number(rider.id.slice(1)), event.target.value)

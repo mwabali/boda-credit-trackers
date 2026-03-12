@@ -176,12 +176,29 @@
 }
 
 .statusSelect {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 0.35rem 0.5rem;
-  font-size: 0.88rem;
-  color: #111827;
-  background: #ffffff;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.maintenance {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.closed {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 @media (max-width: 640px) {

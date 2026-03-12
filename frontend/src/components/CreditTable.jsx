@@ -41,7 +41,7 @@ function CreditTable({
               <td>
                 {onStatusChange ? (
                   <select
-                    className={styles.statusSelect}
+                    className={`${styles.statusSelect} ${styles[tx.statusValue || tx.status.toLowerCase()]}`}
                     value={tx.statusValue || tx.status.toLowerCase()}
                     onChange={(event) => onStatusChange(tx.id, event.target.value)}
                     disabled={isUpdatingStatus}
