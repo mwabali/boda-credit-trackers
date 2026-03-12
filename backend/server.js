@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+require('dotenv').config(); 
 
 const { testConnection } = require('./config/database');
 const { Rider, Station, Transaction } = require('./models');
@@ -8,6 +8,7 @@ const { Rider, Station, Transaction } = require('./models');
 const riderRoutes = require('./routes/riders');
 const stationRoutes = require('./routes/stations');
 const transactionRoutes = require('./routes/transactions');
+const router = require('./routes/riders');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
