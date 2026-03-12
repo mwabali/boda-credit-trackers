@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Station } = require('../models');
+const { hydrateStation, prepareStationPayload } = require('../utils/stationCompany');
 const VALID_STATION_STATUSES = new Set(['active', 'closed', 'maintenance']);
 
 // GET /stations
@@ -21,7 +22,7 @@ router.get('/', async (req, res) => {
     res.json({
       success: true,
       count: stations.length,
-      data: stations
+      data: stations.map(hydrateStation)
     });
   } catch (error) {
     res.status(500).json({
@@ -46,7 +47,7 @@ router.get('/:id', async (req, res) => {
     
     res.json({
       success: true,
-      data: station
+      data: hydrateStation(station)
     });
   } catch (error) {
     res.status(500).json({
@@ -69,17 +70,17 @@ router.post('/', async (req, res) => {
       });
     }
     
-    const station = await Station.create({
+    const station = await Station.create(prepareStationPayload({
       name,
       location,
       managerName,
       managerPhone
-    });
+    }));
     
     res.status(201).json({
       success: true,
       message: 'Station created successfully',
-      data: station
+      data: hydrateStation(station)
     });
   } catch (error) {
     res.status(500).json({
@@ -110,18 +111,18 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    await station.update({
+    await station.update(prepareStationPayload({
       name,
       location,
       managerName,
       managerPhone,
       status,
-    });
+    }));
 
     res.json({
       success: true,
       message: 'Station updated successfully',
-      data: station,
+      data: hydrateStation(station),
     });
   } catch (error) {
     res.status(500).json({

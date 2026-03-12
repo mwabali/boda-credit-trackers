@@ -14,6 +14,12 @@ const Station = sequelize.define('Station', {
       notEmpty: true
     }
   },
+  companyName: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+    defaultValue: 'Total',
+    field: 'company_name',
+  },
   location: {
     type: DataTypes.STRING(200),
     allowNull: false

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Transaction, Rider, Station } = require('../models');
 const { syncRiderBalance } = require('../utils/riderBalances');
+const { hydrateStation } = require('../utils/stationCompany');
 const VALID_TRANSACTION_STATUSES = new Set([
   'pending',
   'approved',
@@ -60,8 +61,19 @@ router.get('/', async (req, res) => {
       include: includeOptions,
       order: [['created_at', 'DESC']]
     });
+
+    const responseTransactions =
+      include === 'all'
+        ? transactions.map((transaction) => {
+            const transactionData = transaction.toJSON();
+            return {
+              ...transactionData,
+              station: hydrateStation(transactionData.station),
+            };
+          })
+        : transactions;
     
-    res.json({ success: true, count: transactions.length, data: transactions });
+    res.json({ success: true, count: transactions.length, data: responseTransactions });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

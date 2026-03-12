@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config(); 
 
-const { testConnection } = require('./config/database');
+const { sequelize, testConnection } = require('./config/database');
 const { Rider, Station, Transaction } = require('./models');
 
 const riderRoutes = require('./routes/riders');
@@ -12,6 +12,19 @@ const router = require('./routes/riders');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+async function ensureStationCompanyColumn() {
+  const queryInterface = sequelize.getQueryInterface();
+  const stationTable = await queryInterface.describeTable('stations');
+
+  if (!stationTable.company_name) {
+    await queryInterface.addColumn('stations', 'company_name', {
+      type: require('sequelize').DataTypes.STRING(100),
+      allowNull: false,
+      defaultValue: 'Total',
+    });
+  }
+}
 
 app.use(cors());
 app.use(express.json());
@@ -33,6 +46,7 @@ const start = async () => {
   await Rider.sync();
   await Station.sync();
   await Transaction.sync();
+  await ensureStationCompanyColumn();
   console.log('✅ Tables ready');
   
   app.listen(PORT, () => {
