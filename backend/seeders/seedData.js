@@ -24,12 +24,12 @@ const seed = async () => {
     console.log(`✅ ${stations.length} stations seeded`);
 
     const transactions = await Transaction.bulkCreate([
-      { riderId: 1, stationId: 1, amount: 50000, status: 'paid', notes: 'Full tank payment' },
-      { riderId: 2, stationId: 1, amount: 30000, status: 'pending', notes: 'Partial fill' },
-      { riderId: 1, stationId: 2, amount: 45000, status: 'pending', notes: 'Emergency fuel' },
-      { riderId: 3, stationId: 3, amount: 60000, status: 'paid', notes: 'Weekly credit cleared' },
-      { riderId: 4, stationId: 2, amount: 25000, status: 'cancelled', notes: 'Incorrect amount' },
-      { riderId: 2, stationId: 4, amount: 55000, status: 'pending', notes: 'Long distance trip' }
+      { riderId: 1, stationId: 1, amount: 50000, liters: 20, status: 'paid', notes: 'Full tank payment' },
+      { riderId: 2, stationId: 1, amount: 30000, liters: 12, status: 'pending', notes: 'Partial fill' },
+      { riderId: 1, stationId: 2, amount: 45000, liters: 18, status: 'pending', notes: 'Emergency fuel' },
+      { riderId: 3, stationId: 3, amount: 60000, liters: 24, status: 'paid', notes: 'Weekly credit cleared' },
+      { riderId: 4, stationId: 2, amount: 25000, liters: 10, status: 'cancelled', notes: 'Incorrect amount' },
+      { riderId: 2, stationId: 4, amount: 55000, liters: 22, status: 'pending', notes: 'Long distance trip' }
     ]);
     console.log(`✅ ${transactions.length} transactions seeded`);
 

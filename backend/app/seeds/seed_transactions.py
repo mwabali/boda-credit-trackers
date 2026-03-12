@@ -5,11 +5,11 @@ def seed_transactions():
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO transactions (rider_id, station_id, amount, status)
+        INSERT INTO transactions (rider_id, station_id, amount, liters, status)
         VALUES
-        (1,1,1500,'pending'),
-        (2,2,2000,'approved'),
-        (3,3,1000,'pending');
+        (1,1,1500,6.0,'pending'),
+        (2,2,2000,8.0,'approved'),
+        (3,3,1000,4.5,'pending');
     """)
 
     conn.commit()
