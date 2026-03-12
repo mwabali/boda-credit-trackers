@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS stations (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
+  company_name VARCHAR(100) NOT NULL DEFAULT 'Total',
   location VARCHAR(200) NOT NULL,
   manager_name VARCHAR(100),
   manager_phone VARCHAR(20),
