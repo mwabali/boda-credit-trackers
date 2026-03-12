@@ -3,7 +3,53 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const { Transaction, Rider, Station } = require('../models');
 
-// GET /transactions - Advanced filtering
+// ============================================
+// /stats/dashboard route
+// ============================================
+router.get('/stats/dashboard', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [
+      totalCount,
+      pendingCount,
+      paidCount,
+      todayCount,
+      totalRevenue,
+      outstandingCredit
+    ] = await Promise.all([
+      Transaction.count(),
+      Transaction.count({ where: { status: 'pending' } }),
+      Transaction.count({ where: { status: 'paid' } }),
+      Transaction.count({ where: { created_at: { [Op.gte]: today } } }),
+      Transaction.sum('amount', { where: { status: 'paid' } }),
+      Transaction.sum('amount', { where: { status: 'pending' } })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        counts: {
+          total: totalCount,
+          pending: pendingCount,
+          paid: paidCount,
+          today: todayCount
+        },
+        amounts: {
+          totalRevenue: (totalRevenue || 0).toFixed(2),
+          outstandingCredit: (outstandingCredit || 0).toFixed(2)
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============================================
+// SECOND: / route (list all with filters)
+// ============================================
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -76,49 +122,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /transactions/stats - Dashboard stats
-router.get('/stats/dashboard', async (req, res) => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const [
-      totalCount,
-      pendingCount,
-      paidCount,
-      todayCount,
-      totalRevenue,
-      outstandingCredit
-    ] = await Promise.all([
-      Transaction.count(),
-      Transaction.count({ where: { status: 'pending' } }),
-      Transaction.count({ where: { status: 'paid' } }),
-      Transaction.count({ where: { created_at: { [Op.gte]: today } } }),
-      Transaction.sum('amount', { where: { status: 'paid' } }),
-      Transaction.sum('amount', { where: { status: 'pending' } })
-    ]);
-    
-    res.json({
-      success: true,
-      data: {
-        counts: {
-          total: totalCount,
-          pending: pendingCount,
-          paid: paidCount,
-          today: todayCount
-        },
-        amounts: {
-          totalRevenue: (totalRevenue || 0).toFixed(2),
-          outstandingCredit: (outstandingCredit || 0).toFixed(2)
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// POST /transactions - Create with validation
+// ============================================
+// THIRD: POST / (create)
+// ============================================
 router.post('/', async (req, res) => {
   try {
     const { riderId, stationId, amount, fuelType, liters, pricePerLiter, notes } = req.body;
@@ -185,7 +191,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PATCH /transactions/:id - Update status (payment workflow)
+// ============================================
+// LAST: /:id routes (must be after specific routes!)
+// ============================================
 router.patch('/:id', async (req, res) => {
   try {
     const { status, notes } = req.body;
