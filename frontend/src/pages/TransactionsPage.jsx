@@ -1,47 +1,87 @@
+import { useEffect, useMemo, useState } from 'react'
 import CreditTable from '../components/CreditTable'
+import { request } from '../lib/api'
+import { formatCurrency } from '../lib/formatters'
+import { mapTransactionToRow } from '../lib/mappers'
 import styles from './TransactionsPage.module.css'
-import { transactions } from '../data/mockData'
 
 function TransactionsPage() {
-  // Transform transactions data for CreditTable component
-  const tableTransactions = transactions.map(tx => ({
-    id: tx.id,
-    rider: tx.rider,
-    station: tx.station,
-    number_plate: tx.number_plate,
-    phone: tx.phone,
-    amount: tx.amount,
-    litres: tx.litres,
-    date: tx.id.split('-').slice(0,3).join('-'),
-    status: tx.status
-  }))
+  const [transactions, setTransactions] = useState([])
+  const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadTransactions() {
+      try {
+        setIsLoading(true)
+        setError('')
+
+        const [transactionsPayload, statsPayload] = await Promise.all([
+          request('/transactions?include=all'),
+          request('/transactions/stats/dashboard'),
+        ])
+
+        setTransactions(transactionsPayload.data || [])
+        setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
+      } catch (loadError) {
+        setError(loadError.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadTransactions()
+  }, [])
+
+  const tableTransactions = useMemo(
+    () => transactions.map(mapTransactionToRow),
+    [transactions]
+  )
+
+  const currentMonthAmount = useMemo(() => {
+    const now = new Date()
+
+    return transactions.reduce((sum, transaction) => {
+      const transactionDate = new Date(transaction.createdAt)
+      const isSameMonth =
+        transactionDate.getMonth() === now.getMonth() &&
+        transactionDate.getFullYear() === now.getFullYear()
+
+      return isSameMonth ? sum + Number(transaction.amount || 0) : sum
+    }, 0)
+  }, [transactions])
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Credit Transaction Log</h1>
         <p className={styles.description}>
-          Placeholder transaction table for future filters, pagination, and
-          backend-powered reconciliation workflows.
+          Live transaction table backed by the current backend credit records.
         </p>
       </header>
 
       <section className={styles.statsGrid} aria-label="Transaction summary">
         <article className={styles.statCard}>
           <h2>Total Credit Transactions</h2>
-          <p>110,000+</p>
+          <p>{stats.total}</p>
         </article>
         <article className={styles.statCard}>
           <h2>Monthly KES Pumped</h2>
-          <p>KES 500,000</p>
+          <p>{formatCurrency(currentMonthAmount)}</p>
         </article>
         <article className={styles.statCard}>
           <h2>Pending Payments</h2>
-          <p>15,000</p>
+          <p>{stats.pending}</p>
         </article>
       </section>
 
-      <CreditTable transactions={tableTransactions} showPhone={false} />
+      {isLoading ? <p className={styles.stateMessage}>Loading transactions...</p> : null}
+      {error ? <p className={styles.errorMessage}>{error}</p> : null}
+
+      {!isLoading && !error ? (
+        <CreditTable transactions={tableTransactions} showPhone={false} />
+      ) : null}
     </main>
   )
 }

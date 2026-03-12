@@ -46,6 +46,16 @@
   color: #111827;
 }
 
+.stateMessage,
+.errorMessage {
+  margin: 0;
+  color: #4b5563;
+}
+
+.errorMessage {
+  color: #991b1b;
+}
+
 .tableShell {
   border: 1px solid #e5e7eb;
   border-radius: 12px;

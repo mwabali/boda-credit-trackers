@@ -1,13 +1,11 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CreditForm from '../components/CreditForm'
 import CreditTable from '../components/CreditTable'
 import StationList from '../components/StationList'
+import { request } from '../lib/api'
+import { mapTransactionToRow } from '../lib/mappers'
 import styles from './HomePage.module.css'
-import {
-  riders as sampleRiders,
-  stations as sampleStations,
-  transactions as sampleTransactions,
-} from '../data/mockData'
 
 const dashboardSections = [
   {
@@ -32,21 +30,58 @@ const dashboardSections = [
   },
 ]
 
-const tableTransactions = sampleTransactions.map((tx) => ({
-  id: tx.id,
-  rider: tx.rider,
-  station: tx.station,
-  phone: tx.phone,
-  number_plate: tx.number_plate,
-  amount: tx.amount,
-  litres: tx.litres,
-  date: tx.id.split('-').slice(0, 3).join('-'),
-  status: tx.status,
-}))
-
 function HomePage() {
+  const [riders, setRiders] = useState([])
+  const [stations, setStations] = useState([])
+  const [transactions, setTransactions] = useState([])
+  const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setIsLoading(true)
+        setError('')
+
+        const [ridersPayload, stationsPayload, transactionsPayload, statsPayload] =
+          await Promise.all([
+            request('/riders'),
+            request('/stations'),
+            request('/transactions?include=all'),
+            request('/transactions/stats/dashboard'),
+          ])
+
+        setRiders(ridersPayload.data || [])
+        setStations(stationsPayload.data || [])
+        setTransactions(transactionsPayload.data || [])
+        setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
+      } catch (loadError) {
+        setError(loadError.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadDashboardData()
+  }, [])
+
+  const stationListRows = useMemo(
+    () =>
+      stations.map((station) => ({
+        ...station,
+        phone: station.managerPhone || '--',
+      })),
+    [stations]
+  )
+
+  const tableTransactions = useMemo(
+    () => transactions.slice(0, 5).map(mapTransactionToRow),
+    [transactions]
+  )
+
   const handleQuickCredit = (formData) => {
-    console.log('Quick credit entry:', formData)
+    console.log('Quick credit preview:', formData)
   }
 
   return (
@@ -54,23 +89,26 @@ function HomePage() {
       <header className={styles.hero}>
         <h1 className={styles.title}>Boda Credit Dashboard</h1>
         <p className={styles.description}>
-          Track core frontend workflows from one place. This dashboard is ready
-          for future UI component expansion and backend integration.
+          Track core workflows from one place with live backend records flowing
+          into the dashboard.
         </p>
       </header>
+
+      {isLoading ? <p className={styles.feedbackMessage}>Loading dashboard data...</p> : null}
+      {error ? <p className={styles.errorMessage}>{error}</p> : null}
 
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
         <article className={styles.statCard}>
           <h2>Total Riders</h2>
-          <p>Placeholder metric for rider registry volume.</p>
+          <p>{riders.length} active records loaded</p>
         </article>
         <article className={styles.statCard}>
           <h2>Total Stations</h2>
-          <p>Placeholder metric for active fuel station partners.</p>
+          <p>{stations.length} partner locations loaded</p>
         </article>
         <article className={styles.statCard}>
           <h2>Credit Activity</h2>
-          <p>Placeholder metric for overall transaction movement.</p>
+          <p>{stats.total} transactions, {stats.pending} pending</p>
         </article>
       </section>
 
@@ -80,13 +118,13 @@ function HomePage() {
             <p className={styles.sectionTag}>Live form preview</p>
             <h2>Credit entry form</h2>
             <p>
-              Fill a credit transaction to see how the form behaves before the
-              backend is wired.
+              Use the live rider and station options here before full submission
+              wiring lands on the Add Credit page.
             </p>
           </div>
           <CreditForm
-            riders={sampleRiders}
-            stations={sampleStations}
+            riders={riders}
+            stations={stations}
             onSubmit={handleQuickCredit}
           />
         </article>
@@ -96,10 +134,10 @@ function HomePage() {
             <p className={styles.sectionTag}>Station list</p>
             <h2>Station directory</h2>
             <p>
-              Reference every onboarding station without leaving the dashboard.
+              Reference every active partner station without leaving the dashboard.
             </p>
           </div>
-          <StationList stations={sampleStations} />
+          <StationList stations={stationListRows} />
         </article>
       </section>
 
@@ -108,8 +146,8 @@ function HomePage() {
           <p className={styles.sectionTag}>Recent activity</p>
           <h2>Credit transactions</h2>
           <p>
-            The same transaction table that will power the Transactions page is
-            already visible here for quick validation.
+            The same live transaction feed that powers the Transactions page is
+            surfaced here for quick review.
           </p>
         </div>
         <CreditTable transactions={tableTransactions} showPhone={false} />
