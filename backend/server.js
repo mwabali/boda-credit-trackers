@@ -7,7 +7,7 @@ const { Rider, Station, Transaction } = require('./models');
 
 const riderRoutes = require('./routes/riders');
 const stationRoutes = require('./routes/stations');
-const transactionRoutes = require('./routes/transactions');
+const transactionRoutes = require('./routes/transaction');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
