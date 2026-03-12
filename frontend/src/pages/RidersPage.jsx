@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import ridersIcon from '../assets/Riders_icon.svg'
 import { request } from '../lib/api'
 import { formatCurrency, formatStatus } from '../lib/formatters'
 import styles from './RidersPage.module.css'
@@ -94,15 +95,42 @@ function RidersPage() {
       <section className={styles.statsGrid} aria-label="Riders summary">
         <article className={styles.statCard}>
           <h2>Total Riders</h2>
-          <p>{riders.length}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={ridersIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.totalIcon}`}
+            />
+            <p className={styles.statValue}>{riders.length}</p>
+          </div>
+          <span className={styles.statMeta}>registered rider profiles</span>
         </article>
         <article className={styles.statCard}>
           <h2>Active Riders</h2>
-          <p>{activeRiders}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={ridersIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.activeIcon}`}
+            />
+            <p className={styles.statValue}>{activeRiders}</p>
+          </div>
+          <span className={styles.statMeta}>currently active riders</span>
         </article>
         <article className={styles.statCard}>
           <h2>Total Debt (Overall)</h2>
-          <p>{formatCurrency(totalDebt)}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={ridersIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.debtIcon}`}
+            />
+            <p className={styles.statValue}>{formatCurrency(totalDebt)}</p>
+          </div>
+          <span className={styles.statMeta}>outstanding rider balances</span>
         </article>
       </section>
 
