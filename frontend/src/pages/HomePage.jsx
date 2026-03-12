@@ -135,15 +135,18 @@ function HomePage() {
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
         <article className={styles.statCard}>
           <h2>Total Riders</h2>
-          <p>{riders.length} active records loaded</p>
+          <p className={styles.statValue}>{riders.length}</p>
+          <span className={styles.statMeta}>active records loaded</span>
         </article>
         <article className={styles.statCard}>
           <h2>Total Stations</h2>
-          <p>{stations.length} partner locations loaded</p>
+          <p className={styles.statValue}>{stations.length}</p>
+          <span className={styles.statMeta}>partner locations loaded</span>
         </article>
         <article className={styles.statCard}>
           <h2>Credit Activity</h2>
-          <p>{stats.total} transactions, {stats.pending} pending</p>
+          <p className={styles.statValue}>{stats.total}</p>
+          <span className={styles.statMeta}>{stats.pending} pending transactions</span>
         </article>
       </section>
 
