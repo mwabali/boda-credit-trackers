@@ -13,6 +13,10 @@ function formatStationId(id) {
   return `FS${String(id).padStart(3, '0')}`
 }
 
+function getTransactionTimestamp(transaction) {
+  return transaction.createdAt || transaction.created_at || transaction.updatedAt || transaction.updated_at
+}
+
 function mapTransactionToRow(transaction) {
   return {
     id: transaction.id,
@@ -22,10 +26,15 @@ function mapTransactionToRow(transaction) {
     station: `${transaction.station.name} (${formatStationId(transaction.station.id)})`,
     amount: formatCurrency(transaction.amount),
     litres: formatLitres(transaction.liters),
-    date: formatDate(transaction.createdAt),
+    date: formatDate(getTransactionTimestamp(transaction)),
     status: formatStatus(transaction.status),
     statusValue: transaction.status,
   }
 }
 
-export { formatRiderId, formatStationId, mapTransactionToRow }
+export {
+  formatRiderId,
+  formatStationId,
+  getTransactionTimestamp,
+  mapTransactionToRow,
+}

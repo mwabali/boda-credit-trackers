@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import CreditTable from '../components/CreditTable'
 import { request } from '../lib/api'
 import { formatCurrency } from '../lib/formatters'
-import { mapTransactionToRow } from '../lib/mappers'
+import { getTransactionTimestamp, mapTransactionToRow } from '../lib/mappers'
 import styles from './TransactionsPage.module.css'
 
 function TransactionsPage() {
@@ -44,7 +44,12 @@ function TransactionsPage() {
     const now = new Date()
 
     return transactions.reduce((sum, transaction) => {
-      const transactionDate = new Date(transaction.createdAt)
+      const timestamp = getTransactionTimestamp(transaction)
+      if (!timestamp) {
+        return sum
+      }
+
+      const transactionDate = new Date(timestamp)
       const isSameMonth =
         transactionDate.getMonth() === now.getMonth() &&
         transactionDate.getFullYear() === now.getFullYear()
