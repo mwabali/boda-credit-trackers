@@ -1,3 +1,4 @@
+import { getStationDisplayName } from '../lib/mappers'
 import { useState } from 'react'
 import styles from './CreditForm.module.css'
 
@@ -226,7 +227,7 @@ function CreditForm({
             <option value="">Select station</option>
             {stations.map((station) => (
               <option key={station.id} value={station.id}>
-                {station.name}
+                {getStationDisplayName(station)}
               </option>
             ))}
           </select>

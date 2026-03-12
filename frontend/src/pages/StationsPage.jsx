@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import stationsIcon from '../assets/Stations_icon.svg'
 import StationList from '../components/StationList'
 import { request } from '../lib/api'
+import { getStationDisplayName } from '../lib/mappers'
 import styles from './StationsPage.module.css'
 
 const initialStationValues = {
@@ -205,13 +206,13 @@ function StationsPage() {
             onSubmit={handleSubmit}
           >
             <label className={styles.field}>
-              Station Name
+              Branch Name
               <input
                 type="text"
                 name="name"
                 value={formValues.name}
                 onChange={handleChange}
-                placeholder="e.g. City Centre Petro"
+                placeholder="e.g. Kampala Road"
                 required
               />
             </label>
@@ -273,7 +274,7 @@ function StationsPage() {
           ? stations.map((station) => (
               <article key={station.id} className={styles.stationCard}>
                 <h2>
-                  {formatStationId(station.id)} <span>{station.name}</span>
+                  {formatStationId(station.id)} <span>{getStationDisplayName(station)}</span>
                 </h2>
                 <ul>
                   <li>

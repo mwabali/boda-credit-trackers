@@ -1,3 +1,4 @@
+import { getStationDisplayName } from '../lib/mappers'
 import styles from './StationList.module.css'
 
 function StationList({ stations = [], className = '' }) {
@@ -21,7 +22,7 @@ function StationList({ stations = [], className = '' }) {
         <tbody>
           {stations.map((station) => (
             <tr key={station.id}>
-              <td>{station.name}</td>
+              <td>{getStationDisplayName(station)}</td>
               <td>{station.location}</td>
               <td>{station.phone}</td>
             </tr>
