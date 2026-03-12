@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { Transaction, Rider, Station } = require('../models');
+const VALID_TRANSACTION_STATUSES = new Set([
+  'pending',
+  'approved',
+  'paid',
+  'cancelled',
+]);
 
 // GET /transactions/stats/dashboard - MUST BE FIRST
 router.get('/stats/dashboard', async (req, res) => {
@@ -90,6 +96,13 @@ router.patch('/:id', async (req, res) => {
     
     if (!transaction) {
       return res.status(404).json({ success: false, message: 'Not found' });
+    }
+
+    if (!VALID_TRANSACTION_STATUSES.has(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid transaction status',
+      });
     }
     
     transaction.status = status;

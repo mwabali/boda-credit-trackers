@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Station } = require('../models');
+const VALID_STATION_STATUSES = new Set(['active', 'closed', 'maintenance']);
 
 // GET /stations
 router.get('/', async (req, res) => {
@@ -85,6 +86,48 @@ router.post('/', async (req, res) => {
       success: false,
       message: 'Error creating station',
       error: error.message
+    });
+  }
+});
+
+// PUT /stations/:id - Update station
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, location, managerName, managerPhone, status } = req.body;
+    const station = await Station.findByPk(req.params.id);
+
+    if (!station) {
+      return res.status(404).json({
+        success: false,
+        message: 'Station not found',
+      });
+    }
+
+    if (status && !VALID_STATION_STATUSES.has(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid station status',
+      });
+    }
+
+    await station.update({
+      name,
+      location,
+      managerName,
+      managerPhone,
+      status,
+    });
+
+    res.json({
+      success: true,
+      message: 'Station updated successfully',
+      data: station,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating station',
+      error: error.message,
     });
   }
 });

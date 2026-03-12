@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Op, fn, col, where: sequelizeWhere } = require('sequelize');
 const { Rider, Transaction } = require('../models');
+const VALID_RIDER_STATUSES = new Set(['active', 'suspended', 'inactive']);
 
 // GET /riders - List all (with optional search)
 router.get('/', async (req, res) => {
@@ -111,6 +112,13 @@ router.put('/:id', async (req, res) => {
     
     if (!rider) {
       return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+
+    if (status && !VALID_RIDER_STATUSES.has(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid rider status',
+      });
     }
     
     await rider.update({ name, phone, licensePlate, status });
