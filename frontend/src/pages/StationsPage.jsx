@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import stationsIcon from '../assets/Stations_icon.svg'
 import StationList from '../components/StationList'
 import { request } from '../lib/api'
 import styles from './StationsPage.module.css'
@@ -132,15 +133,42 @@ function StationsPage() {
       <section className={styles.statsGrid} aria-label="Station summary">
         <article className={styles.statCard}>
           <h2>Total Stations</h2>
-          <p>{stations.length}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={stationsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.totalIcon}`}
+            />
+            <p className={styles.statValue}>{stations.length}</p>
+          </div>
+          <span className={styles.statMeta}>registered partner locations</span>
         </article>
         <article className={styles.statCard}>
           <h2>Active Stations</h2>
-          <p>{activeStations}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={stationsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.activeIcon}`}
+            />
+            <p className={styles.statValue}>{activeStations}</p>
+          </div>
+          <span className={styles.statMeta}>currently serving riders</span>
         </article>
         <article className={styles.statCard}>
           <h2>Manager Contacts</h2>
-          <p>{stationsWithManagers}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={stationsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.contactIcon}`}
+            />
+            <p className={styles.statValue}>{stationsWithManagers}</p>
+          </div>
+          <span className={styles.statMeta}>stations with manager details</span>
         </article>
       </section>
 

@@ -39,11 +39,47 @@
   color: #7c2d12;
 }
 
-.statCard p {
+.metricRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.15rem 0 0.3rem;
+}
+
+.metricIcon {
+  width: 2.05rem;
+  height: 2.05rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  opacity: 0.95;
+}
+
+.totalIcon {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(65%) saturate(1093%)
+    hue-rotate(355deg) brightness(93%) contrast(92%);
+}
+
+.activeIcon {
+  filter: brightness(0) saturate(100%) invert(31%) sepia(45%) saturate(712%)
+    hue-rotate(96deg) brightness(92%) contrast(92%);
+}
+
+.contactIcon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(72%) saturate(2442%)
+    hue-rotate(206deg) brightness(95%) contrast(96%);
+}
+
+.statValue {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  font-weight: 800;
   color: #111827;
+}
+
+.statMeta {
+  display: block;
+  color: #6b7280;
+  font-size: 0.86rem;
 }
 
 .stateMessage,
