@@ -46,6 +46,16 @@
   color: #111827;
 }
 
+.stateMessage,
+.errorMessage {
+  margin: 0;
+  color: #4b5563;
+}
+
+.errorMessage {
+  color: #991b1b;
+}
+
 .cardsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

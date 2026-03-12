@@ -53,6 +53,17 @@
   background: #ffffff;
 }
 
+.stateMessage,
+.errorMessage {
+  margin: 0;
+  padding: 1rem;
+  color: #4b5563;
+}
+
+.errorMessage {
+  color: #991b1b;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -94,6 +105,11 @@
 .pending {
   background: #fef3c7;
   color: #92400e;
+}
+
+.inactive {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 @media (max-width: 640px) {
