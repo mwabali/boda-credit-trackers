@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Transaction, Rider, Station } = require('../models');
+const { syncRiderBalance } = require('../utils/riderBalances');
 const VALID_TRANSACTION_STATUSES = new Set([
   'pending',
   'approved',
@@ -82,6 +83,9 @@ router.post('/', async (req, res) => {
       liters,
       notes,
     });
+
+    await syncRiderBalance(riderId);
+
     res.status(201).json({ success: true, data: transaction });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -107,6 +111,8 @@ router.patch('/:id', async (req, res) => {
     
     transaction.status = status;
     await transaction.save();
+
+    await syncRiderBalance(transaction.riderId);
     
     res.json({ success: true, data: transaction });
   } catch (error) {
