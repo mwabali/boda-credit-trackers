@@ -139,39 +139,39 @@ function HomePage() {
         <article className={styles.statCard}>
           <h2>Total Riders</h2>
           <div className={styles.metricRow}>
-            <p className={styles.statValue}>{riders.length}</p>
             <img
               src={ridersIcon}
               alt=""
               aria-hidden="true"
               className={`${styles.metricIcon} ${styles.ridersIcon}`}
             />
+            <p className={styles.statValue}>{riders.length}</p>
           </div>
           <span className={styles.statMeta}>active records loaded</span>
         </article>
         <article className={styles.statCard}>
           <h2>Total Stations</h2>
           <div className={styles.metricRow}>
-            <p className={styles.statValue}>{stations.length}</p>
             <img
               src={stationsIcon}
               alt=""
               aria-hidden="true"
               className={`${styles.metricIcon} ${styles.stationsIcon}`}
             />
+            <p className={styles.statValue}>{stations.length}</p>
           </div>
           <span className={styles.statMeta}>partner locations loaded</span>
         </article>
         <article className={styles.statCard}>
           <h2>Credit Activity</h2>
           <div className={styles.metricRow}>
-            <p className={styles.statValue}>{stats.total}</p>
             <img
               src={transactionsIcon}
               alt=""
               aria-hidden="true"
               className={`${styles.metricIcon} ${styles.transactionsIcon}`}
             />
+            <p className={styles.statValue}>{stats.total}</p>
           </div>
           <span className={styles.statMeta}>{stats.pending} pending transactions</span>
         </article>
