@@ -16,7 +16,7 @@ function StationList({ stations = [], className = '' }) {
           <tr>
             <th>Name</th>
             <th>Location</th>
-            <th>Phone Number</th>
+            <th>Management Phoneline</th>
           </tr>
         </thead>
         <tbody>

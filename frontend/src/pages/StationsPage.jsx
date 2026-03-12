@@ -162,7 +162,7 @@ function StationsPage() {
           <span className={styles.statMeta}>currently serving riders</span>
         </article>
         <article className={styles.statCard}>
-          <h2>Manager Contacts</h2>
+          <h2>Management Phonelines</h2>
           <div className={styles.metricRow}>
             <img
               src={stationsIcon}
@@ -172,7 +172,7 @@ function StationsPage() {
             />
             <p className={styles.statValue}>{stationsWithManagers}</p>
           </div>
-          <span className={styles.statMeta}>stations with manager details</span>
+          <span className={styles.statMeta}>stations with phonelines recorded</span>
         </article>
       </section>
 
@@ -240,11 +240,11 @@ function StationsPage() {
               />
             </label>
 
-            <label className={styles.field}>
-              Manager Phone
-              <input
-                type="tel"
-                name="managerPhone"
+          <label className={styles.field}>
+            Management Phoneline
+            <input
+              type="tel"
+              name="managerPhone"
                 value={formValues.managerPhone}
                 onChange={handleChange}
                 placeholder="+254 7xx xxx xxx"
@@ -284,7 +284,7 @@ function StationsPage() {
                     <strong>Manager:</strong> {station.managerName || 'Not assigned'}
                   </li>
                   <li>
-                    <strong>Phone:</strong> {station.managerPhone || '--'}
+                    <strong>Management phoneline:</strong> {station.managerPhone || '--'}
                   </li>
                   <li className={styles.statusRow}>
                     <strong>Status:</strong>
