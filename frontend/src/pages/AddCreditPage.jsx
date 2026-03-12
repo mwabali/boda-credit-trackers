@@ -40,12 +40,31 @@ function AddCreditPage() {
       setError('')
       setSuccessMessage('')
 
+      let riderId = formData.riderId
+
+      if (formData.riderMode === 'new') {
+        const riderPayload = await request('/riders', {
+          method: 'POST',
+          body: JSON.stringify(formData.newRider),
+        })
+
+        riderId = riderPayload.data.id
+      }
+
       await request('/transactions', {
         method: 'POST',
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          riderId,
+          stationId: formData.stationId,
+          amount: formData.amount,
+          liters: formData.liters,
+        }),
       })
 
       setSuccessMessage('Credit transaction saved successfully.')
+
+      const ridersPayload = await request('/riders')
+      setRiders(ridersPayload.data || [])
     } catch (submitError) {
       setError(submitError.message)
     } finally {
