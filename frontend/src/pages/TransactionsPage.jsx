@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import transactionsIcon from '../assets/Transactions_icon.svg'
 import CreditTable from '../components/CreditTable'
 import { request } from '../lib/api'
 import { formatCurrency } from '../lib/formatters'
@@ -104,15 +105,42 @@ function TransactionsPage() {
       <section className={styles.statsGrid} aria-label="Transaction summary">
         <article className={styles.statCard}>
           <h2>Total Credit Transactions</h2>
-          <p>{stats.total}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={transactionsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.totalIcon}`}
+            />
+            <p className={styles.statValue}>{stats.total}</p>
+          </div>
+          <span className={styles.statMeta}>credit records in the ledger</span>
         </article>
         <article className={styles.statCard}>
           <h2>Monthly KES Pumped</h2>
-          <p>{formatCurrency(currentMonthAmount)}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={transactionsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.monthlyIcon}`}
+            />
+            <p className={styles.statValue}>{formatCurrency(currentMonthAmount)}</p>
+          </div>
+          <span className={styles.statMeta}>amount recorded this month</span>
         </article>
         <article className={styles.statCard}>
           <h2>Pending Payments</h2>
-          <p>{stats.pending}</p>
+          <div className={styles.metricRow}>
+            <img
+              src={transactionsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.pendingIcon}`}
+            />
+            <p className={styles.statValue}>{stats.pending}</p>
+          </div>
+          <span className={styles.statMeta}>transactions awaiting settlement</span>
         </article>
       </section>
 

@@ -39,11 +39,47 @@
   color: #7c2d12;
 }
 
-.statCard p {
+.metricRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.15rem 0 0.3rem;
+}
+
+.metricIcon {
+  width: 2.05rem;
+  height: 2.05rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  opacity: 0.95;
+}
+
+.totalIcon {
+  filter: brightness(0) saturate(100%) invert(24%) sepia(79%) saturate(1839%)
+    hue-rotate(19deg) brightness(97%) contrast(94%);
+}
+
+.monthlyIcon {
+  filter: brightness(0) saturate(100%) invert(31%) sepia(45%) saturate(712%)
+    hue-rotate(96deg) brightness(92%) contrast(92%);
+}
+
+.pendingIcon {
+  filter: brightness(0) saturate(100%) invert(55%) sepia(78%) saturate(742%)
+    hue-rotate(356deg) brightness(97%) contrast(92%);
+}
+
+.statValue {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  font-weight: 800;
   color: #111827;
+}
+
+.statMeta {
+  display: block;
+  color: #6b7280;
+  font-size: 0.86rem;
 }
 
 .stateMessage,
