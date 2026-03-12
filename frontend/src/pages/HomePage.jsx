@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CreditForm from '../components/CreditForm'
 import CreditTable from '../components/CreditTable'
@@ -36,35 +36,37 @@ function HomePage() {
   const [transactions, setTransactions] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
   const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+
+      const [ridersPayload, stationsPayload, transactionsPayload, statsPayload] =
+        await Promise.all([
+          request('/riders'),
+          request('/stations'),
+          request('/transactions?include=all'),
+          request('/transactions/stats/dashboard'),
+        ])
+
+      setRiders(ridersPayload.data || [])
+      setStations(stationsPayload.data || [])
+      setTransactions(transactionsPayload.data || [])
+      setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
+    } catch (loadError) {
+      setError(loadError.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        setIsLoading(true)
-        setError('')
-
-        const [ridersPayload, stationsPayload, transactionsPayload, statsPayload] =
-          await Promise.all([
-            request('/riders'),
-            request('/stations'),
-            request('/transactions?include=all'),
-            request('/transactions/stats/dashboard'),
-          ])
-
-        setRiders(ridersPayload.data || [])
-        setStations(stationsPayload.data || [])
-        setTransactions(transactionsPayload.data || [])
-        setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
-      } catch (loadError) {
-        setError(loadError.message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     loadDashboardData()
-  }, [])
+  }, [loadDashboardData])
 
   const stationListRows = useMemo(
     () =>
@@ -80,8 +82,24 @@ function HomePage() {
     [transactions]
   )
 
-  const handleQuickCredit = (formData) => {
-    console.log('Quick credit preview:', formData)
+  const handleQuickCredit = async (formData) => {
+    try {
+      setIsSubmitting(true)
+      setError('')
+      setSuccessMessage('')
+
+      await request('/transactions', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      })
+
+      setSuccessMessage('Dashboard credit entry saved successfully.')
+      await loadDashboardData()
+    } catch (submitError) {
+      setError(submitError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -96,6 +114,7 @@ function HomePage() {
 
       {isLoading ? <p className={styles.feedbackMessage}>Loading dashboard data...</p> : null}
       {error ? <p className={styles.errorMessage}>{error}</p> : null}
+      {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
         <article className={styles.statCard}>
@@ -118,14 +137,16 @@ function HomePage() {
             <p className={styles.sectionTag}>Live form preview</p>
             <h2>Credit entry form</h2>
             <p>
-              Use the live rider and station options here before full submission
-              wiring lands on the Add Credit page.
+              Create a quick transaction from the dashboard using live rider and
+              station options.
             </p>
           </div>
           <CreditForm
             riders={riders}
             stations={stations}
             onSubmit={handleQuickCredit}
+            submitLabel="Save From Dashboard"
+            isSubmitting={isSubmitting}
           />
         </article>
 

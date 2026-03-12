@@ -50,13 +50,18 @@
 }
 
 .feedbackMessage,
-.errorMessage {
+.errorMessage,
+.successMessage {
   margin: 0;
   color: #4b5563;
 }
 
 .errorMessage {
   color: #991b1b;
+}
+
+.successMessage {
+  color: #166534;
 }
 
 .cardGrid {
