@@ -3,6 +3,13 @@ import StationList from '../components/StationList'
 import { request } from '../lib/api'
 import styles from './StationsPage.module.css'
 
+const initialStationValues = {
+  name: '',
+  location: '',
+  managerName: '',
+  managerPhone: '',
+}
+
 function formatStationId(id) {
   return `FS${String(id).padStart(3, '0')}`
 }
@@ -10,7 +17,10 @@ function formatStationId(id) {
 function StationsPage() {
   const [stations, setStations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [formValues, setFormValues] = useState(initialStationValues)
 
   useEffect(() => {
     async function loadStations() {
@@ -28,6 +38,36 @@ function StationsPage() {
 
     loadStations()
   }, [])
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setFormValues((prev) => ({ ...prev, [name]: value }))
+    if (error) setError('')
+    if (successMessage) setSuccessMessage('')
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    try {
+      setIsSubmitting(true)
+      setError('')
+      setSuccessMessage('')
+
+      const payload = await request('/stations', {
+        method: 'POST',
+        body: JSON.stringify(formValues),
+      })
+
+      setStations((prev) => [payload.data, ...prev])
+      setFormValues(initialStationValues)
+      setSuccessMessage('Station added successfully.')
+    } catch (submitError) {
+      setError(submitError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const activeStations = useMemo(
     () => stations.filter((station) => station.status === 'active').length,
@@ -70,6 +110,75 @@ function StationsPage() {
           <h2>Manager Contacts</h2>
           <p>{stationsWithManagers}</p>
         </article>
+      </section>
+
+      <section className={styles.formSection} aria-label="Add station">
+        <div className={styles.formIntro}>
+          <h2 className={styles.formTitle}>Add a Station</h2>
+          <p className={styles.formDescription}>
+            Create a station here so it becomes available immediately in the Add
+            Credit form.
+          </p>
+        </div>
+
+        {error ? <p className={styles.errorMessage}>{error}</p> : null}
+        {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
+
+        <form className={styles.stationForm} onSubmit={handleSubmit}>
+          <label className={styles.field}>
+            Station Name
+            <input
+              type="text"
+              name="name"
+              value={formValues.name}
+              onChange={handleChange}
+              placeholder="e.g. City Centre Petro"
+              required
+            />
+          </label>
+
+          <label className={styles.field}>
+            Location
+            <input
+              type="text"
+              name="location"
+              value={formValues.location}
+              onChange={handleChange}
+              placeholder="e.g. Nairobi CBD"
+              required
+            />
+          </label>
+
+          <label className={styles.field}>
+            Manager Name
+            <input
+              type="text"
+              name="managerName"
+              value={formValues.managerName}
+              onChange={handleChange}
+              placeholder="Optional"
+            />
+          </label>
+
+          <label className={styles.field}>
+            Manager Phone
+            <input
+              type="tel"
+              name="managerPhone"
+              value={formValues.managerPhone}
+              onChange={handleChange}
+              placeholder="+254 7xx xxx xxx"
+            />
+          </label>
+
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Add Station'}
+          </button>
+        </form>
       </section>
 
       <section className={styles.cardsGrid} aria-label="Station cards">

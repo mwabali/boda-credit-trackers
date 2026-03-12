@@ -60,6 +60,17 @@
   background: #f8fafc;
 }
 
+.alert {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 0.9rem;
+}
+
 .error {
   margin: 0;
   color: #b91c1c;

@@ -21,6 +21,7 @@ function CreditForm({
 }) {
   const [formData, setFormData] = useState(initialValues)
   const [error, setError] = useState('')
+  const hasStations = stations.length > 0
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -63,6 +64,11 @@ function CreditForm({
       number_plate,
       phone,
     } = formData
+
+    if (!hasStations) {
+      setError('Add at least one station before creating a credit entry')
+      return
+    }
 
     if (!stationId || !amount || !litres) {
       setError('Station, amount, and litres are required')
@@ -112,6 +118,13 @@ function CreditForm({
   return (
     <section className={styles.wrapper} aria-label="Credit entry form">
       <form className={styles.form} onSubmit={handleSubmit}>
+        {!hasStations ? (
+          <p className={styles.alert}>
+            No stations are available yet. Add a station first before recording
+            credit.
+          </p>
+        ) : null}
+
         <fieldset className={styles.modeGroup}>
           <legend>Rider entry</legend>
           <label className={styles.modeOption}>
@@ -208,6 +221,7 @@ function CreditForm({
             name="stationId"
             value={formData.stationId}
             onChange={handleChange}
+            disabled={!hasStations}
           >
             <option value="">Select station</option>
             {stations.map((station) => (
@@ -247,7 +261,11 @@ function CreditForm({
 
         {error ? <p className={styles.error}>{error}</p> : null}
 
-        <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={isSubmitting || !hasStations}
+        >
           {isSubmitting ? 'Saving...' : submitLabel}
         </button>
       </form>

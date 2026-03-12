@@ -47,13 +47,82 @@
 }
 
 .stateMessage,
-.errorMessage {
+.errorMessage,
+.successMessage {
   margin: 0;
   color: #4b5563;
 }
 
 .errorMessage {
   color: #991b1b;
+}
+
+.successMessage {
+  color: #166534;
+}
+
+.formSection {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.formIntro {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #111827;
+}
+
+.formDescription {
+  margin: 0;
+  color: #4b5563;
+}
+
+.stationForm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.field input {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.92rem;
+  color: #111827;
+  background: #ffffff;
+}
+
+.submitButton {
+  border: 1px solid #fdba74;
+  border-radius: 10px;
+  padding: 0.7rem 0.95rem;
+  background: #ffedd5;
+  color: #7c2d12;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.submitButton:disabled {
+  opacity: 0.75;
+  cursor: wait;
 }
 
 .cardsGrid {
@@ -100,12 +169,20 @@
 }
 
 @media (max-width: 640px) {
+  .stationForm {
+    grid-template-columns: 1fr;
+  }
+
   .cardsGrid {
     grid-template-columns: 1fr;
   }
 
   .stationCard {
     padding: 0.8rem;
+  }
+
+  .submitButton {
+    width: 100%;
   }
 }
 
