@@ -20,6 +20,7 @@ function StationsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [isFormExpanded, setIsFormExpanded] = useState(true)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [formValues, setFormValues] = useState(initialStationValues)
@@ -31,6 +32,7 @@ function StationsPage() {
         setError('')
         const payload = await request('/stations')
         setStations(payload.data || [])
+        setIsFormExpanded((payload.data || []).length === 0)
       } catch (loadError) {
         setError(loadError.message)
       } finally {
@@ -64,6 +66,7 @@ function StationsPage() {
       setStations((prev) => [payload.data, ...prev])
       setFormValues(initialStationValues)
       setSuccessMessage('Station added successfully.')
+      setIsFormExpanded(false)
     } catch (submitError) {
       setError(submitError.message)
     } finally {
@@ -173,72 +176,89 @@ function StationsPage() {
       </section>
 
       <section className={styles.formSection} aria-label="Add station">
-        <div className={styles.formIntro}>
-          <h2 className={styles.formTitle}>Add a Station</h2>
-          <p className={styles.formDescription}>
-            Create a station here so it becomes available immediately in the Add
-            Credit form.
-          </p>
+        <div className={styles.formHeader}>
+          <div className={styles.formIntro}>
+            <h2 className={styles.formTitle}>Add a Station</h2>
+            <p className={styles.formDescription}>
+              Create a station here so it becomes available immediately in the Add
+              Credit form.
+            </p>
+          </div>
+          <button
+            type="button"
+            className={styles.toggleButton}
+            aria-expanded={isFormExpanded}
+            aria-controls="station-entry-form"
+            onClick={() => setIsFormExpanded((prev) => !prev)}
+          >
+            {isFormExpanded ? 'Hide form' : 'Add station'}
+          </button>
         </div>
 
         {error ? <p className={styles.errorMessage}>{error}</p> : null}
         {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
-        <form className={styles.stationForm} onSubmit={handleSubmit}>
-          <label className={styles.field}>
-            Station Name
-            <input
-              type="text"
-              name="name"
-              value={formValues.name}
-              onChange={handleChange}
-              placeholder="e.g. City Centre Petro"
-              required
-            />
-          </label>
-
-          <label className={styles.field}>
-            Location
-            <input
-              type="text"
-              name="location"
-              value={formValues.location}
-              onChange={handleChange}
-              placeholder="e.g. Nairobi CBD"
-              required
-            />
-          </label>
-
-          <label className={styles.field}>
-            Manager Name
-            <input
-              type="text"
-              name="managerName"
-              value={formValues.managerName}
-              onChange={handleChange}
-              placeholder="Optional"
-            />
-          </label>
-
-          <label className={styles.field}>
-            Manager Phone
-            <input
-              type="tel"
-              name="managerPhone"
-              value={formValues.managerPhone}
-              onChange={handleChange}
-              placeholder="+254 7xx xxx xxx"
-            />
-          </label>
-
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting}
+        {isFormExpanded ? (
+          <form
+            id="station-entry-form"
+            className={styles.stationForm}
+            onSubmit={handleSubmit}
           >
-            {isSubmitting ? 'Saving...' : 'Add Station'}
-          </button>
-        </form>
+            <label className={styles.field}>
+              Station Name
+              <input
+                type="text"
+                name="name"
+                value={formValues.name}
+                onChange={handleChange}
+                placeholder="e.g. City Centre Petro"
+                required
+              />
+            </label>
+
+            <label className={styles.field}>
+              Location
+              <input
+                type="text"
+                name="location"
+                value={formValues.location}
+                onChange={handleChange}
+                placeholder="e.g. Nairobi CBD"
+                required
+              />
+            </label>
+
+            <label className={styles.field}>
+              Manager Name
+              <input
+                type="text"
+                name="managerName"
+                value={formValues.managerName}
+                onChange={handleChange}
+                placeholder="Optional"
+              />
+            </label>
+
+            <label className={styles.field}>
+              Manager Phone
+              <input
+                type="tel"
+                name="managerPhone"
+                value={formValues.managerPhone}
+                onChange={handleChange}
+                placeholder="+254 7xx xxx xxx"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Add Station'}
+            </button>
+          </form>
+        ) : null}
       </section>
 
       <section className={styles.cardsGrid} aria-label="Station cards">

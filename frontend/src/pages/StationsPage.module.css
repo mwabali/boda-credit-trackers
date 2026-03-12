@@ -106,6 +106,13 @@
   gap: 0.85rem;
 }
 
+.formHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .formIntro {
   display: grid;
   gap: 0.3rem;
@@ -120,6 +127,21 @@
 .formDescription {
   margin: 0;
   color: #4b5563;
+}
+
+.toggleButton {
+  border: 1px solid #fdba74;
+  border-radius: 999px;
+  padding: 0.6rem 0.95rem;
+  background: #fff7ed;
+  color: #9a3412;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggleButton:hover {
+  background: #ffedd5;
 }
 
 .stationForm {
@@ -238,6 +260,11 @@
 }
 
 @media (max-width: 640px) {
+  .formHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .stationForm {
     grid-template-columns: 1fr;
   }
@@ -251,6 +278,10 @@
   }
 
   .submitButton {
+    width: 100%;
+  }
+
+  .toggleButton {
     width: 100%;
   }
 }
