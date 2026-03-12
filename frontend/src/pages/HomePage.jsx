@@ -137,51 +137,42 @@ function HomePage() {
 
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
         <article className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <div
-              className={`${styles.statIconBadge} ${styles.ridersBadge}`}
+          <h2>Total Riders</h2>
+          <div className={styles.metricRow}>
+            <p className={styles.statValue}>{riders.length}</p>
+            <img
+              src={ridersIcon}
+              alt=""
               aria-hidden="true"
-            >
-              <span
-                className={styles.statIcon}
-                style={{ '--icon-url': `url(${ridersIcon})` }}
-              />
-            </div>
-            <h2>Total Riders</h2>
+              className={`${styles.metricIcon} ${styles.ridersIcon}`}
+            />
           </div>
-          <p className={styles.statValue}>{riders.length}</p>
           <span className={styles.statMeta}>active records loaded</span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <div
-              className={`${styles.statIconBadge} ${styles.stationsBadge}`}
+          <h2>Total Stations</h2>
+          <div className={styles.metricRow}>
+            <p className={styles.statValue}>{stations.length}</p>
+            <img
+              src={stationsIcon}
+              alt=""
               aria-hidden="true"
-            >
-              <span
-                className={styles.statIcon}
-                style={{ '--icon-url': `url(${stationsIcon})` }}
-              />
-            </div>
-            <h2>Total Stations</h2>
+              className={`${styles.metricIcon} ${styles.stationsIcon}`}
+            />
           </div>
-          <p className={styles.statValue}>{stations.length}</p>
           <span className={styles.statMeta}>partner locations loaded</span>
         </article>
         <article className={styles.statCard}>
-          <div className={styles.statCardHeader}>
-            <div
-              className={`${styles.statIconBadge} ${styles.transactionsBadge}`}
+          <h2>Credit Activity</h2>
+          <div className={styles.metricRow}>
+            <p className={styles.statValue}>{stats.total}</p>
+            <img
+              src={transactionsIcon}
+              alt=""
               aria-hidden="true"
-            >
-              <span
-                className={styles.statIcon}
-                style={{ '--icon-url': `url(${transactionsIcon})` }}
-              />
-            </div>
-            <h2>Credit Activity</h2>
+              className={`${styles.metricIcon} ${styles.transactionsIcon}`}
+            />
           </div>
-          <p className={styles.statValue}>{stats.total}</p>
           <span className={styles.statMeta}>{stats.pending} pending transactions</span>
         </article>
       </section>
