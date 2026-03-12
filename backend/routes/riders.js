@@ -2,98 +2,117 @@ const express = require('express');
 const router = express.Router();
 const { Rider, Transaction } = require('../models');
 
-// GET /riders
+// GET /riders - List all (with optional search)
 router.get('/', async (req, res) => {
   try {
-    const riders = await Rider.findAll({
-      where: { status: 'active' },
-      order: [['created_at', 'DESC']],
-      attributes: { exclude: ['nationalId'] } // Hide sensitive data
+    const { search, status = 'active' } = req.query;
+    const where = { status };
+    
+    if (search) {
+      where.name = { [require('sequelize').Op.iLike]: `%${search}%` };
+    }
+    
+    const riders = await Rider.findAll({ 
+      where,
+      order: [['created_at', 'DESC']]
     });
     
-    res.json({
-      success: true,
-      count: riders.length,
-      data: riders
-    });
+    res.json({ success: true, count: riders.length, data: riders });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching riders',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// GET /riders/:id
+// GET /riders/:id - Get single with transactions
 router.get('/:id', async (req, res) => {
   try {
     const rider = await Rider.findByPk(req.params.id, {
       include: [{
         model: Transaction,
         as: 'transactions',
-        limit: 5,
+        limit: 10,
         order: [['created_at', 'DESC']]
       }]
     });
     
     if (!rider) {
-      return res.status(404).json({
-        success: false,
-        message: 'Rider not found'
-      });
+      return res.status(404).json({ success: false, message: 'Rider not found' });
     }
     
-    res.json({
-      success: true,
-      data: rider
+    // Calculate stats
+    const totalTransactions = rider.transactions.length;
+    const totalSpent = rider.transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    
+    res.json({ 
+      success: true, 
+      data: {
+        ...rider.toJSON(),
+        stats: { totalTransactions, totalSpent }
+      }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching rider',
-      error: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// POST /riders
+// POST /riders - Create with validation
 router.post('/', async (req, res) => {
   try {
-    const { name, phone, licensePlate, nationalId } = req.body;
+    const { name, phone, licensePlate } = req.body;
     
+    // Validation
     if (!name || !phone || !licensePlate) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name, phone, and licensePlate are required'
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Name, phone, and licensePlate are required' 
       });
     }
     
-    const rider = await Rider.create({
-      name,
-      phone,
-      licensePlate,
-      nationalId
-    });
+    // Phone format validation (basic)
+    if (!phone.match(/^\+?[0-9]{10,15}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid phone format. Use: +256701234567'
+      });
+    }
     
-    res.status(201).json({
-      success: true,
+    const rider = await Rider.create({ name, phone, licensePlate });
+    
+    res.status(201).json({ 
+      success: true, 
       message: 'Rider created successfully',
-      data: rider
+      data: rider 
     });
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone number already registered'
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Phone number already registered' 
       });
     }
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// PUT /riders/:id - Update rider
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, phone, licensePlate, status } = req.body;
+    const rider = await Rider.findByPk(req.params.id);
     
-    res.status(500).json({
-      success: false,
-      message: 'Error creating rider',
-      error: error.message
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+    
+    await rider.update({ name, phone, licensePlate, status });
+    
+    res.json({ 
+      success: true, 
+      message: 'Rider updated',
+      data: rider 
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
