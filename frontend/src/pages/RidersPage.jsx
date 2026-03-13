@@ -161,7 +161,7 @@ function RidersPage() {
                   <td>
                     <span className={styles.nameCell}>
                       <span
-                        className={`${styles.statusDot} ${styles[rider.statusValue]}`}
+                        className={`${styles.statusDot} ${styles[`${rider.statusValue}Dot`]}`}
                         aria-hidden="true"
                       />
                       <span>{rider.name}</span>

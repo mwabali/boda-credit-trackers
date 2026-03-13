@@ -31,13 +31,14 @@ function CreditTable({
         <tbody>
           {transactions.map((tx) => {
             const statusValue = tx.statusValue || tx.status.toLowerCase()
+            const dotClassName = styles[`${statusValue}Dot`]
 
             return (
               <tr key={tx.id}>
                 <td>
                   <span className={styles.riderCell}>
                     <span
-                      className={`${styles.statusDot} ${styles[statusValue]}`}
+                      className={`${styles.statusDot} ${dotClassName}`}
                       aria-hidden="true"
                     />
                     <span>{tx.rider}</span>

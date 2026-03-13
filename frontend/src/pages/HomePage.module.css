@@ -6,16 +6,18 @@
 .hero {
   display: grid;
   gap: 0.6rem;
-  background: linear-gradient(125deg, #eba860 0%, #c76b08 100%);
-  border: 1px solid #c76b08;
+  background: linear-gradient(135deg, #d28a31 0%, #b85f06 55%, #8c3f04 100%);
+  border: 1px solid #a54e0c;
   border-radius: 14px;
   padding: 1.1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .title {
   margin: 0;
-  color: #fdfaf6;
+  color: #fffaf2;
   font-size: clamp(1.55rem, 3vw, 2.1rem);
+  text-shadow: 0 2px 14px rgba(91, 33, 1, 0.26);
 }
 
 .description {
