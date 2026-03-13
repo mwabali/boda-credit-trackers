@@ -42,6 +42,7 @@ const dashboardSections = [
 ]
 
 function HomePage() {
+  const companyLabel = '.Total'
   const [riders, setRiders] = useState([])
   const [stations, setStations] = useState([])
   const [transactions, setTransactions] = useState([])
@@ -132,7 +133,10 @@ function HomePage() {
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
-        <h1 className={styles.title}>Boda Credit Dashboard</h1>
+        <div className={styles.heroTop}>
+          <h1 className={styles.title}>Dashboard</h1>
+          <span className={styles.companyMark}>{companyLabel}</span>
+        </div>
         <p className={styles.description}>
           Track core workflows from one place with live backend records flowing
           into the dashboard.
