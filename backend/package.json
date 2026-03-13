@@ -3,10 +3,10 @@
   "name": "boda-credit-backend",
   "version": "1.0.0",
   "description": "Boda Credit Tracker API",
-  "main": "server.js",
+  "main": "app.py",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "venv/bin/python app.py",
+    "dev": "FLASK_DEBUG=1 venv/bin/python app.py",
     "seed": "node seeders/seedData.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

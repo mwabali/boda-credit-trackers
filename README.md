@@ -5,8 +5,8 @@ Boda Credit Tracker is a full-stack application for recording and tracking fuel 
 ## Current Stack
 
 - Frontend: React + Vite
-- Backend: Node.js + Express
-- ORM: Sequelize
+- Backend: Flask
+- ORM: Flask-SQLAlchemy
 - Production database: Supabase Postgres
 - Frontend hosting: Vercel
 - Backend hosting: Render
@@ -52,7 +52,7 @@ This makes the transaction ledger the source of truth for credit activity betwee
 
 ## Repository Structure
 
-- `backend/`: Express API, Sequelize models, SQL schema files, seed scripts
+- `backend/`: Flask API, SQLAlchemy models, SQL schema files, seed scripts
 - `frontend/`: Vite React frontend
 - `render.yaml`: Render blueprint for backend deployment
 
@@ -63,9 +63,11 @@ This makes the transaction ledger the source of truth for credit activity betwee
 From `backend/`:
 
 ```bash
-npm install
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 npm run seed
-npm run dev
+python3 app.py
 ```
 
 Local backend defaults:
@@ -77,6 +79,7 @@ If you need a custom local port, create `backend/.env`:
 
 ```env
 PORT=5050
+FLASK_DEBUG=1
 ```
 
 ### Frontend
@@ -123,23 +126,23 @@ One-time migration snapshot for the current local data:
 
 Use:
 
-- Runtime: `Node`
+- Runtime: `Python`
 - Root directory: `backend`
-- Build command: `npm install`
-- Start command: `npm start`
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app`
 
 Required environment variables:
 
 ```env
-NODE_ENV=production
 DATABASE_URL=your_supabase_postgres_connection_string
+FLASK_DEBUG=0
 ```
 
 Notes:
 
-- Do not set `SQLITE_STORAGE_PATH` when using Supabase.
-- The backend automatically uses Postgres when `DATABASE_URL` is present.
-- The backend skips local schema sync in Postgres mode and uses the schema already created in Supabase.
+- Use the Supabase session-pooler connection string on Render.
+- The Flask backend automatically uses Postgres when `DATABASE_URL` is present.
+- When `DATABASE_URL` is absent, the backend falls back to local SQLite.
 
 ### Frontend on Vercel
 

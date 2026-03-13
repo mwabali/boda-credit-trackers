@@ -1,5 +1,20 @@
+from datetime import datetime
+
 from sqlalchemy import Numeric
 from app.database.db import db
+
+
+def serialize_datetime(value):
+    if value is None:
+        return None
+
+    if isinstance(value, str):
+        return value
+
+    if isinstance(value, datetime):
+        return value.isoformat()
+
+    return str(value)
 
 
 class Rider(db.Model):
@@ -13,13 +28,8 @@ class Rider(db.Model):
     credit_limit = db.Column(Numeric(12, 2), nullable=False, default=100000.00)
     current_balance = db.Column(Numeric(12, 2), nullable=False, default=0.00)
     status = db.Column(db.String(20), nullable=False, default="active")
-    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
-    updated_at = db.Column(
-        db.DateTime,
-        server_default=db.func.now(),
-        onupdate=db.func.now(),
-        nullable=False,
-    )
+    created_at = db.Column(db.String(64), nullable=False)
+    updated_at = db.Column(db.String(64), nullable=False)
 
     transactions = db.relationship("Transaction", back_populates="rider", lazy="select")
 
@@ -34,8 +44,8 @@ class Rider(db.Model):
             "creditLimit": float(self.credit_limit or 0),
             "currentBalance": float(self.current_balance or 0),
             "status": self.status,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "created_at": serialize_datetime(self.created_at),
+            "updated_at": serialize_datetime(self.updated_at),
         }
 
 
@@ -49,13 +59,8 @@ class Station(db.Model):
     manager_name = db.Column(db.String(100))
     manager_phone = db.Column(db.String(20))
     status = db.Column(db.String(20), nullable=False, default="active")
-    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
-    updated_at = db.Column(
-        db.DateTime,
-        server_default=db.func.now(),
-        onupdate=db.func.now(),
-        nullable=False,
-    )
+    created_at = db.Column(db.String(64), nullable=False)
+    updated_at = db.Column(db.String(64), nullable=False)
 
     transactions = db.relationship("Transaction", back_populates="station", lazy="select")
 
@@ -76,8 +81,8 @@ class Station(db.Model):
             "status": self.status,
             "branchName": branch_name,
             "displayName": display_name,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "created_at": serialize_datetime(self.created_at),
+            "updated_at": serialize_datetime(self.updated_at),
         }
 
 
@@ -93,16 +98,11 @@ class Transaction(db.Model):
     price_per_liter = db.Column(Numeric(8, 2))
     status = db.Column(db.String(20), nullable=False, default="pending")
     payment_method = db.Column(db.String(30), nullable=False, default="credit")
-    payment_date = db.Column(db.DateTime)
+    payment_date = db.Column(db.String(64))
     receipt_number = db.Column(db.String(50), unique=True)
     notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
-    updated_at = db.Column(
-        db.DateTime,
-        server_default=db.func.now(),
-        onupdate=db.func.now(),
-        nullable=False,
-    )
+    created_at = db.Column(db.String(64), nullable=False)
+    updated_at = db.Column(db.String(64), nullable=False)
 
     rider = db.relationship("Rider", back_populates="transactions", lazy="joined")
     station = db.relationship("Station", back_populates="transactions", lazy="joined")
@@ -123,11 +123,11 @@ class Transaction(db.Model):
             "status": self.status,
             "paymentMethod": self.payment_method,
             "payment_method": self.payment_method,
-            "paymentDate": self.payment_date.isoformat() if self.payment_date else None,
-            "payment_date": self.payment_date.isoformat() if self.payment_date else None,
+            "paymentDate": serialize_datetime(self.payment_date),
+            "payment_date": serialize_datetime(self.payment_date),
             "receiptNumber": self.receipt_number,
             "receipt_number": self.receipt_number,
             "notes": self.notes,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "created_at": serialize_datetime(self.created_at),
+            "updated_at": serialize_datetime(self.updated_at),
         }

@@ -1,18 +1,11 @@
 services:
   - type: web
     name: boda-credit-backend
-    runtime: node
-    plan: starter
+    runtime: python
     rootDir: backend
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
     healthCheckPath: /
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: SQLITE_STORAGE_PATH
-        value: /var/data/database.sqlite
-    disk:
-      name: boda-credit-data
-      mountPath: /var/data
-      sizeGB: 1
+      - key: FLASK_DEBUG
+        value: "0"
