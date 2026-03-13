@@ -59,6 +59,11 @@ function TransactionsPage() {
     }, 0)
   }, [transactions])
 
+  const currentMonthAmountDisplay = useMemo(
+    () => formatCurrency(currentMonthAmount).replace(/^ksh\s*/i, ''),
+    [currentMonthAmount]
+  )
+
   const handleStatusChange = async (transactionId, status) => {
     try {
       setIsUpdatingStatus(true)
@@ -116,16 +121,18 @@ function TransactionsPage() {
           </div>
           <span className={styles.statMeta}>credit records in the ledger</span>
         </article>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.amountCard}`}>
           <h2>Monthly KES Pumped</h2>
-          <div className={styles.metricRow}>
+          <div className={`${styles.metricRow} ${styles.amountMetricRow}`}>
             <img
               src={transactionsIcon}
               alt=""
               aria-hidden="true"
               className={`${styles.metricIcon} ${styles.monthlyIcon}`}
             />
-            <p className={styles.statValue}>{formatCurrency(currentMonthAmount)}</p>
+            <p className={`${styles.statValue} ${styles.amountValue}`}>
+              {currentMonthAmountDisplay}
+            </p>
           </div>
           <span className={styles.statMeta}>amount recorded this month</span>
         </article>

@@ -33,6 +33,9 @@
   border: 1px solid #fed7aa;
   border-radius: 12px;
   padding: 0.85rem;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
 }
 
 .statCard h2 {
@@ -76,6 +79,17 @@
   font-size: clamp(1.45rem, 2.6vw, 2rem);
   font-weight: 800;
   color: #111827;
+  line-height: 1;
+}
+
+.amountMetricRow {
+  align-items: flex-end;
+}
+
+.amountValue {
+  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
 }
 
 .statMeta {
@@ -170,6 +184,7 @@
 
   .statCard {
     padding: 0.8rem;
+    min-height: 11.5rem;
   }
 
   .statCard h2 {
@@ -180,7 +195,12 @@
   .metricRow {
     align-items: center;
     gap: 0.45rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-height: 3rem;
+  }
+
+  .amountMetricRow {
+    align-items: flex-end;
   }
 
   .metricIcon {
@@ -189,9 +209,13 @@
   }
 
   .statValue {
-    font-size: clamp(1.2rem, 5.3vw, 1.8rem);
-    line-height: 1.05;
-    overflow-wrap: anywhere;
+    font-size: clamp(1.2rem, 5vw, 1.65rem);
+    line-height: 1.02;
+  }
+
+  .amountValue {
+    font-size: clamp(1.05rem, 4.2vw, 1.45rem);
+    letter-spacing: -0.04em;
   }
 
   .statMeta {
