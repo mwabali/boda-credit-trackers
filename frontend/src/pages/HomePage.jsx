@@ -15,21 +15,29 @@ const dashboardSections = [
     title: 'Riders',
     description: 'Manage rider profiles, debt status, and activity tracking.',
     to: '/riders',
+    icon: ridersIcon,
+    iconClassName: styles.ridersCardIcon,
   },
   {
     title: 'Fuel Stations',
     description: 'Organize station records and monitor station credit balances.',
     to: '/stations',
+    icon: stationsIcon,
+    iconClassName: styles.stationsCardIcon,
   },
   {
     title: 'Transactions',
     description: 'Review credit transactions and reconcile outstanding balances.',
     to: '/transactions',
+    icon: transactionsIcon,
+    iconClassName: styles.transactionsCardIcon,
   },
   {
     title: 'Add Credit',
     description: 'Prepare manual credit entries before API integration begins.',
     to: '/add-credit',
+    icon: transactionsIcon,
+    iconClassName: styles.addCreditCardIcon,
   },
 ]
 
@@ -162,7 +170,7 @@ function HomePage() {
           </div>
           <span className={styles.statMeta}>partner locations loaded</span>
         </article>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.statCardWide}`}>
           <h2>Credit Activity</h2>
           <div className={styles.metricRow}>
             <img
@@ -223,6 +231,12 @@ function HomePage() {
       <section className={styles.cardGrid} aria-label="Primary navigation">
         {dashboardSections.map((section) => (
           <article key={section.to} className={styles.navCard}>
+            <img
+              src={section.icon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.navCardIcon} ${section.iconClassName}`}
+            />
             <h2>{section.title}</h2>
             <p>{section.description}</p>
             <Link to={section.to} className={styles.cardLink}>
