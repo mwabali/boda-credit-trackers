@@ -17,6 +17,7 @@ function TransactionsPage() {
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [isDeletingTransaction, setIsDeletingTransaction] = useState(false)
   const [error, setError] = useState('')
 
   const loadTransactions = useCallback(async () => {
@@ -88,6 +89,23 @@ function TransactionsPage() {
     }
   }
 
+  const handleDeleteTransaction = async (transactionId) => {
+    try {
+      setIsDeletingTransaction(true)
+      setError('')
+
+      await request(`/transactions/${transactionId}`, {
+        method: 'DELETE',
+      })
+
+      await loadTransactions()
+    } catch (deleteError) {
+      setError(deleteError.message)
+    } finally {
+      setIsDeletingTransaction(false)
+    }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -149,7 +167,9 @@ function TransactionsPage() {
           transactions={tableTransactions}
           showPhone={false}
           onStatusChange={handleStatusChange}
+          onDeleteTransaction={handleDeleteTransaction}
           isUpdatingStatus={isUpdatingStatus}
+          isDeletingTransaction={isDeletingTransaction}
         />
       ) : null}
     </main>

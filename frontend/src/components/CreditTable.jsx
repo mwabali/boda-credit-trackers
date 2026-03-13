@@ -7,7 +7,9 @@ function CreditTable({
   showPhone = true,
   showNumberPlate = true,
   onStatusChange,
+  onDeleteTransaction,
   isUpdatingStatus = false,
+  isDeletingTransaction = false,
 }) {
   if (!transactions.length) {
     return <p className={styles.emptyState}>No transactions recorded</p>
@@ -26,6 +28,7 @@ function CreditTable({
             <th>Litres</th>
             <th>Date</th>
             <th>Status</th>
+            {onDeleteTransaction ? <th>Actions</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -56,7 +59,7 @@ function CreditTable({
                       className={`${styles.statusSelect} ${styles[statusValue]}`}
                       value={statusValue}
                       onChange={(event) => onStatusChange(tx.id, event.target.value)}
-                      disabled={isUpdatingStatus}
+                      disabled={isUpdatingStatus || isDeletingTransaction}
                       aria-label={`Update transaction ${tx.id} status`}
                     >
                       {STATUS_OPTIONS.map((status) => (
@@ -69,6 +72,19 @@ function CreditTable({
                     <span>{tx.status}</span>
                   )}
                 </td>
+                {onDeleteTransaction ? (
+                  <td>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => onDeleteTransaction(tx.id)}
+                      disabled={isUpdatingStatus || isDeletingTransaction}
+                      aria-label={`Delete transaction ${tx.id}`}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                ) : null}
               </tr>
             )
           })}

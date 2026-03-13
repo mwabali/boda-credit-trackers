@@ -132,4 +132,23 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+// DELETE /transactions/:id - Remove transaction
+router.delete('/:id', async (req, res) => {
+  try {
+    const transaction = await Transaction.findByPk(req.params.id);
+
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Not found' });
+    }
+
+    const riderId = transaction.riderId;
+    await transaction.destroy();
+    await syncRiderBalance(riderId);
+
+    res.json({ success: true, message: 'Transaction deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
