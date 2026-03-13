@@ -1,8 +1,7 @@
 const { Sequelize } = require('sequelize');
 
 const DEFAULT_SQLITE_STORAGE =
-  process.env.SQLITE_STORAGE_PATH ||
-  (process.env.RENDER ? '/var/data/database.sqlite' : './database.sqlite');
+  process.env.SQLITE_STORAGE_PATH || './database.sqlite';
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',
