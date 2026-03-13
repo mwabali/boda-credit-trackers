@@ -10,7 +10,7 @@ async function getOutstandingBalanceMap(riderIds = []) {
 
   const totals = await Transaction.findAll({
     attributes: [
-      'riderId',
+      [Transaction.sequelize.col('rider_id'), 'riderId'],
       [Transaction.sequelize.fn('SUM', Transaction.sequelize.col('amount')), 'balance'],
     ],
     where: {
@@ -21,12 +21,15 @@ async function getOutstandingBalanceMap(riderIds = []) {
         [Op.in]: OUTSTANDING_TRANSACTION_STATUSES,
       },
     },
-    group: ['rider_id'],
+    group: [Transaction.sequelize.col('rider_id')],
     raw: true,
   });
 
   return new Map(
-    totals.map((entry) => [Number(entry.riderId), Number(entry.balance || 0)])
+    totals.map((entry) => [
+      Number(entry.riderId ?? entry.rider_id),
+      Number(entry.balance || 0),
+    ])
   );
 }
 
