@@ -11,7 +11,7 @@ const transactionRoutes = require('./routes/transactions');
 const router = require('./routes/riders');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 async function ensureStationCompanyColumn() {
   const queryInterface = sequelize.getQueryInterface();
@@ -49,8 +49,19 @@ const start = async () => {
   await ensureStationCompanyColumn();
   console.log('✅ Tables ready');
   
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(
+        `❌ Port ${PORT} is already in use. Update backend/.env or stop the other process using that port.`
+      );
+      process.exit(1);
+    }
+
+    throw error;
   });
 };
 
