@@ -23,3 +23,19 @@ Manual Render settings if you do not use the blueprint:
 Recommended next infrastructure step:
 - Keep Render for the backend service
 - Move the database to Supabase when you are ready to stop relying on SQLite
+
+## Supabase Transition
+
+The backend now supports two database modes:
+
+- Local / fallback: SQLite
+- Hosted: Postgres via `DATABASE_URL`
+
+For Render + Supabase:
+- add `DATABASE_URL` in Render from your Supabase project connection details
+- do not set `SQLITE_STORAGE_PATH`
+- keep `NODE_ENV=production`
+
+Once `DATABASE_URL` is present, the backend:
+- connects to Postgres instead of SQLite
+- skips local table sync and uses the schema already created in Supabase
