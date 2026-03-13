@@ -158,7 +158,15 @@ function RidersPage() {
               {riderRows.map((rider) => (
                 <tr key={rider.id}>
                   <td>{rider.id}</td>
-                  <td>{rider.name}</td>
+                  <td>
+                    <span className={styles.nameCell}>
+                      <span
+                        className={`${styles.statusDot} ${styles[rider.statusValue]}`}
+                        aria-hidden="true"
+                      />
+                      <span>{rider.name}</span>
+                    </span>
+                  </td>
                   <td>{rider.plate}</td>
                   <td>{rider.phone}</td>
                   <td>{rider.debt}</td>

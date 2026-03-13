@@ -120,6 +120,21 @@
   font-weight: 700;
 }
 
+.nameCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.statusDot {
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.04);
+}
+
 .badge {
   display: inline-block;
   border-radius: 999px;
