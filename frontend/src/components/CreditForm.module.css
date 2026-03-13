@@ -60,6 +60,17 @@
   background: #f8fafc;
 }
 
+.fieldInputError {
+  border-color: #fca5a5 !important;
+  background: #fff7f7 !important;
+}
+
+.fieldError {
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
 .alert {
   grid-column: 1 / -1;
   margin: 0;

@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
 import { getStationDisplayName } from '../lib/mappers'
-import { useState } from 'react'
 import styles from './CreditForm.module.css'
 
 const initialValues = {
@@ -13,6 +15,8 @@ const initialValues = {
   phone: '',
 }
 
+const phonePattern = /^\+?[0-9]{10,15}$/
+
 function CreditForm({
   riders = [],
   stations = [],
@@ -20,109 +24,135 @@ function CreditForm({
   submitLabel = 'Save Credit',
   isSubmitting = false,
 }) {
-  const [formData, setFormData] = useState(initialValues)
-  const [error, setError] = useState('')
   const hasStations = stations.length > 0
 
-  const handleChange = (event) => {
-    const { name, value } = event.target
+  const validationSchema = useMemo(
+    () =>
+      Yup.object({
+        riderMode: Yup.string().oneOf(['existing', 'new']).required(),
+        riderId: Yup.string().when('riderMode', {
+          is: 'existing',
+          then: (schema) => schema.required('Please select an existing rider'),
+          otherwise: (schema) => schema.notRequired(),
+        }),
+        riderName: Yup.string().when('riderMode', {
+          is: 'new',
+          then: (schema) =>
+            schema
+              .trim()
+              .min(2, 'Rider name must be at least 2 characters')
+              .required('New rider name is required'),
+          otherwise: (schema) => schema.notRequired(),
+        }),
+        number_plate: Yup.string().when('riderMode', {
+          is: 'new',
+          then: (schema) =>
+            schema
+              .trim()
+              .min(5, 'Number plate must be at least 5 characters')
+              .required('Number plate is required'),
+          otherwise: (schema) => schema.notRequired(),
+        }),
+        phone: Yup.string().when('riderMode', {
+          is: 'new',
+          then: (schema) =>
+            schema
+              .matches(phonePattern, 'Use a valid phone number like +254712345678')
+              .required('Phone number is required'),
+          otherwise: (schema) => schema.notRequired(),
+        }),
+        stationId: Yup.string().required('Station is required'),
+        amount: Yup.number()
+          .typeError('Amount must be a number')
+          .positive('Amount must be greater than 0')
+          .required('Amount is required'),
+        litres: Yup.number()
+          .typeError('Litres must be a number')
+          .positive('Litres must be greater than 0')
+          .required('Litres are required'),
+      }),
+    []
+  )
 
-    if (name === 'riderMode') {
-      setFormData((prev) => ({
-        ...initialValues,
-        riderMode: value,
-        stationId: prev.stationId,
-        amount: prev.amount,
-        litres: prev.litres,
-      }))
-    } else if (name === 'riderId') {
-      const selectedRider = riders.find((rider) => String(rider.id) === value)
+  const formik = useFormik({
+    initialValues,
+    validationSchema,
+    validate: (values) => {
+      const errors = {}
 
-      setFormData((prev) => ({
-        ...prev,
-        riderId: value,
-        number_plate:
-          selectedRider?.licensePlate || selectedRider?.number_plate || '',
-        phone: selectedRider?.phone || selectedRider?.phone_number || '',
-      }))
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }))
-    }
+      if (!hasStations) {
+        errors.stationId = 'Add at least one station before creating a credit entry'
+      }
 
-    if (error) setError('')
-  }
-
-  const handleSubmit = (event) => {
-    event.preventDefault()
-
-    const {
-      riderMode,
-      riderId,
-      riderName,
-      stationId,
-      amount,
-      litres,
-      number_plate,
-      phone,
-    } = formData
-
-    if (!hasStations) {
-      setError('Add at least one station before creating a credit entry')
-      return
-    }
-
-    if (!stationId || !amount || !litres) {
-      setError('Station, amount, and litres are required')
-      return
-    }
-
-    if (riderMode === 'existing' && !riderId) {
-      setError('Please select an existing rider')
-      return
-    }
-
-    if (riderMode === 'new' && (!riderName || !number_plate || !phone)) {
-      setError('New rider name, number plate, and phone are required')
-      return
-    }
-
-    if (typeof onSubmit === 'function') {
+      return errors
+    },
+    onSubmit: async (values, { resetForm }) => {
       const payload =
-        riderMode === 'existing'
+        values.riderMode === 'existing'
           ? {
-              riderMode,
-              riderId: Number(riderId),
-              number_plate,
-              phone,
-              stationId: Number(stationId),
-              amount: Number(amount),
-              liters: Number(litres),
+              riderMode: values.riderMode,
+              riderId: Number(values.riderId),
+              number_plate: values.number_plate,
+              phone: values.phone,
+              stationId: Number(values.stationId),
+              amount: Number(values.amount),
+              liters: Number(values.litres),
             }
           : {
-              riderMode,
+              riderMode: values.riderMode,
               newRider: {
-                name: riderName,
-                phone,
-                licensePlate: number_plate,
+                name: values.riderName,
+                phone: values.phone,
+                licensePlate: values.number_plate,
               },
-              stationId: Number(stationId),
-              amount: Number(amount),
-              liters: Number(litres),
+              stationId: Number(values.stationId),
+              amount: Number(values.amount),
+              liters: Number(values.litres),
             }
 
-      onSubmit(payload)
-    }
+      if (typeof onSubmit === 'function') {
+        await onSubmit(payload)
+      }
 
-    setFormData(initialValues)
+      resetForm()
+    },
+  })
+
+  const showFieldError = (fieldName) =>
+    formik.touched[fieldName] && formik.errors[fieldName]
+
+  const handleRiderModeChange = (event) => {
+    const nextMode = event.target.value
+
+    formik.setValues({
+      ...initialValues,
+      riderMode: nextMode,
+      stationId: formik.values.stationId,
+      amount: formik.values.amount,
+      litres: formik.values.litres,
+    })
+
+    formik.setTouched({})
+  }
+
+  const handleRiderSelectionChange = (event) => {
+    const selectedValue = event.target.value
+    const selectedRider = riders.find((rider) => String(rider.id) === selectedValue)
+
+    formik.setValues({
+      ...formik.values,
+      riderId: selectedValue,
+      number_plate: selectedRider?.licensePlate || selectedRider?.number_plate || '',
+      phone: selectedRider?.phone || selectedRider?.phone_number || '',
+    })
   }
 
   return (
     <section className={styles.wrapper} aria-label="Credit entry form">
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.form} onSubmit={formik.handleSubmit}>
         {!hasStations ? (
           <p className={styles.alert}>
-            No stations are available yet. Add a station first before recording
-            credit.
+            No stations are available yet. Add a station first before recording credit.
           </p>
         ) : null}
 
@@ -133,8 +163,8 @@ function CreditForm({
               type="radio"
               name="riderMode"
               value="existing"
-              checked={formData.riderMode === 'existing'}
-              onChange={handleChange}
+              checked={formik.values.riderMode === 'existing'}
+              onChange={handleRiderModeChange}
             />
             Existing rider
           </label>
@@ -143,21 +173,23 @@ function CreditForm({
               type="radio"
               name="riderMode"
               value="new"
-              checked={formData.riderMode === 'new'}
-              onChange={handleChange}
+              checked={formik.values.riderMode === 'new'}
+              onChange={handleRiderModeChange}
             />
             New rider
           </label>
         </fieldset>
 
-        {formData.riderMode === 'existing' ? (
+        {formik.values.riderMode === 'existing' ? (
           <label className={styles.field} htmlFor="riderId">
             Rider
             <select
               id="riderId"
               name="riderId"
-              value={formData.riderId}
-              onChange={handleChange}
+              value={formik.values.riderId}
+              onChange={handleRiderSelectionChange}
+              onBlur={formik.handleBlur}
+              className={showFieldError('riderId') ? styles.fieldInputError : ''}
             >
               <option value="">Select rider</option>
               {riders.map((rider) => (
@@ -166,6 +198,9 @@ function CreditForm({
                 </option>
               ))}
             </select>
+            {showFieldError('riderId') ? (
+              <span className={styles.fieldError}>{formik.errors.riderId}</span>
+            ) : null}
           </label>
         ) : (
           <label className={styles.field} htmlFor="riderName">
@@ -174,10 +209,15 @@ function CreditForm({
               id="riderName"
               name="riderName"
               type="text"
-              value={formData.riderName}
-              onChange={handleChange}
+              value={formik.values.riderName}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
               placeholder="Enter new rider name"
+              className={showFieldError('riderName') ? styles.fieldInputError : ''}
             />
+            {showFieldError('riderName') ? (
+              <span className={styles.fieldError}>{formik.errors.riderName}</span>
+            ) : null}
           </label>
         )}
 
@@ -187,15 +227,20 @@ function CreditForm({
             id="number_plate"
             name="number_plate"
             type="text"
-            value={formData.number_plate}
-            readOnly={formData.riderMode === 'existing'}
-            onChange={handleChange}
+            value={formik.values.number_plate}
+            readOnly={formik.values.riderMode === 'existing'}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             placeholder={
-              formData.riderMode === 'existing'
+              formik.values.riderMode === 'existing'
                 ? 'Auto-filled from rider'
                 : 'Enter rider number plate'
             }
+            className={showFieldError('number_plate') ? styles.fieldInputError : ''}
           />
+          {showFieldError('number_plate') ? (
+            <span className={styles.fieldError}>{formik.errors.number_plate}</span>
+          ) : null}
         </label>
 
         <label className={styles.field} htmlFor="phone">
@@ -204,15 +249,20 @@ function CreditForm({
             id="phone"
             name="phone"
             type="tel"
-            value={formData.phone}
-            readOnly={formData.riderMode === 'existing'}
-            onChange={handleChange}
+            value={formik.values.phone}
+            readOnly={formik.values.riderMode === 'existing'}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             placeholder={
-              formData.riderMode === 'existing'
+              formik.values.riderMode === 'existing'
                 ? 'Auto-filled from rider'
-                : '+254 7xx xxx xxx'
+                : '+254712345678'
             }
+            className={showFieldError('phone') ? styles.fieldInputError : ''}
           />
+          {showFieldError('phone') ? (
+            <span className={styles.fieldError}>{formik.errors.phone}</span>
+          ) : null}
         </label>
 
         <label className={styles.field} htmlFor="stationId">
@@ -220,9 +270,11 @@ function CreditForm({
           <select
             id="stationId"
             name="stationId"
-            value={formData.stationId}
-            onChange={handleChange}
+            value={formik.values.stationId}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             disabled={!hasStations}
+            className={showFieldError('stationId') ? styles.fieldInputError : ''}
           >
             <option value="">Select station</option>
             {stations.map((station) => (
@@ -231,6 +283,9 @@ function CreditForm({
               </option>
             ))}
           </select>
+          {showFieldError('stationId') ? (
+            <span className={styles.fieldError}>{formik.errors.stationId}</span>
+          ) : null}
         </label>
 
         <label className={styles.field} htmlFor="amount">
@@ -240,10 +295,15 @@ function CreditForm({
             name="amount"
             type="number"
             min="0"
-            value={formData.amount}
-            onChange={handleChange}
+            value={formik.values.amount}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             placeholder="e.g. 1500"
+            className={showFieldError('amount') ? styles.fieldInputError : ''}
           />
+          {showFieldError('amount') ? (
+            <span className={styles.fieldError}>{formik.errors.amount}</span>
+          ) : null}
         </label>
 
         <label className={styles.field} htmlFor="litres">
@@ -254,13 +314,16 @@ function CreditForm({
             type="number"
             min="0"
             step="0.1"
-            value={formData.litres}
-            onChange={handleChange}
+            value={formik.values.litres}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
             placeholder="e.g. 5"
+            className={showFieldError('litres') ? styles.fieldInputError : ''}
           />
+          {showFieldError('litres') ? (
+            <span className={styles.fieldError}>{formik.errors.litres}</span>
+          ) : null}
         </label>
-
-        {error ? <p className={styles.error}>{error}</p> : null}
 
         <button
           type="submit"
