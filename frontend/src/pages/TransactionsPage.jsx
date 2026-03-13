@@ -18,6 +18,7 @@ function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isDeletingTransaction, setIsDeletingTransaction] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
   const [error, setError] = useState('')
 
   const loadTransactions = useCallback(async () => {
@@ -89,12 +90,12 @@ function TransactionsPage() {
     }
   }
 
-  const handleDeleteTransaction = async (transactionId) => {
-    const confirmed = window.confirm(
-      'Delete this transaction permanently? This action cannot be undone.'
-    )
+  const requestDeleteTransaction = (transactionId) => {
+    setPendingDeleteId(transactionId)
+  }
 
-    if (!confirmed) {
+  const handleDeleteTransaction = async () => {
+    if (!pendingDeleteId) {
       return
     }
 
@@ -102,11 +103,12 @@ function TransactionsPage() {
       setIsDeletingTransaction(true)
       setError('')
 
-      await request(`/transactions/${transactionId}`, {
+      await request(`/transactions/${pendingDeleteId}`, {
         method: 'DELETE',
       })
 
       await loadTransactions()
+      setPendingDeleteId(null)
     } catch (deleteError) {
       setError(deleteError.message)
     } finally {
@@ -175,10 +177,52 @@ function TransactionsPage() {
           transactions={tableTransactions}
           showPhone={false}
           onStatusChange={handleStatusChange}
-          onDeleteTransaction={handleDeleteTransaction}
+          onDeleteTransaction={requestDeleteTransaction}
           isUpdatingStatus={isUpdatingStatus}
           isDeletingTransaction={isDeletingTransaction}
         />
+      ) : null}
+
+      {pendingDeleteId ? (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.confirmationModal}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-transaction-title"
+            aria-describedby="delete-transaction-description"
+          >
+            <p className={styles.modalEyebrow}>Delete Transaction</p>
+            <h2 id="delete-transaction-title" className={styles.modalTitle}>
+              Remove this credit record?
+            </h2>
+            <p
+              id="delete-transaction-description"
+              className={styles.modalDescription}
+            >
+              This will permanently remove the transaction from the ledger and
+              update the rider balance immediately. This action cannot be undone.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalSecondaryButton}
+                onClick={() => setPendingDeleteId(null)}
+                disabled={isDeletingTransaction}
+              >
+                Keep entry
+              </button>
+              <button
+                type="button"
+                className={styles.modalDangerButton}
+                onClick={handleDeleteTransaction}
+                disabled={isDeletingTransaction}
+              >
+                {isDeletingTransaction ? 'Deleting...' : 'Delete entry'}
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </main>
   )
