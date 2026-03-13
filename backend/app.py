@@ -1,12 +1,8 @@
-from flask import Flask, jsonify
-from flask_cors import CORS
+from app import create_app
 
-app = Flask(__name__)
-CORS(app)
 
-@app.route("/")
-def home():
-    return jsonify({"message": "Boda Credit Tracker API is running"})
+app = create_app()
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=app.config["PORT"], debug=app.config["DEBUG"])
