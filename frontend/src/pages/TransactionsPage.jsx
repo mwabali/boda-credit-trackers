@@ -2,9 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import transactionsIcon from '../assets/Transactions_icon.svg'
 import CreditTable from '../components/CreditTable'
 import { request } from '../lib/api'
-import { formatCurrency } from '../lib/formatters'
 import { getTransactionTimestamp, mapTransactionToRow } from '../lib/mappers'
 import styles from './TransactionsPage.module.css'
+
+function formatCompactKes(value) {
+  if (!value) return '0K'
+
+  const roundedThousands = Math.round(Number(value) / 1000)
+  return `${roundedThousands}K`
+}
 
 function TransactionsPage() {
   const [transactions, setTransactions] = useState([])
@@ -60,7 +66,7 @@ function TransactionsPage() {
   }, [transactions])
 
   const currentMonthAmountDisplay = useMemo(
-    () => formatCurrency(currentMonthAmount).replace(/^ksh\s*/i, ''),
+    () => formatCompactKes(currentMonthAmount),
     [currentMonthAmount]
   )
 
@@ -134,7 +140,7 @@ function TransactionsPage() {
               {currentMonthAmountDisplay}
             </p>
           </div>
-          <span className={styles.statMeta}>amount recorded this month</span>
+          <span className={styles.statMeta}>rounded monthly amount recorded in KES</span>
         </article>
         <article className={`${styles.statCard} ${styles.statCardWide}`}>
           <h2>Pending Payments</h2>
