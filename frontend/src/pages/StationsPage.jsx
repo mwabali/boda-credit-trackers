@@ -1,52 +1,311 @@
-import styles from './StationsPage.module.css'
+import { useEffect, useMemo, useState } from 'react'
+import stationsIcon from '../assets/Stations_icon.svg'
 import StationList from '../components/StationList'
-import { stations } from '../data/mockData'
+import { request } from '../lib/api'
+import { getStationDisplayName } from '../lib/mappers'
+import styles from './StationsPage.module.css'
+
+const initialStationValues = {
+  name: '',
+  location: '',
+  managerName: '',
+  managerPhone: '',
+}
+
+function formatStationId(id) {
+  return `FS${String(id).padStart(3, '0')}`
+}
 
 function StationsPage() {
+  const [stations, setStations] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [isFormExpanded, setIsFormExpanded] = useState(true)
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [formValues, setFormValues] = useState(initialStationValues)
+
+  useEffect(() => {
+    async function loadStations() {
+      try {
+        setIsLoading(true)
+        setError('')
+        const payload = await request('/stations')
+        setStations(payload.data || [])
+        setIsFormExpanded((payload.data || []).length === 0)
+      } catch (loadError) {
+        setError(loadError.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadStations()
+  }, [])
+
+  const handleChange = (event) => {
+    const { name, value } = event.target
+    setFormValues((prev) => ({ ...prev, [name]: value }))
+    if (error) setError('')
+    if (successMessage) setSuccessMessage('')
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+
+    try {
+      setIsSubmitting(true)
+      setError('')
+      setSuccessMessage('')
+
+      const payload = await request('/stations', {
+        method: 'POST',
+        body: JSON.stringify(formValues),
+      })
+
+      setStations((prev) => [payload.data, ...prev])
+      setFormValues(initialStationValues)
+      setSuccessMessage('Station added successfully.')
+      setIsFormExpanded(false)
+    } catch (submitError) {
+      setError(submitError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const activeStations = useMemo(
+    () => stations.filter((station) => station.status === 'active').length,
+    [stations]
+  )
+
+  const stationsWithManagers = useMemo(
+    () => stations.filter((station) => station.managerName).length,
+    [stations]
+  )
+
+  const stationListRows = useMemo(
+    () =>
+      stations.map((station) => ({
+        ...station,
+        phone: station.managerPhone || '--',
+      })),
+    [stations]
+  )
+
+  const handleStatusChange = async (stationId, status) => {
+    try {
+      setIsUpdatingStatus(true)
+      setError('')
+
+      const currentStation = stations.find((station) => station.id === stationId)
+      if (!currentStation) return
+
+      await request(`/stations/${stationId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: currentStation.name,
+          location: currentStation.location,
+          managerName: currentStation.managerName,
+          managerPhone: currentStation.managerPhone,
+          status,
+        }),
+      })
+
+      setStations((prev) =>
+        prev.map((station) =>
+          station.id === stationId ? { ...station, status } : station
+        )
+      )
+    } catch (updateError) {
+      setError(updateError.message)
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Fuel Stations Network</h1>
         <p className={styles.description}>
-          Placeholder station directory for card components and station detail
-          workflows that will be expanded in future iterations.
+          Live station directory backed by the current backend station records.
         </p>
       </header>
 
       <section className={styles.statsGrid} aria-label="Station summary">
         <article className={styles.statCard}>
           <h2>Total Stations</h2>
-          <p>62</p>
+          <div className={styles.metricRow}>
+            <img
+              src={stationsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.totalIcon}`}
+            />
+            <p className={styles.statValue}>{stations.length}</p>
+          </div>
+          <span className={styles.statMeta}>registered partner locations</span>
         </article>
         <article className={styles.statCard}>
-          <h2>Total KES Owed</h2>
-          <p>KES 2,500,000</p>
+          <h2>Active Stations</h2>
+          <div className={styles.metricRow}>
+            <img
+              src={stationsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.activeIcon}`}
+            />
+            <p className={styles.statValue}>{activeStations}</p>
+          </div>
+          <span className={styles.statMeta}>currently serving riders</span>
         </article>
         <article className={styles.statCard}>
-          <h2>Total Litres Pumped</h2>
-          <p>15,000L</p>
+          <h2>Management Phonelines</h2>
+          <div className={styles.metricRow}>
+            <img
+              src={stationsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.contactIcon}`}
+            />
+            <p className={styles.statValue}>{stationsWithManagers}</p>
+          </div>
+          <span className={styles.statMeta}>stations with phonelines recorded</span>
         </article>
       </section>
 
+      <section className={styles.formSection} aria-label="Add station">
+        <div className={styles.formHeader}>
+          <div className={styles.formIntro}>
+            <h2 className={styles.formTitle}>Add a Station</h2>
+            <p className={styles.formDescription}>
+              Create a station here so it becomes available immediately in the Add
+              Credit form.
+            </p>
+          </div>
+          <button
+            type="button"
+            className={styles.toggleButton}
+            aria-expanded={isFormExpanded}
+            aria-controls="station-entry-form"
+            onClick={() => setIsFormExpanded((prev) => !prev)}
+          >
+            {isFormExpanded ? 'Hide form' : 'Add station'}
+          </button>
+        </div>
+
+        {error ? <p className={styles.errorMessage}>{error}</p> : null}
+        {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
+
+        {isFormExpanded ? (
+          <form
+            id="station-entry-form"
+            className={styles.stationForm}
+            onSubmit={handleSubmit}
+          >
+            <label className={styles.field}>
+              Branch Name
+              <input
+                type="text"
+                name="name"
+                value={formValues.name}
+                onChange={handleChange}
+                placeholder="e.g. Kampala Road"
+                required
+              />
+            </label>
+
+            <label className={styles.field}>
+              Location
+              <input
+                type="text"
+                name="location"
+                value={formValues.location}
+                onChange={handleChange}
+                placeholder="e.g. Nairobi CBD"
+                required
+              />
+            </label>
+
+            <label className={styles.field}>
+              Manager Name
+              <input
+                type="text"
+                name="managerName"
+                value={formValues.managerName}
+                onChange={handleChange}
+                placeholder="Optional"
+              />
+            </label>
+
+          <label className={styles.field}>
+            Management Phoneline
+            <input
+              type="tel"
+              name="managerPhone"
+                value={formValues.managerPhone}
+                onChange={handleChange}
+                placeholder="+254 7xx xxx xxx"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Add Station'}
+            </button>
+          </form>
+        ) : null}
+      </section>
+
       <section className={styles.cardsGrid} aria-label="Station cards">
-        {stations.map((station) => (
-          <article key={station.id} className={styles.stationCard}>
-            <h2>
-              {station.id} <span>{station.name}</span>
-            </h2>
-            <ul>
-              <li>
-                <strong>Location:</strong> {station.location}
-              </li>
-              <li>
-                <strong>Phone:</strong> {station.phone}
-              </li>
-              <li>
-                <strong>Total Owed:</strong> {station.owed}
-              </li>
-            </ul>
-          </article>
-        ))}
+        {isLoading ? <p className={styles.stateMessage}>Loading stations...</p> : null}
+        {error ? <p className={styles.errorMessage}>{error}</p> : null}
+
+        {!isLoading && !error && !stations.length ? (
+          <p className={styles.stateMessage}>No stations available.</p>
+        ) : null}
+
+        {!isLoading && !error
+          ? stations.map((station) => (
+              <article key={station.id} className={styles.stationCard}>
+                <h2>
+                  {formatStationId(station.id)} <span>{getStationDisplayName(station)}</span>
+                </h2>
+                <ul>
+                  <li>
+                    <strong>Location:</strong> {station.location}
+                  </li>
+                  <li>
+                    <strong>Manager:</strong> {station.managerName || 'Not assigned'}
+                  </li>
+                  <li>
+                    <strong>Management phoneline:</strong> {station.managerPhone || '--'}
+                  </li>
+                  <li className={styles.statusRow}>
+                    <strong>Status:</strong>
+                    <select
+                      className={`${styles.statusSelect} ${styles[station.status]}`}
+                      value={station.status}
+                      onChange={(event) =>
+                        handleStatusChange(station.id, event.target.value)
+                      }
+                      disabled={isUpdatingStatus}
+                      aria-label={`Update ${station.name} status`}
+                    >
+                      <option value="active">Active</option>
+                      <option value="maintenance">Maintenance</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                  </li>
+                </ul>
+              </article>
+            ))
+          : null}
       </section>
 
       <div className={styles.listSection}>
@@ -56,7 +315,7 @@ function StationsPage() {
             Track the active stations in a tabular view for quick reference.
           </p>
         </div>
-        <StationList stations={stations} />
+        <StationList stations={stationListRows} />
       </div>
     </main>
   )

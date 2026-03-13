@@ -1,23 +1,40 @@
 const express = require('express');
 const router = express.Router();
+const { Op, fn, col, where: sequelizeWhere } = require('sequelize');
 const { Rider, Transaction } = require('../models');
+const { getOutstandingBalanceMap } = require('../utils/riderBalances');
+const VALID_RIDER_STATUSES = new Set(['active', 'suspended', 'inactive']);
 
 // GET /riders - List all (with optional search)
 router.get('/', async (req, res) => {
   try {
-    const { search, status = 'active' } = req.query;
-    const where = { status };
-    
-    if (search) {
-      where.name = { [require('sequelize').Op.iLike]: `%${search}%` };
+    const { search, status } = req.query;
+    const where = {};
+
+    if (status) {
+      where.status = status;
     }
     
-    const riders = await Rider.findAll({ 
+    if (search) {
+      where[Op.and] = [
+        sequelizeWhere(fn('LOWER', col('name')), {
+          [Op.like]: `%${search.toLowerCase()}%`,
+        }),
+      ];
+    }
+    
+    const riders = await Rider.findAll({
       where,
       order: [['created_at', 'DESC']]
     });
+
+    const balanceMap = await getOutstandingBalanceMap(riders.map((rider) => rider.id));
+    const ridersWithBalances = riders.map((rider) => ({
+      ...rider.toJSON(),
+      currentBalance: balanceMap.get(rider.id) || 0,
+    }));
     
-    res.json({ success: true, count: riders.length, data: riders });
+    res.json({ success: true, count: riders.length, data: ridersWithBalances });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -39,6 +56,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Rider not found' });
     }
     
+    const outstandingBalance = rider.transactions.reduce((sum, transaction) => {
+      if (transaction.status === 'paid' || transaction.status === 'cancelled') {
+        return sum;
+      }
+
+      return sum + parseFloat(transaction.amount || 0);
+    }, 0);
+
     // Calculate stats
     const totalTransactions = rider.transactions.length;
     const totalSpent = rider.transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
@@ -47,6 +72,7 @@ router.get('/:id', async (req, res) => {
       success: true, 
       data: {
         ...rider.toJSON(),
+        currentBalance: outstandingBalance,
         stats: { totalTransactions, totalSpent }
       }
     });
@@ -102,6 +128,13 @@ router.put('/:id', async (req, res) => {
     
     if (!rider) {
       return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+
+    if (status && !VALID_RIDER_STATUSES.has(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid rider status',
+      });
     }
     
     await rider.update({ name, phone, licensePlate, status });

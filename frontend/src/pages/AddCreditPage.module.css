@@ -30,6 +30,20 @@
   box-shadow: 0 24px 48px rgba(15, 23, 42, 0.08);
 }
 
+.stateMessage,
+.errorMessage,
+.successMessage {
+  margin: 0 0 1rem;
+}
+
+.errorMessage {
+  color: #991b1b;
+}
+
+.successMessage {
+  color: #166534;
+}
+
 .form {
   display: flex;
   flex-direction: column;

@@ -5,11 +5,11 @@ def seed_stations():
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO stations (name, location, manager_name)
+        INSERT INTO stations (name, company_name, location, manager_name, manager_phone)
         VALUES
-        ('Shell Eldoret','Eldoret Town','Peter Kiptoo'),
-        ('Total Kisumu','Kisumu','James Kimani'),
-        ('Rubis Langata','Langas','Mary Wanjiku');
+        ('Eldoret','Total','Eldoret Town','Peter Kiptoo','+254711000101'),
+        ('Kisumu','Total','Kisumu','James Kimani','+254711000102'),
+        ('Langata','Total','Langas','Mary Wanjiku','+254711000103');
     """)
 
     conn.commit()

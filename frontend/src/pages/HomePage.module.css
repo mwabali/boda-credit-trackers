@@ -38,15 +38,68 @@
 }
 
 .statCard h2 {
-  margin: 0 0 0.45rem;
-  font-size: 1rem;
-  color: #1f2937;
+  margin: 0;
+  font-size: 0.95rem;
+  color: #7c2d12;
+  letter-spacing: 0.02em;
 }
 
-.statCard p {
+.metricRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.metricIcon {
+  flex: 0 0 auto;
+  object-fit: contain;
+  opacity: 0.95;
+  filter: brightness(0) saturate(100%) invert(40%) sepia(65%) saturate(1093%)
+    hue-rotate(355deg) brightness(93%) contrast(92%);
+}
+
+.ridersIcon {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.stationsIcon {
+  width: 1.95rem;
+  height: 1.95rem;
+}
+
+.transactionsIcon {
+  width: 2.05rem;
+  height: 2.05rem;
+}
+
+.statValue {
   margin: 0;
+  color: #111827;
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.statMeta {
   color: #6b7280;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
+}
+
+.feedbackMessage,
+.errorMessage,
+.successMessage {
+  margin: 0;
+  color: #4b5563;
+}
+
+.errorMessage {
+  color: #991b1b;
+}
+
+.successMessage {
+  color: #166534;
 }
 
 .cardGrid {

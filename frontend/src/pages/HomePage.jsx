@@ -1,13 +1,14 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CreditForm from '../components/CreditForm'
 import CreditTable from '../components/CreditTable'
 import StationList from '../components/StationList'
+import ridersIcon from '../assets/Riders_icon.svg'
+import stationsIcon from '../assets/Stations_icon.svg'
+import transactionsIcon from '../assets/Transactions_icon.svg'
+import { request } from '../lib/api'
+import { mapTransactionToRow } from '../lib/mappers'
 import styles from './HomePage.module.css'
-import {
-  riders as sampleRiders,
-  stations as sampleStations,
-  transactions as sampleTransactions,
-} from '../data/mockData'
 
 const dashboardSections = [
   {
@@ -32,21 +33,92 @@ const dashboardSections = [
   },
 ]
 
-const tableTransactions = sampleTransactions.map((tx) => ({
-  id: tx.id,
-  rider: tx.rider,
-  station: tx.station,
-  phone: tx.phone,
-  number_plate: tx.number_plate,
-  amount: tx.amount,
-  litres: tx.litres,
-  date: tx.id.split('-').slice(0, 3).join('-'),
-  status: tx.status,
-}))
-
 function HomePage() {
-  const handleQuickCredit = (formData) => {
-    console.log('Quick credit entry:', formData)
+  const [riders, setRiders] = useState([])
+  const [stations, setStations] = useState([])
+  const [transactions, setTransactions] = useState([])
+  const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+
+      const [ridersPayload, stationsPayload, transactionsPayload, statsPayload] =
+        await Promise.all([
+          request('/riders'),
+          request('/stations'),
+          request('/transactions?include=all'),
+          request('/transactions/stats/dashboard'),
+        ])
+
+      setRiders(ridersPayload.data || [])
+      setStations(stationsPayload.data || [])
+      setTransactions(transactionsPayload.data || [])
+      setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
+    } catch (loadError) {
+      setError(loadError.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [loadDashboardData])
+
+  const stationListRows = useMemo(
+    () =>
+      stations.map((station) => ({
+        ...station,
+        phone: station.managerPhone || '--',
+      })),
+    [stations]
+  )
+
+  const tableTransactions = useMemo(
+    () => transactions.slice(0, 5).map(mapTransactionToRow),
+    [transactions]
+  )
+
+  const handleQuickCredit = async (formData) => {
+    try {
+      setIsSubmitting(true)
+      setError('')
+      setSuccessMessage('')
+
+      let riderId = formData.riderId
+
+      if (formData.riderMode === 'new') {
+        const riderPayload = await request('/riders', {
+          method: 'POST',
+          body: JSON.stringify(formData.newRider),
+        })
+
+        riderId = riderPayload.data.id
+      }
+
+      await request('/transactions', {
+        method: 'POST',
+        body: JSON.stringify({
+          riderId,
+          stationId: formData.stationId,
+          amount: formData.amount,
+          liters: formData.liters,
+        }),
+      })
+
+      setSuccessMessage('Dashboard credit entry saved successfully.')
+      await loadDashboardData()
+    } catch (submitError) {
+      setError(submitError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -54,23 +126,54 @@ function HomePage() {
       <header className={styles.hero}>
         <h1 className={styles.title}>Boda Credit Dashboard</h1>
         <p className={styles.description}>
-          Track core frontend workflows from one place. This dashboard is ready
-          for future UI component expansion and backend integration.
+          Track core workflows from one place with live backend records flowing
+          into the dashboard.
         </p>
       </header>
+
+      {isLoading ? <p className={styles.feedbackMessage}>Loading dashboard data...</p> : null}
+      {error ? <p className={styles.errorMessage}>{error}</p> : null}
+      {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
         <article className={styles.statCard}>
           <h2>Total Riders</h2>
-          <p>Placeholder metric for rider registry volume.</p>
+          <div className={styles.metricRow}>
+            <img
+              src={ridersIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.ridersIcon}`}
+            />
+            <p className={styles.statValue}>{riders.length}</p>
+          </div>
+          <span className={styles.statMeta}>active records loaded</span>
         </article>
         <article className={styles.statCard}>
           <h2>Total Stations</h2>
-          <p>Placeholder metric for active fuel station partners.</p>
+          <div className={styles.metricRow}>
+            <img
+              src={stationsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.stationsIcon}`}
+            />
+            <p className={styles.statValue}>{stations.length}</p>
+          </div>
+          <span className={styles.statMeta}>partner locations loaded</span>
         </article>
         <article className={styles.statCard}>
           <h2>Credit Activity</h2>
-          <p>Placeholder metric for overall transaction movement.</p>
+          <div className={styles.metricRow}>
+            <img
+              src={transactionsIcon}
+              alt=""
+              aria-hidden="true"
+              className={`${styles.metricIcon} ${styles.transactionsIcon}`}
+            />
+            <p className={styles.statValue}>{stats.total}</p>
+          </div>
+          <span className={styles.statMeta}>{stats.pending} pending transactions</span>
         </article>
       </section>
 
@@ -80,14 +183,16 @@ function HomePage() {
             <p className={styles.sectionTag}>Live form preview</p>
             <h2>Credit entry form</h2>
             <p>
-              Fill a credit transaction to see how the form behaves before the
-              backend is wired.
+              Create a quick transaction from the dashboard using live rider and
+              station options.
             </p>
           </div>
           <CreditForm
-            riders={sampleRiders}
-            stations={sampleStations}
+            riders={riders}
+            stations={stations}
             onSubmit={handleQuickCredit}
+            submitLabel="Save From Dashboard"
+            isSubmitting={isSubmitting}
           />
         </article>
 
@@ -96,10 +201,10 @@ function HomePage() {
             <p className={styles.sectionTag}>Station list</p>
             <h2>Station directory</h2>
             <p>
-              Reference every onboarding station without leaving the dashboard.
+              Reference every active partner station without leaving the dashboard.
             </p>
           </div>
-          <StationList stations={sampleStations} />
+          <StationList stations={stationListRows} />
         </article>
       </section>
 
@@ -108,8 +213,8 @@ function HomePage() {
           <p className={styles.sectionTag}>Recent activity</p>
           <h2>Credit transactions</h2>
           <p>
-            The same transaction table that will power the Transactions page is
-            already visible here for quick validation.
+            The same live transaction feed that powers the Transactions page is
+            surfaced here for quick review.
           </p>
         </div>
         <CreditTable transactions={tableTransactions} showPhone={false} />

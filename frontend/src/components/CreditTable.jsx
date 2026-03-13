@@ -1,6 +1,14 @@
 import styles from './CreditTable.module.css'
 
-function CreditTable({ transactions = [], showPhone = true, showNumberPlate = true }) {
+const STATUS_OPTIONS = ['pending', 'approved', 'paid', 'cancelled']
+
+function CreditTable({
+  transactions = [],
+  showPhone = true,
+  showNumberPlate = true,
+  onStatusChange,
+  isUpdatingStatus = false,
+}) {
   if (!transactions.length) {
     return <p className={styles.emptyState}>No transactions recorded</p>
   }
@@ -30,7 +38,25 @@ function CreditTable({ transactions = [], showPhone = true, showNumberPlate = tr
               <td>{tx.amount}</td>
               <td>{tx.litres}</td>
               <td>{tx.date}</td>
-              <td>{tx.status}</td>
+              <td>
+                {onStatusChange ? (
+                  <select
+                    className={`${styles.statusSelect} ${styles[tx.statusValue || tx.status.toLowerCase()]}`}
+                    value={tx.statusValue || tx.status.toLowerCase()}
+                    onChange={(event) => onStatusChange(tx.id, event.target.value)}
+                    disabled={isUpdatingStatus}
+                    aria-label={`Update transaction ${tx.id} status`}
+                  >
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  tx.status
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

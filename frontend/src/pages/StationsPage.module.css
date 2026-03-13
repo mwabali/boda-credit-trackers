@@ -39,11 +39,148 @@
   color: #7c2d12;
 }
 
-.statCard p {
+.metricRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.15rem 0 0.3rem;
+}
+
+.metricIcon {
+  width: 2.05rem;
+  height: 2.05rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  opacity: 0.95;
+}
+
+.totalIcon {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(65%) saturate(1093%)
+    hue-rotate(355deg) brightness(93%) contrast(92%);
+}
+
+.activeIcon {
+  filter: brightness(0) saturate(100%) invert(31%) sepia(45%) saturate(712%)
+    hue-rotate(96deg) brightness(92%) contrast(92%);
+}
+
+.contactIcon {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(72%) saturate(2442%)
+    hue-rotate(206deg) brightness(95%) contrast(96%);
+}
+
+.statValue {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  font-weight: 800;
   color: #111827;
+}
+
+.statMeta {
+  display: block;
+  color: #6b7280;
+  font-size: 0.86rem;
+}
+
+.stateMessage,
+.errorMessage,
+.successMessage {
+  margin: 0;
+  color: #4b5563;
+}
+
+.errorMessage {
+  color: #991b1b;
+}
+
+.successMessage {
+  color: #166534;
+}
+
+.formSection {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.formHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.formIntro {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #111827;
+}
+
+.formDescription {
+  margin: 0;
+  color: #4b5563;
+}
+
+.toggleButton {
+  border: 1px solid #fdba74;
+  border-radius: 999px;
+  padding: 0.6rem 0.95rem;
+  background: #fff7ed;
+  color: #9a3412;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggleButton:hover {
+  background: #ffedd5;
+}
+
+.stationForm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.field input {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.92rem;
+  color: #111827;
+  background: #ffffff;
+}
+
+.submitButton {
+  border: 1px solid #fdba74;
+  border-radius: 10px;
+  padding: 0.7rem 0.95rem;
+  background: #ffedd5;
+  color: #7c2d12;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.submitButton:disabled {
+  opacity: 0.75;
+  cursor: wait;
 }
 
 .cardsGrid {
@@ -89,13 +226,63 @@
   color: #374151;
 }
 
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.statusSelect {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.maintenance {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.closed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 @media (max-width: 640px) {
+  .formHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stationForm {
+    grid-template-columns: 1fr;
+  }
+
   .cardsGrid {
     grid-template-columns: 1fr;
   }
 
   .stationCard {
     padding: 0.8rem;
+  }
+
+  .submitButton {
+    width: 100%;
+  }
+
+  .toggleButton {
+    width: 100%;
   }
 }
 

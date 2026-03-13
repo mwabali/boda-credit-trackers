@@ -1,11 +1,75 @@
+import { useEffect, useState } from 'react'
 import CreditForm from '../components/CreditForm'
+import { request } from '../lib/api'
 import styles from './AddCreditPage.module.css'
-import { riders as sampleRiders, stations as sampleStations } from '../data/mockData'
 
 function AddCreditPage() {
-  const handleSubmit = (formData) => {
-    console.log('Credit submitted:', formData)
-    // TODO: Connect to backend API
+  const [riders, setRiders] = useState([])
+  const [stations, setStations] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+
+  useEffect(() => {
+    async function loadFormOptions() {
+      try {
+        setIsLoading(true)
+        setError('')
+
+        const [ridersPayload, stationsPayload] = await Promise.all([
+          request('/riders'),
+          request('/stations'),
+        ])
+
+        setRiders(ridersPayload.data || [])
+        setStations(stationsPayload.data || [])
+      } catch (loadError) {
+        setError(loadError.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadFormOptions()
+  }, [])
+
+  const handleSubmit = async (formData) => {
+    try {
+      setIsSubmitting(true)
+      setError('')
+      setSuccessMessage('')
+
+      let riderId = formData.riderId
+
+      if (formData.riderMode === 'new') {
+        const riderPayload = await request('/riders', {
+          method: 'POST',
+          body: JSON.stringify(formData.newRider),
+        })
+
+        riderId = riderPayload.data.id
+      }
+
+      await request('/transactions', {
+        method: 'POST',
+        body: JSON.stringify({
+          riderId,
+          stationId: formData.stationId,
+          amount: formData.amount,
+          liters: formData.liters,
+        }),
+      })
+
+      setSuccessMessage('Credit transaction saved successfully.')
+
+      const ridersPayload = await request('/riders')
+      setRiders(ridersPayload.data || [])
+    } catch (submitError) {
+      setError(submitError.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -18,10 +82,15 @@ function AddCreditPage() {
       </header>
 
       <section className={styles.formShell}>
+        {isLoading ? <p className={styles.stateMessage}>Loading form options...</p> : null}
+        {error ? <p className={styles.errorMessage}>{error}</p> : null}
+        {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
+
         <CreditForm
-          riders={sampleRiders}
-          stations={sampleStations}
+          riders={riders}
+          stations={stations}
           onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
         />
       </section>
     </main>

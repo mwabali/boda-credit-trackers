@@ -1,43 +1,116 @@
+import { getStationDisplayName } from '../lib/mappers'
 import { useState } from 'react'
 import styles from './CreditForm.module.css'
 
 const initialValues = {
-  rider: '',
-  station: '',
+  riderMode: 'existing',
+  riderId: '',
+  riderName: '',
+  stationId: '',
   amount: '',
   litres: '',
   number_plate: '',
   phone: '',
 }
 
-function CreditForm({ riders = [], stations = [], onSubmit }) {
+function CreditForm({
+  riders = [],
+  stations = [],
+  onSubmit,
+  submitLabel = 'Save Credit',
+  isSubmitting = false,
+}) {
   const [formData, setFormData] = useState(initialValues)
   const [error, setError] = useState('')
+  const hasStations = stations.length > 0
 
   const handleChange = (event) => {
     const { name, value } = event.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    if (name === 'riderMode') {
+      setFormData((prev) => ({
+        ...initialValues,
+        riderMode: value,
+        stationId: prev.stationId,
+        amount: prev.amount,
+        litres: prev.litres,
+      }))
+    } else if (name === 'riderId') {
+      const selectedRider = riders.find((rider) => String(rider.id) === value)
+
+      setFormData((prev) => ({
+        ...prev,
+        riderId: value,
+        number_plate:
+          selectedRider?.licensePlate || selectedRider?.number_plate || '',
+        phone: selectedRider?.phone || selectedRider?.phone_number || '',
+      }))
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+    }
+
     if (error) setError('')
   }
 
   const handleSubmit = (event) => {
     event.preventDefault()
 
-    const { rider, station, amount, litres, number_plate, phone } = formData
-    if (!rider || !station || !amount || !litres || !number_plate || !phone) {
-      setError('All fields are required')
+    const {
+      riderMode,
+      riderId,
+      riderName,
+      stationId,
+      amount,
+      litres,
+      number_plate,
+      phone,
+    } = formData
+
+    if (!hasStations) {
+      setError('Add at least one station before creating a credit entry')
+      return
+    }
+
+    if (!stationId || !amount || !litres) {
+      setError('Station, amount, and litres are required')
+      return
+    }
+
+    if (riderMode === 'existing' && !riderId) {
+      setError('Please select an existing rider')
+      return
+    }
+
+    if (riderMode === 'new' && (!riderName || !number_plate || !phone)) {
+      setError('New rider name, number plate, and phone are required')
       return
     }
 
     if (typeof onSubmit === 'function') {
-      onSubmit({
-        rider,
-        station,
-        number_plate,
-        phone,
-        amount: Number(amount),
-        litres: Number(litres),
-      })
+      const payload =
+        riderMode === 'existing'
+          ? {
+              riderMode,
+              riderId: Number(riderId),
+              number_plate,
+              phone,
+              stationId: Number(stationId),
+              amount: Number(amount),
+              liters: Number(litres),
+            }
+          : {
+              riderMode,
+              newRider: {
+                name: riderName,
+                phone,
+                licensePlate: number_plate,
+              },
+              stationId: Number(stationId),
+              amount: Number(amount),
+              liters: Number(litres),
+            }
+
+      onSubmit(payload)
     }
 
     setFormData(initialValues)
@@ -46,23 +119,67 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
   return (
     <section className={styles.wrapper} aria-label="Credit entry form">
       <form className={styles.form} onSubmit={handleSubmit}>
-        <label className={styles.field} htmlFor="rider">
-          Rider
-          <input
-            id="rider"
-            name="rider"
-            type="text"
-            value={formData.rider}
-            onChange={handleChange}
-            placeholder="Enter rider name or ID"
-            list="riderList"
-          />
-          <datalist id="riderList">
-            {riders.map((rider) => (
-              <option key={rider.id} value={rider.name} />
-            ))}
-          </datalist>
-        </label>
+        {!hasStations ? (
+          <p className={styles.alert}>
+            No stations are available yet. Add a station first before recording
+            credit.
+          </p>
+        ) : null}
+
+        <fieldset className={styles.modeGroup}>
+          <legend>Rider entry</legend>
+          <label className={styles.modeOption}>
+            <input
+              type="radio"
+              name="riderMode"
+              value="existing"
+              checked={formData.riderMode === 'existing'}
+              onChange={handleChange}
+            />
+            Existing rider
+          </label>
+          <label className={styles.modeOption}>
+            <input
+              type="radio"
+              name="riderMode"
+              value="new"
+              checked={formData.riderMode === 'new'}
+              onChange={handleChange}
+            />
+            New rider
+          </label>
+        </fieldset>
+
+        {formData.riderMode === 'existing' ? (
+          <label className={styles.field} htmlFor="riderId">
+            Rider
+            <select
+              id="riderId"
+              name="riderId"
+              value={formData.riderId}
+              onChange={handleChange}
+            >
+              <option value="">Select rider</option>
+              {riders.map((rider) => (
+                <option key={rider.id} value={rider.id}>
+                  {rider.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <label className={styles.field} htmlFor="riderName">
+            Rider Name
+            <input
+              id="riderName"
+              name="riderName"
+              type="text"
+              value={formData.riderName}
+              onChange={handleChange}
+              placeholder="Enter new rider name"
+            />
+          </label>
+        )}
 
         <label className={styles.field} htmlFor="number_plate">
           Number Plate
@@ -71,8 +188,13 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
             name="number_plate"
             type="text"
             value={formData.number_plate}
+            readOnly={formData.riderMode === 'existing'}
             onChange={handleChange}
-            placeholder="Enter rider number plate"
+            placeholder={
+              formData.riderMode === 'existing'
+                ? 'Auto-filled from rider'
+                : 'Enter rider number plate'
+            }
           />
         </label>
 
@@ -83,23 +205,29 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
             name="phone"
             type="tel"
             value={formData.phone}
+            readOnly={formData.riderMode === 'existing'}
             onChange={handleChange}
-            placeholder="+254 7xx xxx xxx"
+            placeholder={
+              formData.riderMode === 'existing'
+                ? 'Auto-filled from rider'
+                : '+254 7xx xxx xxx'
+            }
           />
         </label>
 
-        <label className={styles.field} htmlFor="station">
+        <label className={styles.field} htmlFor="stationId">
           Station
           <select
-            id="station"
-            name="station"
-            value={formData.station}
+            id="stationId"
+            name="stationId"
+            value={formData.stationId}
             onChange={handleChange}
+            disabled={!hasStations}
           >
             <option value="">Select station</option>
             {stations.map((station) => (
               <option key={station.id} value={station.id}>
-                {station.name}
+                {getStationDisplayName(station)}
               </option>
             ))}
           </select>
@@ -134,8 +262,12 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
 
         {error ? <p className={styles.error}>{error}</p> : null}
 
-        <button type="submit" className={styles.submitButton}>
-          Save Credit
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={isSubmitting || !hasStations}
+        >
+          {isSubmitting ? 'Saving...' : submitLabel}
         </button>
       </form>
     </section>
@@ -143,8 +275,3 @@ function CreditForm({ riders = [], stations = [], onSubmit }) {
 }
 
 export default CreditForm
-
-// TODO: Add rider details (phone, number plate)
-// TODO:Link the credit form details to the riders management and to transacion table
-// TODO: Restyling
-// TODO: Remove Placeholders
