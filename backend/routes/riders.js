@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
     const balanceMap = await getOutstandingBalanceMap(riders.map((rider) => rider.id));
     const ridersWithBalances = riders.map((rider) => ({
       ...rider.toJSON(),
-      currentBalance: balanceMap.get(rider.id) || 0,
+      currentBalance: balanceMap.get(Number(rider.id)) || 0,
     }));
     
     res.json({ success: true, count: riders.length, data: ridersWithBalances });
