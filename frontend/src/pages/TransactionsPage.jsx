@@ -129,7 +129,7 @@ function TransactionsPage() {
           </div>
           <span className={styles.statMeta}>amount recorded this month</span>
         </article>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.statCardWide}`}>
           <h2>Pending Payments</h2>
           <div className={styles.metricRow}>
             <img

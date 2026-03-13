@@ -119,7 +119,7 @@ function RidersPage() {
           </div>
           <span className={styles.statMeta}>currently active riders</span>
         </article>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.statCardWide}`}>
           <h2>Total Debt (Overall)</h2>
           <div className={styles.metricRow}>
             <img

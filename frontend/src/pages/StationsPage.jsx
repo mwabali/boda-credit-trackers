@@ -161,7 +161,7 @@ function StationsPage() {
           </div>
           <span className={styles.statMeta}>currently serving riders</span>
         </article>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.statCardWide}`}>
           <h2>Management Phonelines</h2>
           <div className={styles.metricRow}>
             <img
