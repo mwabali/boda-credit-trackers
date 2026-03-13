@@ -18,6 +18,8 @@
   margin: 0;
   color: #4b5563;
   max-width: 72ch;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .formShell {
@@ -34,6 +36,7 @@
 .errorMessage,
 .successMessage {
   margin: 0 0 1rem;
+  font-size: 0.86rem;
 }
 
 .errorMessage {
@@ -95,6 +98,10 @@
     gap: 0.85rem;
   }
 
+  .description {
+    font-size: 0.8rem;
+  }
+
   .form {
     grid-template-columns: 1fr;
   }
@@ -105,5 +112,11 @@
 
   .submitButton {
     width: 100%;
+  }
+
+  .stateMessage,
+  .errorMessage,
+  .successMessage {
+    font-size: 0.78rem;
   }
 }
