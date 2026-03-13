@@ -1,18 +1,37 @@
 const { Sequelize } = require('sequelize');
 
+const DATABASE_URL = process.env.DATABASE_URL;
 const DEFAULT_SQLITE_STORAGE =
   process.env.SQLITE_STORAGE_PATH || './database.sqlite';
 
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: DEFAULT_SQLITE_STORAGE,
-  logging: false
-});
+const usingPostgres = Boolean(DATABASE_URL);
+
+const sequelize = usingPostgres
+  ? new Sequelize(DATABASE_URL, {
+      dialect: 'postgres',
+      protocol: 'postgres',
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
+    })
+  : new Sequelize({
+      dialect: 'sqlite',
+      storage: DEFAULT_SQLITE_STORAGE,
+      logging: false,
+    });
 
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log(`✅ Database connected (SQLite: ${DEFAULT_SQLITE_STORAGE}).`);
+    console.log(
+      usingPostgres
+        ? '✅ Database connected (Postgres).'
+        : `✅ Database connected (SQLite: ${DEFAULT_SQLITE_STORAGE}).`
+    );
     return true;
   } catch (error) {
     console.error('❌ Connection failed:', error.message);
@@ -20,4 +39,4 @@ const testConnection = async () => {
   }
 };
 
-module.exports = { sequelize, testConnection };
+module.exports = { sequelize, testConnection, usingPostgres };
