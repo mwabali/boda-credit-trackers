@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config(); 
 
-const { sequelize, testConnection } = require('./config/database');
+const { sequelize, testConnection, usingPostgres } = require('./config/database');
 const { Rider, Station, Transaction } = require('./models');
 
 const riderRoutes = require('./routes/riders');
@@ -14,6 +14,10 @@ const app = express();
 const PORT = process.env.PORT || 5050;
 
 async function ensureStationCompanyColumn() {
+  if (usingPostgres) {
+    return;
+  }
+
   const queryInterface = sequelize.getQueryInterface();
   const stationTable = await queryInterface.describeTable('stations');
 
@@ -42,12 +46,16 @@ app.use('/transactions', transactionRoutes);
 const start = async () => {
   await testConnection();
   
-  // Sync models (create tables)
-  await Rider.sync();
-  await Station.sync();
-  await Transaction.sync();
-  await ensureStationCompanyColumn();
-  console.log('✅ Tables ready');
+  if (usingPostgres) {
+    console.log('✅ Using existing Postgres schema');
+  } else {
+    // Sync models (create tables) for local SQLite development only
+    await Rider.sync();
+    await Station.sync();
+    await Transaction.sync();
+    await ensureStationCompanyColumn();
+    console.log('✅ Tables ready');
+  }
   
   const server = app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
