@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import ridersIcon from '../assets/Riders_icon.svg'
 import { request } from '../lib/api'
 import { formatCurrency, formatStatus } from '../lib/formatters'
@@ -14,22 +14,22 @@ function RidersPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function loadRiders() {
-      try {
-        setIsLoading(true)
-        setError('')
-        const payload = await request('/riders')
-        setRiders(payload.data || [])
-      } catch (loadError) {
-        setError(loadError.message)
-      } finally {
-        setIsLoading(false)
-      }
+  const loadRiders = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+      const payload = await request('/riders')
+      setRiders(payload.data || [])
+    } catch (loadError) {
+      setError(loadError.message)
+    } finally {
+      setIsLoading(false)
     }
-
-    loadRiders()
   }, [])
+
+  useEffect(() => {
+    loadRiders()
+  }, [loadRiders])
 
   const riderRows = useMemo(
     () =>
@@ -65,9 +65,7 @@ function RidersPage() {
         body: JSON.stringify({ status }),
       })
 
-      setRiders((prev) =>
-        prev.map((rider) => (rider.id === riderId ? { ...rider, status } : rider))
-      )
+      await loadRiders()
     } catch (updateError) {
       setError(updateError.message)
     } finally {

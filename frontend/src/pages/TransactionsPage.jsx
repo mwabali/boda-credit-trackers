@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import transactionsIcon from '../assets/Transactions_icon.svg'
 import CreditTable from '../components/CreditTable'
 import { request } from '../lib/api'
@@ -19,28 +19,28 @@ function TransactionsPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function loadTransactions() {
-      try {
-        setIsLoading(true)
-        setError('')
+  const loadTransactions = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
 
-        const [transactionsPayload, statsPayload] = await Promise.all([
-          request('/transactions?include=all'),
-          request('/transactions/stats/dashboard'),
-        ])
+      const [transactionsPayload, statsPayload] = await Promise.all([
+        request('/transactions?include=all'),
+        request('/transactions/stats/dashboard'),
+      ])
 
-        setTransactions(transactionsPayload.data || [])
-        setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
-      } catch (loadError) {
-        setError(loadError.message)
-      } finally {
-        setIsLoading(false)
-      }
+      setTransactions(transactionsPayload.data || [])
+      setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
+    } catch (loadError) {
+      setError(loadError.message)
+    } finally {
+      setIsLoading(false)
     }
-
-    loadTransactions()
   }, [])
+
+  useEffect(() => {
+    loadTransactions()
+  }, [loadTransactions])
 
   const tableTransactions = useMemo(
     () => transactions.map(mapTransactionToRow),
@@ -80,23 +80,7 @@ function TransactionsPage() {
         body: JSON.stringify({ status }),
       })
 
-      setTransactions((prev) =>
-        prev.map((transaction) =>
-          transaction.id === transactionId ? { ...transaction, status } : transaction
-        )
-      )
-
-      setStats((prev) => {
-        const nextTransactions = transactions.map((transaction) =>
-          transaction.id === transactionId ? { ...transaction, status } : transaction
-        )
-
-        return {
-          total: nextTransactions.length,
-          pending: nextTransactions.filter((transaction) => transaction.status === 'pending').length,
-          paid: nextTransactions.filter((transaction) => transaction.status === 'paid').length,
-        }
-      })
+      await loadTransactions()
     } catch (updateError) {
       setError(updateError.message)
     } finally {

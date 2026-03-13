@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import stationsIcon from '../assets/Stations_icon.svg'
 import StationList from '../components/StationList'
 import { request } from '../lib/api'
@@ -26,23 +26,23 @@ function StationsPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [formValues, setFormValues] = useState(initialStationValues)
 
-  useEffect(() => {
-    async function loadStations() {
-      try {
-        setIsLoading(true)
-        setError('')
-        const payload = await request('/stations')
-        setStations(payload.data || [])
-        setIsFormExpanded((payload.data || []).length === 0)
-      } catch (loadError) {
-        setError(loadError.message)
-      } finally {
-        setIsLoading(false)
-      }
+  const loadStations = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError('')
+      const payload = await request('/stations')
+      setStations(payload.data || [])
+      setIsFormExpanded((payload.data || []).length === 0)
+    } catch (loadError) {
+      setError(loadError.message)
+    } finally {
+      setIsLoading(false)
     }
-
-    loadStations()
   }, [])
+
+  useEffect(() => {
+    loadStations()
+  }, [loadStations])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -59,12 +59,12 @@ function StationsPage() {
       setError('')
       setSuccessMessage('')
 
-      const payload = await request('/stations', {
+      await request('/stations', {
         method: 'POST',
         body: JSON.stringify(formValues),
       })
 
-      setStations((prev) => [payload.data, ...prev])
+      await loadStations()
       setFormValues(initialStationValues)
       setSuccessMessage('Station added successfully.')
       setIsFormExpanded(false)
@@ -104,11 +104,7 @@ function StationsPage() {
         body: JSON.stringify({ status }),
       })
 
-      setStations((prev) =>
-        prev.map((station) =>
-          station.id === stationId ? { ...station, status } : station
-        )
-      )
+      await loadStations()
     } catch (updateError) {
       setError(updateError.message)
     } finally {
