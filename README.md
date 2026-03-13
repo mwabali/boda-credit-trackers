@@ -144,4 +144,3 @@ npm run seed
 
 - Local database files and frontend cache folders should remain untracked.
 - Supabase is now the source of truth for deployed data.
-- Hobby-mode Render is fine for backend hosting, but Supabase is what solves the data persistence problem.
