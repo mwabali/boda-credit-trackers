@@ -303,3 +303,37 @@
   color: #4b5563;
   max-width: 70ch;
 }
+
+@media (max-width: 900px) {
+  .statsGrid,
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formHeader,
+  .statusRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .submitButton,
+  .toggleButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    gap: 0.85rem;
+  }
+
+  .statCard,
+  .formSection,
+  .stationCard {
+    padding: 0.8rem;
+  }
+
+  .stationForm {
+    grid-template-columns: 1fr;
+  }
+}

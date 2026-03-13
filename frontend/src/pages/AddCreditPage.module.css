@@ -84,7 +84,17 @@
   background: #fed7aa;
 }
 
+@media (max-width: 900px) {
+  .formShell {
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
+  .page {
+    gap: 0.85rem;
+  }
+
   .form {
     grid-template-columns: 1fr;
   }
