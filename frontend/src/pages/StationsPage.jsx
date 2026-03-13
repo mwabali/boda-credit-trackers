@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
 import stationsIcon from '../assets/Stations_icon.svg'
 import StationList from '../components/StationList'
 import { request } from '../lib/api'
@@ -24,7 +26,6 @@ function StationsPage() {
   const [isFormExpanded, setIsFormExpanded] = useState(true)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  const [formValues, setFormValues] = useState(initialStationValues)
 
   const loadStations = useCallback(async () => {
     try {
@@ -44,44 +45,13 @@ function StationsPage() {
     loadStations()
   }, [loadStations])
 
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setFormValues((prev) => ({ ...prev, [name]: value }))
-    if (error) setError('')
-    if (successMessage) setSuccessMessage('')
-  }
-
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-
-    try {
-      setIsSubmitting(true)
-      setError('')
-      setSuccessMessage('')
-
-      await request('/stations', {
-        method: 'POST',
-        body: JSON.stringify(formValues),
-      })
-
-      await loadStations()
-      setFormValues(initialStationValues)
-      setSuccessMessage('Station added successfully.')
-      setIsFormExpanded(false)
-    } catch (submitError) {
-      setError(submitError.message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   const activeStations = useMemo(
     () => stations.filter((station) => station.status === 'active').length,
     [stations]
   )
 
   const stationsWithManagers = useMemo(
-    () => stations.filter((station) => station.managerName).length,
+    () => stations.filter((station) => station.managerPhone).length,
     [stations]
   )
 
@@ -111,6 +81,67 @@ function StationsPage() {
       setIsUpdatingStatus(false)
     }
   }
+
+  const validationSchema = useMemo(
+    () =>
+      Yup.object({
+        name: Yup.string()
+          .trim()
+          .min(2, 'Branch name must be at least 2 characters')
+          .required('Branch name is required'),
+        location: Yup.string()
+          .trim()
+          .min(2, 'Location must be at least 2 characters')
+          .required('Location is required'),
+        managerName: Yup.string()
+          .trim()
+          .min(2, 'Manager name must be at least 2 characters')
+          .nullable(),
+        managerPhone: Yup.string()
+          .trim()
+          .matches(/^\+?[0-9]{10,15}$/, {
+            message: 'Use a valid phone number like +254712345678',
+            excludeEmptyString: true,
+          }),
+      }),
+    []
+  )
+
+  const formik = useFormik({
+    initialValues: initialStationValues,
+    validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        setIsSubmitting(true)
+        setError('')
+        setSuccessMessage('')
+
+        const payload = {
+          name: values.name.trim(),
+          location: values.location.trim(),
+          managerName: values.managerName.trim(),
+          managerPhone: values.managerPhone.trim(),
+        }
+
+        await request('/stations', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
+
+        await loadStations()
+        resetForm()
+        setSuccessMessage('Station added successfully.')
+        setIsFormExpanded(false)
+      } catch (submitError) {
+        setError(submitError.message)
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+  })
+
+  const showFieldError = (fieldName) =>
+    formik.touched[fieldName] && formik.errors[fieldName]
 
   return (
     <main className={styles.page}>
@@ -190,18 +221,22 @@ function StationsPage() {
           <form
             id="station-entry-form"
             className={styles.stationForm}
-            onSubmit={handleSubmit}
+            onSubmit={formik.handleSubmit}
           >
             <label className={styles.field}>
               Branch Name
               <input
                 type="text"
                 name="name"
-                value={formValues.name}
-                onChange={handleChange}
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 placeholder="e.g. Kampala Road"
-                required
+                className={showFieldError('name') ? styles.fieldInputError : ''}
               />
+              {showFieldError('name') ? (
+                <span className={styles.fieldError}>{formik.errors.name}</span>
+              ) : null}
             </label>
 
             <label className={styles.field}>
@@ -209,11 +244,15 @@ function StationsPage() {
               <input
                 type="text"
                 name="location"
-                value={formValues.location}
-                onChange={handleChange}
+                value={formik.values.location}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 placeholder="e.g. Nairobi CBD"
-                required
+                className={showFieldError('location') ? styles.fieldInputError : ''}
               />
+              {showFieldError('location') ? (
+                <span className={styles.fieldError}>{formik.errors.location}</span>
+              ) : null}
             </label>
 
             <label className={styles.field}>
@@ -221,21 +260,31 @@ function StationsPage() {
               <input
                 type="text"
                 name="managerName"
-                value={formValues.managerName}
-                onChange={handleChange}
+                value={formik.values.managerName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 placeholder="Optional"
+                className={showFieldError('managerName') ? styles.fieldInputError : ''}
               />
+              {showFieldError('managerName') ? (
+                <span className={styles.fieldError}>{formik.errors.managerName}</span>
+              ) : null}
             </label>
 
-          <label className={styles.field}>
-            Management Phoneline
-            <input
-              type="tel"
-              name="managerPhone"
-                value={formValues.managerPhone}
-                onChange={handleChange}
+            <label className={styles.field}>
+              Management Phoneline
+              <input
+                type="tel"
+                name="managerPhone"
+                value={formik.values.managerPhone}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 placeholder="+254 7xx xxx xxx"
+                className={showFieldError('managerPhone') ? styles.fieldInputError : ''}
               />
+              {showFieldError('managerPhone') ? (
+                <span className={styles.fieldError}>{formik.errors.managerPhone}</span>
+              ) : null}
             </label>
 
             <button

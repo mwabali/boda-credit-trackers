@@ -171,6 +171,17 @@
   background: #ffffff;
 }
 
+.fieldInputError {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.fieldError {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
 .submitButton {
   border: 1px solid #fdba74;
   border-radius: 10px;
