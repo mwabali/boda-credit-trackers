@@ -99,18 +99,9 @@ function StationsPage() {
       setIsUpdatingStatus(true)
       setError('')
 
-      const currentStation = stations.find((station) => station.id === stationId)
-      if (!currentStation) return
-
       await request(`/stations/${stationId}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          name: currentStation.name,
-          location: currentStation.location,
-          managerName: currentStation.managerName,
-          managerPhone: currentStation.managerPhone,
-          status,
-        }),
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
       })
 
       setStations((prev) =>

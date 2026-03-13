@@ -120,6 +120,35 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PATCH /riders/:id - Update rider status only
+router.patch('/:id', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const rider = await Rider.findByPk(req.params.id);
+
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+
+    if (!status || !VALID_RIDER_STATUSES.has(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid rider status',
+      });
+    }
+
+    await rider.update({ status });
+
+    res.json({
+      success: true,
+      message: 'Rider status updated',
+      data: rider,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // PUT /riders/:id - Update rider
 router.put('/:id', async (req, res) => {
   try {

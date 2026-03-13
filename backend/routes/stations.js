@@ -91,6 +91,42 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PATCH /stations/:id - Update station status only
+router.patch('/:id', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const station = await Station.findByPk(req.params.id);
+
+    if (!station) {
+      return res.status(404).json({
+        success: false,
+        message: 'Station not found',
+      });
+    }
+
+    if (!status || !VALID_STATION_STATUSES.has(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid station status',
+      });
+    }
+
+    await station.update({ status });
+
+    res.json({
+      success: true,
+      message: 'Station status updated successfully',
+      data: hydrateStation(station),
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error updating station status',
+      error: error.message,
+    });
+  }
+});
+
 // PUT /stations/:id - Update station
 router.put('/:id', async (req, res) => {
   try {

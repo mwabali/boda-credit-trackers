@@ -60,17 +60,9 @@ function RidersPage() {
       setIsUpdatingStatus(true)
       setError('')
 
-      const currentRider = riders.find((rider) => rider.id === riderId)
-      if (!currentRider) return
-
       await request(`/riders/${riderId}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          name: currentRider.name,
-          phone: currentRider.phone,
-          licensePlate: currentRider.licensePlate,
-          status,
-        }),
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
       })
 
       setRiders((prev) =>
