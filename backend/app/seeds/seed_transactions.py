@@ -1,19 +1,11 @@
-from app.database.db import get_db_connection
+from models import Transaction
+
 
 def seed_transactions():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    transactions = [
+        Transaction(rider_id=1, station_id=1, amount=1500, liters=6.0, status="pending"),
+        Transaction(rider_id=2, station_id=2, amount=2000, liters=8.0, status="approved"),
+        Transaction(rider_id=3, station_id=3, amount=1000, liters=4.5, status="pending"),
+    ]
 
-    cursor.execute("""
-        INSERT INTO transactions (rider_id, station_id, amount, liters, status)
-        VALUES
-        (1,1,1500,6.0,'pending'),
-        (2,2,2000,8.0,'approved'),
-        (3,3,1000,4.5,'pending');
-    """)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    print("Transactions seeded successfully")
+    return transactions

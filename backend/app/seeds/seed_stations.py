@@ -1,19 +1,29 @@
-from app.database.db import get_db_connection
+from models import Station
+
 
 def seed_stations():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    stations = [
+        Station(
+            name="Eldoret",
+            company_name="Total",
+            location="Eldoret Town",
+            manager_name="Peter Kiptoo",
+            manager_phone="+254711000101",
+        ),
+        Station(
+            name="Kisumu",
+            company_name="Total",
+            location="Kisumu",
+            manager_name="James Kimani",
+            manager_phone="+254711000102",
+        ),
+        Station(
+            name="Langata",
+            company_name="Total",
+            location="Langas",
+            manager_name="Mary Wanjiku",
+            manager_phone="+254711000103",
+        ),
+    ]
 
-    cursor.execute("""
-        INSERT INTO stations (name, company_name, location, manager_name, manager_phone)
-        VALUES
-        ('Eldoret','Total','Eldoret Town','Peter Kiptoo','+254711000101'),
-        ('Kisumu','Total','Kisumu','James Kimani','+254711000102'),
-        ('Langata','Total','Langas','Mary Wanjiku','+254711000103');
-    """)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    print("Stations seeded successfully")
+    return stations

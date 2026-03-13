@@ -66,7 +66,7 @@ From `backend/`:
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-npm run seed
+python run_seeds.py
 python3 app.py
 ```
 
@@ -165,7 +165,8 @@ Main local seed command:
 
 ```bash
 cd backend
-npm run seed
+source venv/bin/activate
+python run_seeds.py
 ```
 
 ## Notes
