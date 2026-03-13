@@ -2,32 +2,13 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
-from app.database.db import db
+from app.utils.rider_balances import get_outstanding_balance_map
 from models import Rider, Transaction
 
 
 riders_bp = Blueprint("riders", __name__, url_prefix="/riders")
 
 VALID_RIDER_STATUSES = {"active", "suspended", "inactive"}
-OUTSTANDING_TRANSACTION_STATUSES = {"pending", "approved"}
-
-
-def get_outstanding_balance_map(rider_ids):
-    if not rider_ids:
-        return {}
-
-    rows = (
-        db.session.query(
-            Transaction.rider_id.label("rider_id"),
-            func.coalesce(func.sum(Transaction.amount), 0).label("balance"),
-        )
-        .filter(Transaction.rider_id.in_(rider_ids))
-        .filter(Transaction.status.in_(OUTSTANDING_TRANSACTION_STATUSES))
-        .group_by(Transaction.rider_id)
-        .all()
-    )
-
-    return {row.rider_id: float(row.balance or 0) for row in rows}
 
 
 @riders_bp.get("")

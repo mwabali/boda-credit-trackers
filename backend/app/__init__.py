@@ -17,9 +17,11 @@ def create_app():
     from app.routes.health import health_bp
     from app.routes.riders import riders_bp
     from app.routes.stations import stations_bp
+    from app.routes.transactions import transactions_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(riders_bp)
     app.register_blueprint(stations_bp)
+    app.register_blueprint(transactions_bp)
 
     return app
