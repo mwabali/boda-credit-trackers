@@ -209,12 +209,12 @@
   }
 
   .statValue {
-    font-size: clamp(1.35rem, 5.4vw, 1.9rem);
+    font-size: clamp(1.55rem, 6vw, 2.1rem);
     line-height: 1.02;
   }
 
   .amountValue {
-    font-size: clamp(1.2rem, 4.7vw, 1.6rem);
+    font-size: clamp(1.35rem, 5.1vw, 1.75rem);
     letter-spacing: -0.04em;
   }
 
