@@ -1,29 +1,38 @@
 .appContainer {
   min-height: 100vh;
-  background: #f4f4fb;
+  background: linear-gradient(180deg, #f8fafc 0%, #f4f4fb 100%);
   display: flex;
 }
 
 .contentArea {
   flex: 1;
   margin-left: 240px;
-  padding: 2.5rem;
+  padding: 2rem;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
+  .appContainer {
+    display: block;
+    background: #f4f4fb;
+  }
+
   .contentArea {
     margin-left: 0;
-    padding: 1.75rem;
-    border-radius: 16px;
+    padding: 1.15rem 1rem 1.25rem;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
   }
 }
 
 @media (max-width: 640px) {
   .contentArea {
-    padding: 1.25rem;
+    padding: 1rem 0.85rem 1.1rem;
   }
 }
