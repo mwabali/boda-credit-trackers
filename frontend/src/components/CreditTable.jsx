@@ -34,7 +34,15 @@ function CreditTable({
 
             return (
               <tr key={tx.id}>
-                <td>{tx.rider}</td>
+                <td>
+                  <span className={styles.riderCell}>
+                    <span
+                      className={`${styles.statusDot} ${styles[statusValue]}`}
+                      aria-hidden="true"
+                    />
+                    <span>{tx.rider}</span>
+                  </span>
+                </td>
                 {showPhone && <td>{tx.phone}</td>}
                 {showNumberPlate && <td>{tx.number_plate}</td>}
                 <td>{tx.station}</td>
@@ -42,29 +50,23 @@ function CreditTable({
                 <td>{tx.litres}</td>
                 <td>{tx.date}</td>
                 <td>
-                  <span className={styles.statusCell}>
-                    <span
-                      className={`${styles.statusDot} ${styles[statusValue]}`}
-                      aria-hidden="true"
-                    />
-                    {onStatusChange ? (
-                      <select
-                        className={`${styles.statusSelect} ${styles[statusValue]}`}
-                        value={statusValue}
-                        onChange={(event) => onStatusChange(tx.id, event.target.value)}
-                        disabled={isUpdatingStatus}
-                        aria-label={`Update transaction ${tx.id} status`}
-                      >
-                        {STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span>{tx.status}</span>
-                    )}
-                  </span>
+                  {onStatusChange ? (
+                    <select
+                      className={`${styles.statusSelect} ${styles[statusValue]}`}
+                      value={statusValue}
+                      onChange={(event) => onStatusChange(tx.id, event.target.value)}
+                      disabled={isUpdatingStatus}
+                      aria-label={`Update transaction ${tx.id} status`}
+                    >
+                      {STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span>{tx.status}</span>
+                  )}
                 </td>
               </tr>
             )

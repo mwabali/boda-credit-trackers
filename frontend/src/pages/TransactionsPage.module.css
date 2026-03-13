@@ -165,8 +165,31 @@
     padding: 0.8rem;
   }
 
+  .statCard h2 {
+    font-size: 0.86rem;
+    line-height: 1.25;
+  }
+
   .metricRow {
-    gap: 0.6rem;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .metricIcon {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .statValue {
+    font-size: clamp(1.2rem, 5.3vw, 1.8rem);
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .statMeta {
+    font-size: 0.8rem;
+    line-height: 1.35;
   }
 
   .table {
