@@ -187,22 +187,22 @@
   }
 
   .statCard {
-    padding: 0.88rem;
-    min-height: 8.3rem;
-    grid-template-rows: minmax(2.6rem, auto) auto auto;
-    gap: 0.35rem;
+    padding: 0.82rem;
+    min-height: 7.55rem;
+    grid-template-rows: minmax(2.25rem, auto) auto auto;
+    gap: 0.22rem;
   }
 
   .statCard h2 {
-    font-size: 0.92rem;
-    line-height: 1.15;
+    font-size: 0.9rem;
+    line-height: 1.1;
   }
 
   .metricRow {
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.46rem;
     flex-wrap: nowrap;
-    min-height: 2.25rem;
+    min-height: 2rem;
   }
 
   .amountMetricRow {
@@ -210,8 +210,8 @@
   }
 
   .metricIcon {
-    width: 1.75rem;
-    height: 1.75rem;
+    width: 1.62rem;
+    height: 1.62rem;
   }
 
   .statValue {
@@ -225,8 +225,8 @@
   }
 
   .statMeta {
-    font-size: 0.84rem;
-    line-height: 1.28;
+    font-size: 0.8rem;
+    line-height: 1.22;
   }
 
   .table {
