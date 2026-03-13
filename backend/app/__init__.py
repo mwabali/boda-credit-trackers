@@ -15,7 +15,9 @@ def create_app():
     import models  # noqa: F401
 
     from app.routes.health import health_bp
+    from app.routes.riders import riders_bp
 
     app.register_blueprint(health_bp)
+    app.register_blueprint(riders_bp)
 
     return app
