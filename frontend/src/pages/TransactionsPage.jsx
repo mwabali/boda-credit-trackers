@@ -90,6 +90,14 @@ function TransactionsPage() {
   }
 
   const handleDeleteTransaction = async (transactionId) => {
+    const confirmed = window.confirm(
+      'Delete this transaction permanently? This action cannot be undone.'
+    )
+
+    if (!confirmed) {
+      return
+    }
+
     try {
       setIsDeletingTransaction(true)
       setError('')
