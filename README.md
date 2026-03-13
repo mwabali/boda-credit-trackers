@@ -25,6 +25,31 @@ The current app supports the core MVP flows:
 
 The current station model assumes a single company using the platform and stores branches under `Total`.
 
+## Data Model Relationships
+
+The backend uses three core models:
+
+- `Rider`
+- `Station`
+- `Transaction`
+
+Relationship structure:
+
+- One rider has many transactions
+- One station has many transactions
+- Riders and stations are also linked through a reciprocal many-to-many relationship using `Transaction` as the association table
+
+`Transaction` is not just a join table. It stores user-submittable business data such as:
+
+- `amount`
+- `liters`
+- `status`
+- `notes`
+- `paymentMethod`
+- `paymentDate`
+
+This makes the transaction ledger the source of truth for credit activity between riders and station branches.
+
 ## Repository Structure
 
 - `backend/`: Express API, Sequelize models, SQL schema files, seed scripts
