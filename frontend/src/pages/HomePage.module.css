@@ -119,6 +119,7 @@
   border-radius: 14px;
   padding: 1rem;
   display: grid;
+  grid-template-rows: auto auto 1fr auto;
   gap: 0.65rem;
   align-content: start;
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
@@ -171,6 +172,7 @@
 
 .cardLink {
   justify-self: start;
+  align-self: end;
   text-decoration: none;
   font-weight: 700;
   font-size: 0.9rem;
@@ -243,11 +245,11 @@
   }
 
   .statsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .statCardWide {
-    grid-column: auto;
+    grid-column: 1 / -1;
   }
 
   .extensionGrid {
