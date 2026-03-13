@@ -129,7 +129,7 @@ Use:
 - Runtime: `Python`
 - Root directory: `backend`
 - Build command: `pip install -r requirements.txt`
-- Start command: `gunicorn app:app`
+- Start command: `gunicorn 'app:create_app()'`
 
 Required environment variables:
 
