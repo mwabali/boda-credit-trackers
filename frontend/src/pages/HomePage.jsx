@@ -57,18 +57,12 @@ function HomePage() {
       setIsLoading(true)
       setError('')
 
-      const [ridersPayload, stationsPayload, transactionsPayload, statsPayload] =
-        await Promise.all([
-          request('/riders'),
-          request('/stations'),
-          request('/transactions?include=all'),
-          request('/transactions/stats/dashboard'),
-        ])
+      const dashboardPayload = await request('/dashboard')
 
-      setRiders(ridersPayload.data || [])
-      setStations(stationsPayload.data || [])
-      setTransactions(transactionsPayload.data || [])
-      setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
+      setRiders(dashboardPayload.data?.riders || [])
+      setStations(dashboardPayload.data?.stations || [])
+      setTransactions(dashboardPayload.data?.transactions || [])
+      setStats(dashboardPayload.data?.stats || { total: 0, pending: 0, paid: 0 })
     } catch (loadError) {
       setError(loadError.message)
     } finally {
