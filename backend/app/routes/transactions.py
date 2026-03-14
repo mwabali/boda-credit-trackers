@@ -55,6 +55,7 @@ def list_transactions():
     try:
         status = request.args.get("status", "").strip()
         include_all = request.args.get("include") == "all"
+        include_stats = request.args.get("stats") == "dashboard"
 
         query = Transaction.query
         if status:
@@ -72,7 +73,16 @@ def list_transactions():
             for transaction in transactions
         ]
 
-        return jsonify({"success": True, "count": len(data), "data": data})
+        response_payload = {"success": True, "count": len(data), "data": data}
+
+        if include_stats:
+            response_payload["stats"] = {
+                "total": Transaction.query.count(),
+                "pending": Transaction.query.filter_by(status="pending").count(),
+                "paid": Transaction.query.filter_by(status="paid").count(),
+            }
+
+        return jsonify(response_payload)
     except Exception as error:
         return jsonify({"success": False, "message": str(error)}), 500
 

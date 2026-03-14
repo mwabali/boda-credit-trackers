@@ -26,13 +26,10 @@ function TransactionsPage() {
       setIsLoading(true)
       setError('')
 
-      const [transactionsPayload, statsPayload] = await Promise.all([
-        request('/transactions?include=all'),
-        request('/transactions/stats/dashboard'),
-      ])
+      const transactionsPayload = await request('/transactions?include=all&stats=dashboard')
 
       setTransactions(transactionsPayload.data || [])
-      setStats(statsPayload.data || { total: 0, pending: 0, paid: 0 })
+      setStats(transactionsPayload.stats || { total: 0, pending: 0, paid: 0 })
     } catch (loadError) {
       setError(loadError.message)
     } finally {
