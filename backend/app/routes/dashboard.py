@@ -58,3 +58,31 @@ def get_dashboard_payload():
         )
     except Exception as error:
         return jsonify({"success": False, "message": str(error)}), 500
+
+
+@dashboard_bp.get("/form-options")
+def get_form_options():
+    try:
+        riders = Rider.query.order_by(Rider.created_at.desc()).all()
+        stations = Station.query.order_by(Station.created_at.desc()).all()
+        balance_map = get_outstanding_balance_map([rider.id for rider in riders])
+
+        rider_data = []
+        for rider in riders:
+            payload = rider.to_dict()
+            payload["currentBalance"] = balance_map.get(rider.id, 0)
+            rider_data.append(payload)
+
+        station_data = [hydrate_station(station) for station in stations]
+
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "riders": rider_data,
+                    "stations": station_data,
+                },
+            }
+        )
+    except Exception as error:
+        return jsonify({"success": False, "message": str(error)}), 500

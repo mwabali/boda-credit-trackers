@@ -17,13 +17,10 @@ function AddCreditPage() {
         setIsLoading(true)
         setError('')
 
-        const [ridersPayload, stationsPayload] = await Promise.all([
-          request('/riders'),
-          request('/stations'),
-        ])
+        const optionsPayload = await request('/dashboard/form-options')
 
-        setRiders(ridersPayload.data || [])
-        setStations(stationsPayload.data || [])
+        setRiders(optionsPayload.data?.riders || [])
+        setStations(optionsPayload.data?.stations || [])
       } catch (loadError) {
         setError(loadError.message)
       } finally {
@@ -49,6 +46,7 @@ function AddCreditPage() {
         })
 
         riderId = riderPayload.data.id
+        setRiders((currentRiders) => [riderPayload.data, ...currentRiders])
       }
 
       await request('/transactions', {
@@ -62,9 +60,6 @@ function AddCreditPage() {
       })
 
       setSuccessMessage('Credit transaction saved successfully.')
-
-      const ridersPayload = await request('/riders')
-      setRiders(ridersPayload.data || [])
     } catch (submitError) {
       setError(submitError.message)
     } finally {
