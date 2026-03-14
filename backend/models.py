@@ -17,6 +17,10 @@ def serialize_datetime(value):
     return str(value)
 
 
+def current_timestamp():
+    return datetime.utcnow().isoformat()
+
+
 class Rider(db.Model):
     __tablename__ = "riders"
 
@@ -28,8 +32,13 @@ class Rider(db.Model):
     credit_limit = db.Column(Numeric(12, 2), nullable=False, default=100000.00)
     current_balance = db.Column(Numeric(12, 2), nullable=False, default=0.00)
     status = db.Column(db.String(20), nullable=False, default="active")
-    created_at = db.Column(db.String(64), nullable=False)
-    updated_at = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
 
     transactions = db.relationship("Transaction", back_populates="rider", lazy="select")
 
@@ -59,8 +68,13 @@ class Station(db.Model):
     manager_name = db.Column(db.String(100))
     manager_phone = db.Column(db.String(20))
     status = db.Column(db.String(20), nullable=False, default="active")
-    created_at = db.Column(db.String(64), nullable=False)
-    updated_at = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
 
     transactions = db.relationship("Transaction", back_populates="station", lazy="select")
 
@@ -101,8 +115,13 @@ class Transaction(db.Model):
     payment_date = db.Column(db.String(64))
     receipt_number = db.Column(db.String(50), unique=True)
     notes = db.Column(db.Text)
-    created_at = db.Column(db.String(64), nullable=False)
-    updated_at = db.Column(db.String(64), nullable=False)
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
 
     rider = db.relationship("Rider", back_populates="transactions", lazy="joined")
     station = db.relationship("Station", back_populates="transactions", lazy="joined")

@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
+from app.database.db import db
 from app.utils.rider_balances import get_outstanding_balance_map
 from models import Rider, Transaction
 
