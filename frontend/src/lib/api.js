@@ -3,11 +3,22 @@ const API_BASE_URL =
   'http://localhost:5050'
 
 async function request(path, options = {}) {
+  const headers = {
+    Accept: 'application/json',
+    ...options.headers,
+  }
+
+  const hasJsonBody =
+    options.body !== undefined &&
+    options.body !== null &&
+    !(options.body instanceof FormData)
+
+  if (hasJsonBody && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json'
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
     ...options,
   })
 
