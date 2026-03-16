@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import stationsIcon from '../assets/Stations_icon.svg'
+import StatusToast from '../components/StatusToast'
 import StationList from '../components/StationList'
 import { request } from '../lib/api'
 import { getStationDisplayName } from '../lib/mappers'
@@ -145,6 +146,8 @@ function StationsPage() {
 
   return (
     <main className={styles.page}>
+      <StatusToast message={error} onClose={() => setError('')} />
+
       <header className={styles.header}>
         <h1 className={styles.title}>Fuel Stations Network</h1>
         <p className={styles.description}>
@@ -214,7 +217,6 @@ function StationsPage() {
           </button>
         </div>
 
-        {error ? <p className={styles.errorMessage}>{error}</p> : null}
         {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
         {isFormExpanded ? (
@@ -300,8 +302,6 @@ function StationsPage() {
 
       <section className={styles.cardsGrid} aria-label="Station cards">
         {isLoading ? <p className={styles.stateMessage}>Loading stations...</p> : null}
-        {error ? <p className={styles.errorMessage}>{error}</p> : null}
-
         {!isLoading && !error && !stations.length ? (
           <p className={styles.stateMessage}>No stations available.</p>
         ) : null}

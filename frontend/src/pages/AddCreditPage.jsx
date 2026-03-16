@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import CreditForm from '../components/CreditForm'
+import StatusToast from '../components/StatusToast'
 import { request } from '../lib/api'
 import styles from './AddCreditPage.module.css'
 
@@ -69,6 +70,8 @@ function AddCreditPage() {
 
   return (
     <main className={styles.page}>
+      <StatusToast message={error} onClose={() => setError('')} />
+
       <header className={styles.header}>
         <h1 className={styles.title}>Add Credit Transaction</h1>
         <p className={styles.description}>
@@ -78,7 +81,6 @@ function AddCreditPage() {
 
       <section className={styles.formShell}>
         {isLoading ? <p className={styles.stateMessage}>Loading form options...</p> : null}
-        {error ? <p className={styles.errorMessage}>{error}</p> : null}
         {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
         <CreditForm

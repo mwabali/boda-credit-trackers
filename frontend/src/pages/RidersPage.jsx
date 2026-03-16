@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import ridersIcon from '../assets/Riders_icon.svg'
+import StatusToast from '../components/StatusToast'
 import { request } from '../lib/api'
 import { formatCurrency, formatStatus } from '../lib/formatters'
 import styles from './RidersPage.module.css'
@@ -75,6 +76,8 @@ function RidersPage() {
 
   return (
     <main className={styles.page}>
+      <StatusToast message={error} onClose={() => setError('')} />
+
       <header className={styles.header}>
         <h1 className={styles.title}>Riders Management</h1>
         <p className={styles.description}>
@@ -126,8 +129,6 @@ function RidersPage() {
 
       <section className={styles.tableShell} aria-label="Riders list">
         {isLoading ? <p className={styles.stateMessage}>Loading riders...</p> : null}
-        {error ? <p className={styles.errorMessage}>{error}</p> : null}
-
         {!isLoading && !error && !riderRows.length ? (
           <p className={styles.stateMessage}>No riders available.</p>
         ) : null}

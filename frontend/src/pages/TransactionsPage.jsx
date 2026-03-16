@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import transactionsIcon from '../assets/Transactions_icon.svg'
 import CreditTable from '../components/CreditTable'
+import StatusToast from '../components/StatusToast'
 import { request } from '../lib/api'
 import { getTransactionTimestamp, mapTransactionToRow } from '../lib/mappers'
 import styles from './TransactionsPage.module.css'
@@ -115,6 +116,8 @@ function TransactionsPage() {
 
   return (
     <main className={styles.page}>
+      <StatusToast message={error} onClose={() => setError('')} />
+
       <header className={styles.header}>
         <h1 className={styles.title}>Credit Transaction Log</h1>
         <p className={styles.description}>
@@ -167,8 +170,6 @@ function TransactionsPage() {
       </section>
 
       {isLoading ? <p className={styles.stateMessage}>Loading transactions...</p> : null}
-      {error ? <p className={styles.errorMessage}>{error}</p> : null}
-
       {!isLoading && !error ? (
         <CreditTable
           transactions={tableTransactions}

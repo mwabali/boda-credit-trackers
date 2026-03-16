@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CreditForm from '../components/CreditForm'
 import CreditTable from '../components/CreditTable'
+import StatusToast from '../components/StatusToast'
 import StationList from '../components/StationList'
 import ridersIcon from '../assets/Riders_icon.svg'
 import stationsIcon from '../assets/Stations_icon.svg'
@@ -126,6 +127,8 @@ function HomePage() {
 
   return (
     <main className={styles.page}>
+      <StatusToast message={error} onClose={() => setError('')} />
+
       <header className={styles.hero}>
         <div className={styles.heroTop}>
           <h1 className={styles.title}>Dashboard</h1>
@@ -138,7 +141,6 @@ function HomePage() {
       </header>
 
       {isLoading ? <p className={styles.feedbackMessage}>Loading dashboard data...</p> : null}
-      {error ? <p className={styles.errorMessage}>{error}</p> : null}
       {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
