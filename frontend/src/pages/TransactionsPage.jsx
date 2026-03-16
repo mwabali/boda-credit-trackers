@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import transactionsIcon from '../assets/Transactions_icon.svg'
 import CreditTable from '../components/CreditTable'
-import StatusToast from '../components/StatusToast'
+import { useToast } from '../components/ToastProvider'
 import { request } from '../lib/api'
 import { getTransactionTimestamp, mapTransactionToRow } from '../lib/mappers'
 import styles from './TransactionsPage.module.css'
@@ -14,6 +14,7 @@ function formatCompactKes(value) {
 }
 
 function TransactionsPage() {
+  const { showError, showSuccess } = useToast()
   const [transactions, setTransactions] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
   const [isLoading, setIsLoading] = useState(true)
@@ -33,10 +34,11 @@ function TransactionsPage() {
       setStats(transactionsPayload.stats || { total: 0, pending: 0, paid: 0 })
     } catch (loadError) {
       setError(loadError.message)
+      showError(loadError.message)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
     loadTransactions()
@@ -80,9 +82,11 @@ function TransactionsPage() {
         body: JSON.stringify({ status }),
       })
 
+      showSuccess('Transaction status updated successfully.', 'Status updated')
       await loadTransactions()
     } catch (updateError) {
       setError(updateError.message)
+      showError(updateError.message)
     } finally {
       setIsUpdatingStatus(false)
     }
@@ -105,10 +109,12 @@ function TransactionsPage() {
         method: 'DELETE',
       })
 
+      showSuccess('Transaction deleted successfully.', 'Entry removed')
       await loadTransactions()
       setPendingDeleteId(null)
     } catch (deleteError) {
       setError(deleteError.message)
+      showError(deleteError.message)
     } finally {
       setIsDeletingTransaction(false)
     }
@@ -116,8 +122,6 @@ function TransactionsPage() {
 
   return (
     <main className={styles.page}>
-      <StatusToast message={error} onClose={() => setError('')} />
-
       <header className={styles.header}>
         <h1 className={styles.title}>Credit Transaction Log</h1>
         <p className={styles.description}>

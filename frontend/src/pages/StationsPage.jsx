@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import stationsIcon from '../assets/Stations_icon.svg'
-import StatusToast from '../components/StatusToast'
 import StationList from '../components/StationList'
+import { useToast } from '../components/ToastProvider'
 import { request } from '../lib/api'
 import { getStationDisplayName } from '../lib/mappers'
 import styles from './StationsPage.module.css'
@@ -20,13 +20,13 @@ function formatStationId(id) {
 }
 
 function StationsPage() {
+  const { showError, showSuccess } = useToast()
   const [stations, setStations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isFormExpanded, setIsFormExpanded] = useState(true)
   const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
 
   const loadStations = useCallback(async () => {
     try {
@@ -37,10 +37,11 @@ function StationsPage() {
       setIsFormExpanded((payload.data || []).length === 0)
     } catch (loadError) {
       setError(loadError.message)
+      showError(loadError.message)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
     loadStations()
@@ -75,9 +76,11 @@ function StationsPage() {
         body: JSON.stringify({ status }),
       })
 
+      showSuccess('Station status updated successfully.', 'Status updated')
       await loadStations()
     } catch (updateError) {
       setError(updateError.message)
+      showError(updateError.message)
     } finally {
       setIsUpdatingStatus(false)
     }
@@ -115,7 +118,6 @@ function StationsPage() {
       try {
         setIsSubmitting(true)
         setError('')
-        setSuccessMessage('')
 
         const payload = {
           name: values.name.trim(),
@@ -131,10 +133,11 @@ function StationsPage() {
 
         await loadStations()
         resetForm()
-        setSuccessMessage('Station added successfully.')
+        showSuccess('Station added successfully.', 'Station saved')
         setIsFormExpanded(false)
       } catch (submitError) {
         setError(submitError.message)
+        showError(submitError.message)
       } finally {
         setIsSubmitting(false)
       }
@@ -146,8 +149,6 @@ function StationsPage() {
 
   return (
     <main className={styles.page}>
-      <StatusToast message={error} onClose={() => setError('')} />
-
       <header className={styles.header}>
         <h1 className={styles.title}>Fuel Stations Network</h1>
         <p className={styles.description}>
@@ -216,8 +217,6 @@ function StationsPage() {
             {isFormExpanded ? 'Hide form' : 'Add station'}
           </button>
         </div>
-
-        {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
         {isFormExpanded ? (
           <form

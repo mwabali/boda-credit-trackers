@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import CreditForm from '../components/CreditForm'
 import CreditTable from '../components/CreditTable'
-import StatusToast from '../components/StatusToast'
 import StationList from '../components/StationList'
+import { useToast } from '../components/ToastProvider'
 import ridersIcon from '../assets/Riders_icon.svg'
 import stationsIcon from '../assets/Stations_icon.svg'
 import transactionsIcon from '../assets/Transactions_icon.svg'
@@ -43,6 +43,7 @@ const dashboardSections = [
 ]
 
 function HomePage() {
+  const { showError, showSuccess } = useToast()
   const companyLabel = '.Total'
   const [riders, setRiders] = useState([])
   const [stations, setStations] = useState([])
@@ -51,7 +52,6 @@ function HomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
 
   const loadDashboardData = useCallback(async () => {
     try {
@@ -66,10 +66,11 @@ function HomePage() {
       setStats(dashboardPayload.data?.stats || { total: 0, pending: 0, paid: 0 })
     } catch (loadError) {
       setError(loadError.message)
+      showError(loadError.message)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
     loadDashboardData()
@@ -93,7 +94,6 @@ function HomePage() {
     try {
       setIsSubmitting(true)
       setError('')
-      setSuccessMessage('')
 
       let riderId = formData.riderId
 
@@ -116,10 +116,11 @@ function HomePage() {
         }),
       })
 
-      setSuccessMessage('Dashboard credit entry saved successfully.')
+      showSuccess('Dashboard credit entry saved successfully.', 'Transaction saved')
       await loadDashboardData()
     } catch (submitError) {
       setError(submitError.message)
+      showError(submitError.message)
     } finally {
       setIsSubmitting(false)
     }
@@ -127,8 +128,6 @@ function HomePage() {
 
   return (
     <main className={styles.page}>
-      <StatusToast message={error} onClose={() => setError('')} />
-
       <header className={styles.hero}>
         <div className={styles.heroTop}>
           <h1 className={styles.title}>Dashboard</h1>
@@ -141,7 +140,6 @@ function HomePage() {
       </header>
 
       {isLoading ? <p className={styles.feedbackMessage}>Loading dashboard data...</p> : null}
-      {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
         <article className={styles.statCard}>

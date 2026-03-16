@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import ridersIcon from '../assets/Riders_icon.svg'
-import StatusToast from '../components/StatusToast'
+import { useToast } from '../components/ToastProvider'
 import { request } from '../lib/api'
 import { formatCurrency, formatStatus } from '../lib/formatters'
 import styles from './RidersPage.module.css'
@@ -10,6 +10,7 @@ function formatRiderId(id) {
 }
 
 function RidersPage() {
+  const { showError, showSuccess } = useToast()
   const [riders, setRiders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -23,10 +24,11 @@ function RidersPage() {
       setRiders(payload.data || [])
     } catch (loadError) {
       setError(loadError.message)
+      showError(loadError.message)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [showError])
 
   useEffect(() => {
     loadRiders()
@@ -66,9 +68,11 @@ function RidersPage() {
         body: JSON.stringify({ status }),
       })
 
+      showSuccess('Rider status updated successfully.', 'Status updated')
       await loadRiders()
     } catch (updateError) {
       setError(updateError.message)
+      showError(updateError.message)
     } finally {
       setIsUpdatingStatus(false)
     }
@@ -76,8 +80,6 @@ function RidersPage() {
 
   return (
     <main className={styles.page}>
-      <StatusToast message={error} onClose={() => setError('')} />
-
       <header className={styles.header}>
         <h1 className={styles.title}>Riders Management</h1>
         <p className={styles.description}>

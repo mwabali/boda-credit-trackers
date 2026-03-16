@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react'
 import CreditForm from '../components/CreditForm'
-import StatusToast from '../components/StatusToast'
+import { useToast } from '../components/ToastProvider'
 import { request } from '../lib/api'
 import styles from './AddCreditPage.module.css'
 
 function AddCreditPage() {
+  const { showError, showSuccess } = useToast()
   const [riders, setRiders] = useState([])
   const [stations, setStations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     async function loadFormOptions() {
       try {
-        setIsLoading(true)
-        setError('')
+      setIsLoading(true)
+      setError('')
 
         const optionsPayload = await request('/dashboard/form-options')
 
@@ -24,6 +24,7 @@ function AddCreditPage() {
         setStations(optionsPayload.data?.stations || [])
       } catch (loadError) {
         setError(loadError.message)
+        showError(loadError.message)
       } finally {
         setIsLoading(false)
       }
@@ -36,7 +37,6 @@ function AddCreditPage() {
     try {
       setIsSubmitting(true)
       setError('')
-      setSuccessMessage('')
 
       let riderId = formData.riderId
 
@@ -60,9 +60,10 @@ function AddCreditPage() {
         }),
       })
 
-      setSuccessMessage('Credit transaction saved successfully.')
+      showSuccess('Credit transaction saved successfully.', 'Transaction saved')
     } catch (submitError) {
       setError(submitError.message)
+      showError(submitError.message)
     } finally {
       setIsSubmitting(false)
     }
@@ -70,8 +71,6 @@ function AddCreditPage() {
 
   return (
     <main className={styles.page}>
-      <StatusToast message={error} onClose={() => setError('')} />
-
       <header className={styles.header}>
         <h1 className={styles.title}>Add Credit Transaction</h1>
         <p className={styles.description}>
@@ -81,7 +80,6 @@ function AddCreditPage() {
 
       <section className={styles.formShell}>
         {isLoading ? <p className={styles.stateMessage}>Loading form options...</p> : null}
-        {successMessage ? <p className={styles.successMessage}>{successMessage}</p> : null}
 
         <CreditForm
           riders={riders}
