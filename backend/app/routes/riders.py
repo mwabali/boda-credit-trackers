@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from app.database.db import db
+from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import get_outstanding_balance_map
 from models import Rider, Transaction
 
@@ -112,6 +114,18 @@ def create_rider():
             ),
             201,
         )
+    except ValueError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(error)}), 400
+    except IntegrityError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": format_integrity_error(error)}), 409
+    except ValueError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(error)}), 400
+    except IntegrityError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": format_integrity_error(error)}), 409
     except Exception as error:
         db.session.rollback()
         return jsonify({"success": False, "message": str(error)}), 500
@@ -139,6 +153,12 @@ def patch_rider_status(rider_id):
                 "data": rider.to_dict(),
             }
         )
+    except ValueError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(error)}), 400
+    except IntegrityError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": format_integrity_error(error)}), 409
     except Exception as error:
         db.session.rollback()
         return jsonify({"success": False, "message": str(error)}), 500

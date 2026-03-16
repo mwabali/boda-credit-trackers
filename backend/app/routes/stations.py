@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy.exc import IntegrityError
 
 from app.database.db import db
+from app.utils.db_errors import format_integrity_error
 from app.utils.station_company import hydrate_station, prepare_station_payload
 from models import Station
 
@@ -99,6 +101,18 @@ def create_station():
             ),
             201,
         )
+    except ValueError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(error)}), 400
+    except IntegrityError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": format_integrity_error(error)}), 409
+    except ValueError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(error)}), 400
+    except IntegrityError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": format_integrity_error(error)}), 409
     except Exception as error:
         db.session.rollback()
         return (
@@ -135,6 +149,12 @@ def patch_station_status(station_id):
                 "data": hydrate_station(station),
             }
         )
+    except ValueError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(error)}), 400
+    except IntegrityError as error:
+        db.session.rollback()
+        return jsonify({"success": False, "message": format_integrity_error(error)}), 409
     except Exception as error:
         db.session.rollback()
         return (
