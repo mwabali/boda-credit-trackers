@@ -1,6 +1,6 @@
 .toastStack {
   position: fixed;
-  top: 1rem;
+  top: 1.5rem;
   right: 1rem;
   z-index: 80;
   width: min(22rem, calc(100vw - 2rem));
@@ -81,7 +81,7 @@
 
 @media (max-width: 640px) {
   .toastStack {
-    top: 0.85rem;
+    top: 5.35rem;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
