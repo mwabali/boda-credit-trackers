@@ -3,6 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import CheckConstraint, Numeric
 from sqlalchemy.orm import validates
+from werkzeug.security import check_password_hash, generate_password_hash
 from app.database.db import db
 
 
@@ -11,6 +12,7 @@ VALID_RIDER_STATUSES = {"active", "suspended", "inactive"}
 VALID_STATION_STATUSES = {"active", "closed", "maintenance"}
 VALID_TRANSACTION_STATUSES = {"pending", "approved", "paid", "cancelled"}
 VALID_PAYMENT_METHODS = {"credit", "cash", "mobile_money", "card"}
+VALID_ACCOUNT_ROLES = {"company", "station", "rider"}
 
 
 def serialize_datetime(value):
@@ -60,6 +62,12 @@ class Rider(db.Model):
     )
 
     transactions = db.relationship("Transaction", back_populates="rider", lazy="select")
+    account = db.relationship(
+        "AuthAccount",
+        back_populates="rider",
+        lazy="select",
+        uselist=False,
+    )
 
     @validates("name", "license_plate")
     def validate_required_text(self, key, value):
@@ -125,6 +133,12 @@ class Station(db.Model):
     )
 
     transactions = db.relationship("Transaction", back_populates="station", lazy="select")
+    account = db.relationship(
+        "AuthAccount",
+        back_populates="station",
+        lazy="select",
+        uselist=False,
+    )
 
     @validates("name", "company_name", "location")
     def validate_station_text(self, key, value):
@@ -284,3 +298,101 @@ class Transaction(db.Model):
             "created_at": serialize_datetime(self.created_at),
             "updated_at": serialize_datetime(self.updated_at),
         }
+
+
+class AuthAccount(db.Model):
+    __tablename__ = "auth_accounts"
+    __table_args__ = (
+        CheckConstraint(
+            "role IN ('company', 'station', 'rider')",
+            name="check_auth_accounts_role_valid",
+        ),
+        CheckConstraint(
+            "(station_id IS NULL) OR (rider_id IS NULL)",
+            name="check_auth_accounts_single_profile_link",
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), nullable=False, unique=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), nullable=False)
+    full_name = db.Column(db.String(120), nullable=False)
+    company_name = db.Column(db.String(100), nullable=False, default="Total")
+    station_id = db.Column(db.Integer, db.ForeignKey("stations.id"), unique=True)
+    rider_id = db.Column(db.Integer, db.ForeignKey("riders.id"), unique=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
+
+    station = db.relationship("Station", back_populates="account", lazy="joined")
+    rider = db.relationship("Rider", back_populates="account", lazy="joined")
+
+    @validates("email")
+    def validate_email(self, key, value):
+        cleaned_value = (value or "").strip().lower()
+        if not cleaned_value or "@" not in cleaned_value:
+            raise ValueError("Email must be valid")
+        return cleaned_value
+
+    @validates("full_name", "company_name")
+    def validate_account_text(self, key, value):
+        cleaned_value = (value or "").strip()
+        if not cleaned_value:
+            raise ValueError(f"{key.replace('_', ' ').title()} is required")
+        return cleaned_value
+
+    @validates("role")
+    def validate_role(self, key, value):
+        if value not in VALID_ACCOUNT_ROLES:
+            raise ValueError("Account role is invalid")
+        return value
+
+    def set_password(self, raw_password):
+        trimmed_password = (raw_password or "").strip()
+        if len(trimmed_password) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        self.password_hash = generate_password_hash(trimmed_password)
+
+    def check_password(self, raw_password):
+        return check_password_hash(self.password_hash, raw_password or "")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "role": self.role,
+            "fullName": self.full_name,
+            "companyName": self.company_name,
+            "stationId": self.station_id,
+            "riderId": self.rider_id,
+            "isActive": self.is_active,
+            "created_at": serialize_datetime(self.created_at),
+            "updated_at": serialize_datetime(self.updated_at),
+        }
+
+    def to_session_dict(self):
+        payload = self.to_dict()
+
+        if self.station:
+            payload["station"] = {
+                "id": self.station.id,
+                "name": self.station.name,
+                "displayName": f"{self.station.company_name} {self.station.name}".strip(),
+                "location": self.station.location,
+            }
+
+        if self.rider:
+            payload["rider"] = {
+                "id": self.rider.id,
+                "name": self.rider.name,
+                "licensePlate": self.rider.license_plate,
+                "phone": self.rider.phone,
+            }
+
+        return payload

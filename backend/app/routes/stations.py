@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
 from app.database.db import db
+from app.utils.auth import auth_required, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.station_company import hydrate_station, prepare_station_payload
 from models import Station
@@ -13,11 +14,18 @@ VALID_STATION_STATUSES = {"active", "closed", "maintenance"}
 
 
 @stations_bp.get("")
+@auth_required
 def list_stations():
     try:
+        account = resolve_request_account()
         status = request.args.get("status", "").strip()
 
         query = Station.query
+        if account.role == "station":
+            query = query.filter(Station.id == account.station_id)
+        elif account.role == "rider" and not status:
+            query = query.filter(Station.status == "active")
+
         if status:
             query = query.filter(Station.status == status)
 
@@ -39,12 +47,20 @@ def list_stations():
 
 
 @stations_bp.get("/<int:station_id>")
+@auth_required
 def get_station(station_id):
     try:
+        account = resolve_request_account()
         station = Station.query.get(station_id)
 
         if not station:
             return jsonify({"success": False, "message": "Station not found"}), 404
+
+        if account.role == "station" and account.station_id != station_id:
+            return jsonify({"success": False, "message": "Access denied"}), 403
+
+        if account.role == "rider" and station.status != "active":
+            return jsonify({"success": False, "message": "Access denied"}), 403
 
         return jsonify({"success": True, "data": hydrate_station(station)})
     except Exception as error:
@@ -61,6 +77,7 @@ def get_station(station_id):
 
 
 @stations_bp.post("")
+@roles_required("company")
 def create_station():
     try:
         payload = request.get_json() or {}
@@ -128,6 +145,7 @@ def create_station():
 
 
 @stations_bp.patch("/<int:station_id>")
+@roles_required("company")
 def patch_station_status(station_id):
     try:
         station = Station.query.get(station_id)
@@ -170,6 +188,7 @@ def patch_station_status(station_id):
 
 
 @stations_bp.put("/<int:station_id>")
+@roles_required("company")
 def update_station(station_id):
     try:
         station = Station.query.get(station_id)

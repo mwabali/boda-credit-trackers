@@ -14,12 +14,19 @@ def create_app():
     init_db(app)
     import models  # noqa: F401
 
+    with app.app_context():
+        from app.database.db import db
+
+        db.create_all()
+
+    from app.routes.auth import auth_bp
     from app.routes.health import health_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.riders import riders_bp
     from app.routes.stations import stations_bp
     from app.routes.transactions import transactions_bp
 
+    app.register_blueprint(auth_bp)
     app.register_blueprint(health_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(riders_bp)

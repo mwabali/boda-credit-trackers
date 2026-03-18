@@ -17,6 +17,8 @@ class Config:
     BASE_DIR = Path(__file__).resolve().parents[1]
     DEBUG = os.getenv("FLASK_DEBUG", "0") == "1"
     PORT = int(os.getenv("PORT", "5050"))
+    SECRET_KEY = os.getenv("SECRET_KEY", "boda-credit-dev-secret")
+    AUTH_TOKEN_MAX_AGE_SECONDS = int(os.getenv("AUTH_TOKEN_MAX_AGE_SECONDS", "604800"))
 
     DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL"))
     SQLITE_STORAGE_PATH = os.getenv("SQLITE_STORAGE_PATH", "./database.sqlite")

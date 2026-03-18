@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from app.database.db import db
+from app.utils.auth import auth_required, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import get_outstanding_balance_map
 from models import Rider, Transaction
@@ -15,12 +16,19 @@ VALID_RIDER_STATUSES = {"active", "suspended", "inactive"}
 
 
 @riders_bp.get("")
+@auth_required
 def list_riders():
     try:
+        account = resolve_request_account()
         search = request.args.get("search", "").strip().lower()
         status = request.args.get("status", "").strip()
 
         query = Rider.query
+
+        if account.role == "station":
+            query = query.join(Transaction).filter(Transaction.station_id == account.station_id)
+        elif account.role == "rider":
+            query = query.filter(Rider.id == account.rider_id)
 
         if status:
             query = query.filter(Rider.status == status)
@@ -28,7 +36,7 @@ def list_riders():
         if search:
             query = query.filter(func.lower(Rider.name).like(f"%{search}%"))
 
-        riders = query.order_by(Rider.created_at.desc()).all()
+        riders = query.distinct(Rider.id).order_by(Rider.created_at.desc()).all()
         balance_map = get_outstanding_balance_map([rider.id for rider in riders])
 
         data = []
@@ -43,8 +51,10 @@ def list_riders():
 
 
 @riders_bp.get("/<int:rider_id>")
+@auth_required
 def get_rider(rider_id):
     try:
+        account = resolve_request_account()
         rider = (
             Rider.query.options(joinedload(Rider.transactions))
             .filter(Rider.id == rider_id)
@@ -53,6 +63,16 @@ def get_rider(rider_id):
 
         if not rider:
             return jsonify({"success": False, "message": "Rider not found"}), 404
+
+        if account.role == "rider" and account.rider_id != rider_id:
+            return jsonify({"success": False, "message": "Access denied"}), 403
+
+        if account.role == "station":
+            has_station_transaction = any(
+                transaction.station_id == account.station_id for transaction in rider.transactions
+            )
+            if not has_station_transaction:
+                return jsonify({"success": False, "message": "Access denied"}), 403
 
         outstanding_balance = sum(
             float(transaction.amount or 0)
@@ -82,6 +102,7 @@ def get_rider(rider_id):
 
 
 @riders_bp.post("")
+@roles_required("company", "station")
 def create_rider():
     try:
         payload = request.get_json() or {}
@@ -132,6 +153,7 @@ def create_rider():
 
 
 @riders_bp.patch("/<int:rider_id>")
+@roles_required("company")
 def patch_rider_status(rider_id):
     try:
         rider = Rider.query.get(rider_id)
@@ -165,6 +187,7 @@ def patch_rider_status(rider_id):
 
 
 @riders_bp.put("/<int:rider_id>")
+@roles_required("company")
 def update_rider(rider_id):
     try:
         rider = Rider.query.get(rider_id)

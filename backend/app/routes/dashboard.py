@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
+from app.utils.auth import auth_required, resolve_request_account
 from app.routes.transactions import serialize_transaction
 from app.utils.rider_balances import get_outstanding_balance_map
 from app.utils.station_company import hydrate_station
@@ -11,19 +13,40 @@ dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 
 @dashboard_bp.get("")
+@auth_required
 def get_dashboard_payload():
     try:
-        riders = Rider.query.order_by(Rider.created_at.desc()).all()
-        stations = Station.query.order_by(Station.created_at.desc()).all()
-        transactions = (
-            Transaction.query.options(
-                joinedload(Transaction.rider),
-                joinedload(Transaction.station),
-            )
-            .order_by(Transaction.created_at.desc())
-            .limit(5)
-            .all()
+        account = resolve_request_account()
+
+        riders_query = Rider.query
+        stations_query = Station.query
+        transactions_query = Transaction.query.options(
+            joinedload(Transaction.rider),
+            joinedload(Transaction.station),
         )
+
+        if account.role == "station":
+            riders_query = riders_query.join(Transaction).filter(
+                Transaction.station_id == account.station_id
+            )
+            stations_query = stations_query.filter(Station.id == account.station_id)
+            transactions_query = transactions_query.filter(
+                Transaction.station_id == account.station_id
+            )
+        elif account.role == "rider":
+            riders_query = riders_query.filter(Rider.id == account.rider_id)
+            stations_query = stations_query.join(Transaction).filter(
+                Transaction.rider_id == account.rider_id
+            )
+            transactions_query = transactions_query.filter(
+                Transaction.rider_id == account.rider_id
+            )
+
+        riders = riders_query.distinct(Rider.id).order_by(Rider.created_at.desc()).all()
+        stations = (
+            stations_query.distinct(Station.id).order_by(Station.created_at.desc()).all()
+        )
+        transactions = transactions_query.order_by(Transaction.created_at.desc()).limit(5).all()
 
         balance_map = get_outstanding_balance_map([rider.id for rider in riders])
 
@@ -39,20 +62,28 @@ def get_dashboard_payload():
             for transaction in transactions
         ]
 
+        stats_query = Transaction.query
+        if account.role == "station":
+            stats_query = stats_query.filter(Transaction.station_id == account.station_id)
+        elif account.role == "rider":
+            stats_query = stats_query.filter(Transaction.rider_id == account.rider_id)
+
         stats = {
-            "total": Transaction.query.count(),
-            "pending": Transaction.query.filter_by(status="pending").count(),
-            "paid": Transaction.query.filter_by(status="paid").count(),
+            "total": stats_query.count(),
+            "pending": stats_query.filter_by(status="pending").count(),
+            "paid": stats_query.filter_by(status="paid").count(),
         }
 
         return jsonify(
             {
                 "success": True,
                 "data": {
+                    "viewerRole": account.role,
                     "riders": rider_data,
                     "stations": station_data,
                     "transactions": transaction_data,
                     "stats": stats,
+                    "viewer": account.to_session_dict(),
                 },
             }
         )
@@ -61,10 +92,22 @@ def get_dashboard_payload():
 
 
 @dashboard_bp.get("/form-options")
+@auth_required
 def get_form_options():
     try:
-        riders = Rider.query.order_by(Rider.created_at.desc()).all()
-        stations = Station.query.order_by(Station.created_at.desc()).all()
+        account = resolve_request_account()
+
+        if account.role == "rider":
+            return jsonify({"success": False, "message": "Access denied"}), 403
+
+        riders_query = Rider.query
+        stations_query = Station.query
+
+        if account.role == "station":
+            stations_query = stations_query.filter(Station.id == account.station_id)
+
+        riders = riders_query.order_by(Rider.created_at.desc()).all()
+        stations = stations_query.order_by(Station.created_at.desc()).all()
         balance_map = get_outstanding_balance_map([rider.id for rider in riders])
 
         rider_data = []
@@ -79,6 +122,7 @@ def get_form_options():
             {
                 "success": True,
                 "data": {
+                    "viewerRole": account.role,
                     "riders": rider_data,
                     "stations": station_data,
                 },

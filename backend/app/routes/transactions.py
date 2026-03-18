@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from app.database.db import db
+from app.utils.auth import auth_required, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import sync_rider_balance
 from app.utils.station_company import hydrate_station
@@ -32,11 +33,20 @@ def serialize_transaction(transaction, include_all=False):
 
 
 @transactions_bp.get("/stats/dashboard")
+@auth_required
 def transaction_dashboard_stats():
     try:
-        total_count = Transaction.query.count()
-        pending_count = Transaction.query.filter_by(status="pending").count()
-        paid_count = Transaction.query.filter_by(status="paid").count()
+        account = resolve_request_account()
+        query = Transaction.query
+
+        if account.role == "station":
+            query = query.filter_by(station_id=account.station_id)
+        elif account.role == "rider":
+            query = query.filter_by(rider_id=account.rider_id)
+
+        total_count = query.count()
+        pending_count = query.filter_by(status="pending").count()
+        paid_count = query.filter_by(status="paid").count()
 
         return jsonify(
             {
@@ -53,13 +63,20 @@ def transaction_dashboard_stats():
 
 
 @transactions_bp.get("")
+@auth_required
 def list_transactions():
     try:
+        account = resolve_request_account()
         status = request.args.get("status", "").strip()
         include_all = request.args.get("include") == "all"
         include_stats = request.args.get("stats") == "dashboard"
 
         query = Transaction.query
+        if account.role == "station":
+            query = query.filter(Transaction.station_id == account.station_id)
+        elif account.role == "rider":
+            query = query.filter(Transaction.rider_id == account.rider_id)
+
         if status:
             query = query.filter(Transaction.status == status)
 
@@ -78,10 +95,16 @@ def list_transactions():
         response_payload = {"success": True, "count": len(data), "data": data}
 
         if include_stats:
+            stats_query = Transaction.query
+            if account.role == "station":
+                stats_query = stats_query.filter(Transaction.station_id == account.station_id)
+            elif account.role == "rider":
+                stats_query = stats_query.filter(Transaction.rider_id == account.rider_id)
+
             response_payload["stats"] = {
-                "total": Transaction.query.count(),
-                "pending": Transaction.query.filter_by(status="pending").count(),
-                "paid": Transaction.query.filter_by(status="paid").count(),
+                "total": stats_query.count(),
+                "pending": stats_query.filter_by(status="pending").count(),
+                "paid": stats_query.filter_by(status="paid").count(),
             }
 
         return jsonify(response_payload)
@@ -90,8 +113,10 @@ def list_transactions():
 
 
 @transactions_bp.post("")
+@roles_required("company", "station")
 def create_transaction():
     try:
+        account = resolve_request_account()
         payload = request.get_json() or {}
         rider_id = payload.get("riderId")
         station_id = payload.get("stationId")
@@ -99,6 +124,9 @@ def create_transaction():
 
         if not rider_id or not station_id or not amount:
             return jsonify({"success": False, "message": "Missing required fields"}), 400
+
+        if account.role == "station":
+            station_id = account.station_id
 
         rider = Rider.query.get(rider_id)
         station = Station.query.get(station_id)
@@ -133,12 +161,17 @@ def create_transaction():
 
 
 @transactions_bp.patch("/<int:transaction_id>")
+@roles_required("company", "station")
 def patch_transaction_status(transaction_id):
     try:
+        account = resolve_request_account()
         transaction = Transaction.query.get(transaction_id)
 
         if not transaction:
             return jsonify({"success": False, "message": "Not found"}), 404
+
+        if account.role == "station" and transaction.station_id != account.station_id:
+            return jsonify({"success": False, "message": "Access denied"}), 403
 
         status = (request.get_json() or {}).get("status")
         if status not in VALID_TRANSACTION_STATUSES:
@@ -164,12 +197,17 @@ def patch_transaction_status(transaction_id):
 
 
 @transactions_bp.delete("/<int:transaction_id>")
+@roles_required("company", "station")
 def delete_transaction(transaction_id):
     try:
+        account = resolve_request_account()
         transaction = Transaction.query.get(transaction_id)
 
         if not transaction:
             return jsonify({"success": False, "message": "Not found"}), 404
+
+        if account.role == "station" and transaction.station_id != account.station_id:
+            return jsonify({"success": False, "message": "Access denied"}), 403
 
         rider_id = transaction.rider_id
         db.session.delete(transaction)
