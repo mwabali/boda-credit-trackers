@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
 from app.database.db import db
-from app.utils.db_errors import friendly_db_error
+from app.utils.db_errors import format_integrity_error
 from app.utils.auth import auth_required, generate_auth_token, resolve_request_account
 from models import AuthAccount, Rider, Station
 
@@ -176,7 +176,7 @@ def register():
         return jsonify({"success": False, "message": str(error)}), 400
     except IntegrityError as error:
         db.session.rollback()
-        return jsonify({"success": False, "message": friendly_db_error(error)}), 409
+        return jsonify({"success": False, "message": format_integrity_error(error)}), 409
     except Exception as error:
         db.session.rollback()
         return jsonify({"success": False, "message": str(error)}), 500
