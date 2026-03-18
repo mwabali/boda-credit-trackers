@@ -195,6 +195,14 @@ Demo seeded accounts:
 - Station: `eldoret.rep@total.co.ke` / `StationRep2026!`
 - Rider: `john.kamau@rider.bodacredit.app` / `RiderAccess2026!`
 
+For an existing deployed database where you do not want to wipe data, bootstrap demo auth accounts with:
+
+```bash
+cd backend
+source venv/bin/activate
+python bootstrap_auth_accounts.py
+```
+
 ## Notes
 
 - Local database files and frontend cache folders should remain untracked.
