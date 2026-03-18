@@ -82,8 +82,8 @@ def get_dashboard_payload():
 
         stats = {
             "total": stats_query.count(),
-            "pending": stats_query.filter_by(status="pending").count(),
-            "paid": stats_query.filter_by(status="paid").count(),
+            "pending": stats_query.filter(Transaction.status == "pending").count(),
+            "paid": stats_query.filter(Transaction.status == "paid").count(),
         }
 
         return jsonify(

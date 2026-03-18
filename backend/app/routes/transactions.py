@@ -47,8 +47,8 @@ def transaction_dashboard_stats():
             query = query.filter_by(rider_id=account.rider_id)
 
         total_count = query.count()
-        pending_count = query.filter_by(status="pending").count()
-        paid_count = query.filter_by(status="paid").count()
+        pending_count = query.filter(Transaction.status == "pending").count()
+        paid_count = query.filter(Transaction.status == "paid").count()
 
         return jsonify(
             {
@@ -111,8 +111,8 @@ def list_transactions():
 
             response_payload["stats"] = {
                 "total": stats_query.count(),
-                "pending": stats_query.filter_by(status="pending").count(),
-                "paid": stats_query.filter_by(status="paid").count(),
+                "pending": stats_query.filter(Transaction.status == "pending").count(),
+                "paid": stats_query.filter(Transaction.status == "paid").count(),
             }
 
         return jsonify(response_payload)
