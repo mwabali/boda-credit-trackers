@@ -26,6 +26,7 @@ function StationsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isFormExpanded, setIsFormExpanded] = useState(true)
+  const [editingStationId, setEditingStationId] = useState(null)
   const [error, setError] = useState('')
 
   const loadStations = useCallback(async () => {
@@ -34,14 +35,16 @@ function StationsPage() {
       setError('')
       const payload = await request('/stations')
       setStations(payload.data || [])
-      setIsFormExpanded((payload.data || []).length === 0)
+      setIsFormExpanded((currentExpanded) =>
+        editingStationId ? currentExpanded : (payload.data || []).length === 0
+      )
     } catch (loadError) {
       setError(loadError.message)
       showError(loadError.message)
     } finally {
       setIsLoading(false)
     }
-  }, [showError])
+  }, [editingStationId, showError])
 
   useEffect(() => {
     loadStations()
@@ -139,14 +142,18 @@ function StationsPage() {
           location: values.location.trim(),
         }
 
-        await request('/stations', {
-          method: 'POST',
+        await request(editingStationId ? `/stations/${editingStationId}` : '/stations', {
+          method: editingStationId ? 'PUT' : 'POST',
           body: JSON.stringify(payload),
         })
 
         await loadStations()
         resetForm()
-        showSuccess('Station added successfully.', 'Station saved')
+        setEditingStationId(null)
+        showSuccess(
+          editingStationId ? 'Station details updated successfully.' : 'Station added successfully.',
+          editingStationId ? 'Station updated' : 'Station saved'
+        )
         setIsFormExpanded(false)
       } catch (submitError) {
         setError(submitError.message)
@@ -162,6 +169,23 @@ function StationsPage() {
 
   const canManageStations = user?.role === 'company'
   const canToggleStatus = user?.role === 'company'
+
+  const startEditingStation = (station) => {
+    setEditingStationId(station.id)
+    formik.resetForm({
+      values: {
+        name: station.name || '',
+        location: station.location || '',
+      },
+    })
+    setIsFormExpanded(true)
+  }
+
+  const stopEditingStation = () => {
+    setEditingStationId(null)
+    formik.resetForm({ values: initialStationValues })
+    setIsFormExpanded(stations.length === 0)
+  }
 
   return (
     <main className={styles.page}>
@@ -278,10 +302,13 @@ function StationsPage() {
       <section className={styles.formSection} aria-label="Add station">
         <div className={styles.formHeader}>
           <div className={styles.formIntro}>
-            <h2 className={styles.formTitle}>Add a Station</h2>
+            <h2 className={styles.formTitle}>
+              {editingStationId ? 'Edit Station' : 'Add a Station'}
+            </h2>
             <p className={styles.formDescription}>
-              Enlist a station under your company. A station manager can later claim
-              it through the station portal and await approval.
+              {editingStationId
+                ? 'Update this station profile for your company. Changes stay restricted to stations under your organization.'
+                : 'Enlist a station under your company. A station manager can later claim it through the station portal and await approval.'}
             </p>
           </div>
           <button
@@ -289,9 +316,16 @@ function StationsPage() {
             className={styles.toggleButton}
             aria-expanded={isFormExpanded}
             aria-controls="station-entry-form"
-            onClick={() => setIsFormExpanded((prev) => !prev)}
+            onClick={() => {
+              if (isFormExpanded && editingStationId) {
+                stopEditingStation()
+                return
+              }
+
+              setIsFormExpanded((prev) => !prev)
+            }}
           >
-            {isFormExpanded ? 'Hide form' : 'Add station'}
+            {isFormExpanded ? (editingStationId ? 'Cancel edit' : 'Hide form') : 'Add station'}
           </button>
         </div>
 
@@ -343,8 +377,21 @@ function StationsPage() {
               className={styles.submitButton}
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : 'Add Station'}
+              {isSubmitting
+                ? 'Saving...'
+                : editingStationId
+                  ? 'Save changes'
+                  : 'Add Station'}
             </button>
+            {editingStationId ? (
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={stopEditingStation}
+              >
+                Cancel
+              </button>
+            ) : null}
           </form>
         ) : null}
       </section>
@@ -359,9 +406,20 @@ function StationsPage() {
         {!isLoading && !error
           ? stations.map((station) => (
               <article key={station.id} className={styles.stationCard}>
-                <h2>
-                  {formatStationId(station.id)} <span>{getStationDisplayName(station)}</span>
-                </h2>
+                <div className={styles.cardHeader}>
+                  <h2>
+                    {formatStationId(station.id)} <span>{getStationDisplayName(station)}</span>
+                  </h2>
+                  {canManageStations ? (
+                    <button
+                      type="button"
+                      className={styles.editButton}
+                      onClick={() => startEditingStation(station)}
+                    >
+                      Edit
+                    </button>
+                  ) : null}
+                </div>
                 <ul>
                   <li>
                     <strong>Location:</strong> {station.location}

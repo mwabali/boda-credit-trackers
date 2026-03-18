@@ -212,6 +212,17 @@
   width: fit-content;
 }
 
+.secondaryButton {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.7rem 0.95rem;
+  background: #ffffff;
+  color: #374151;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+}
+
 .submitButton:disabled {
   opacity: 0.75;
   cursor: wait;
@@ -232,6 +243,13 @@
   gap: 0.6rem;
 }
 
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
 .stationCard h2 {
   margin: 0;
   color: #111827;
@@ -239,6 +257,22 @@
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+}
+
+.editButton {
+  border: 1px solid #fdba74;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.editButton:hover {
+  background: #ffedd5;
 }
 
 .stationCard h2 span {
@@ -315,6 +349,10 @@
     width: 100%;
   }
 
+  .secondaryButton {
+    width: 100%;
+  }
+
   .stateMessage,
   .errorMessage,
   .successMessage {
@@ -353,13 +391,15 @@
   }
 
   .formHeader,
-  .statusRow {
+  .statusRow,
+  .cardHeader {
     flex-direction: column;
     align-items: stretch;
   }
 
   .submitButton,
-  .toggleButton {
+  .toggleButton,
+  .secondaryButton {
     width: 100%;
   }
 }
