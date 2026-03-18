@@ -3,6 +3,25 @@ BEGIN
   IF EXISTS (
     SELECT 1
     FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'companies'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.companies FORCE ROW LEVEL SECURITY';
+    EXECUTE 'REVOKE ALL ON TABLE public.companies FROM anon, authenticated';
+    EXECUTE 'DROP POLICY IF EXISTS companies_deny_direct_api ON public.companies';
+    EXECUTE $policy$
+      CREATE POLICY companies_deny_direct_api
+      ON public.companies
+      FOR ALL
+      TO anon, authenticated
+      USING (false)
+      WITH CHECK (false)
+    $policy$;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = 'riders'
   ) THEN
     EXECUTE 'ALTER TABLE public.riders ENABLE ROW LEVEL SECURITY';
@@ -50,6 +69,25 @@ BEGIN
     EXECUTE $policy$
       CREATE POLICY transactions_deny_direct_api
       ON public.transactions
+      FOR ALL
+      TO anon, authenticated
+      USING (false)
+      WITH CHECK (false)
+    $policy$;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'notifications'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.notifications FORCE ROW LEVEL SECURITY';
+    EXECUTE 'REVOKE ALL ON TABLE public.notifications FROM anon, authenticated';
+    EXECUTE 'DROP POLICY IF EXISTS notifications_deny_direct_api ON public.notifications';
+    EXECUTE $policy$
+      CREATE POLICY notifications_deny_direct_api
+      ON public.notifications
       FOR ALL
       TO anon, authenticated
       USING (false)

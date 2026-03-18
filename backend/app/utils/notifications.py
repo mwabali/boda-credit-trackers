@@ -1,4 +1,5 @@
 from app.database.db import db
+from sqlalchemy import or_
 from models import AuthAccount, Notification
 
 
@@ -24,7 +25,14 @@ def notify_company_accounts(
 ):
     query = AuthAccount.query.filter_by(role="company", is_active=True)
 
-    if company_id:
+    if company_id and company_name:
+        query = query.filter(
+            or_(
+                AuthAccount.company_id == company_id,
+                AuthAccount.company_name == company_name,
+            )
+        )
+    elif company_id:
         query = query.filter(AuthAccount.company_id == company_id)
     elif company_name:
         query = query.filter(AuthAccount.company_name == company_name)

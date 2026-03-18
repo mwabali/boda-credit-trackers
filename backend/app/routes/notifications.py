@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy import or_
 
 from app.database.db import db
 from app.utils.auth import (
@@ -39,7 +40,14 @@ def list_notifications():
                 approval_status="pending",
                 is_active=True,
             )
-            if account.company_id:
+            if account.company_id and get_account_company_name(account):
+                pending_query = pending_query.filter(
+                    or_(
+                        AuthAccount.company_id == account.company_id,
+                        AuthAccount.company_name == get_account_company_name(account),
+                    )
+                )
+            elif account.company_id:
                 pending_query = pending_query.filter(AuthAccount.company_id == account.company_id)
             else:
                 pending_query = pending_query.filter(

@@ -50,7 +50,19 @@ def list_riders():
             query = query.filter(func.lower(Rider.name).like(f"%{search}%"))
 
         riders = query.order_by(Rider.created_at.desc()).all()
-        balance_map = get_outstanding_balance_map([rider.id for rider in riders])
+        balance_kwargs = {}
+        if account.role == "company":
+            balance_kwargs = {
+                "company_id": account.company_id,
+                "company_name": get_account_company_name(account),
+            }
+        elif account.role == "station":
+            balance_kwargs = {"station_id": account.station_id}
+
+        balance_map = get_outstanding_balance_map(
+            [rider.id for rider in riders],
+            **balance_kwargs,
+        )
 
         data = []
         for rider in riders:
@@ -102,19 +114,40 @@ def get_rider(rider_id):
             if not has_station_transaction:
                 return jsonify({"success": False, "message": "Access denied"}), 403
 
+        relevant_transactions = rider.transactions
+        if account.role == "company":
+            relevant_transactions = [
+                transaction
+                for transaction in rider.transactions
+                if transaction.station
+                and (
+                    (account.company_id and transaction.station.company_id == account.company_id)
+                    or (
+                        not account.company_id
+                        and transaction.station.company_name == get_account_company_name(account)
+                    )
+                )
+            ]
+        elif account.role == "station":
+            relevant_transactions = [
+                transaction
+                for transaction in rider.transactions
+                if transaction.station_id == account.station_id
+            ]
+
         outstanding_balance = sum(
             float(transaction.amount or 0)
-            for transaction in rider.transactions
+            for transaction in relevant_transactions
             if transaction.status not in {"paid", "cancelled"}
         )
-        total_transactions = len(rider.transactions)
-        total_spent = sum(float(transaction.amount or 0) for transaction in rider.transactions)
+        total_transactions = len(relevant_transactions)
+        total_spent = sum(float(transaction.amount or 0) for transaction in relevant_transactions)
 
         rider_data = rider.to_dict()
         rider_data["currentBalance"] = outstanding_balance
         rider_data["transactions"] = [
             transaction.to_dict() for transaction in sorted(
-                rider.transactions,
+                relevant_transactions,
                 key=lambda item: item.created_at or 0,
                 reverse=True,
             )[:10]
