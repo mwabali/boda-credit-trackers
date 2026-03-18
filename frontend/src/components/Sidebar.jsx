@@ -6,7 +6,10 @@ import styles from './Sidebar.module.css'
 
 function getLinksForRole(user) {
   if (user?.role === 'station' && user?.approvalStatus !== 'approved') {
-    return [{ to: '/notifications', label: 'Notifications' }]
+    return [
+      { to: '/notifications', label: 'Notifications' },
+      { to: '/profile', label: 'Profile' },
+    ]
   }
 
   const role = user?.role
@@ -18,6 +21,7 @@ function getLinksForRole(user) {
       { to: '/transactions', label: 'Transactions' },
       { to: '/add-credit', label: 'Add Credit' },
       { to: '/notifications', label: 'Notifications' },
+      { to: '/profile', label: 'Profile' },
     ]
   }
 
@@ -28,6 +32,7 @@ function getLinksForRole(user) {
       { to: '/transactions', label: 'Transactions' },
       { to: '/add-credit', label: 'Add Credit' },
       { to: '/notifications', label: 'Notifications' },
+      { to: '/profile', label: 'Profile' },
     ]
   }
 
@@ -36,6 +41,7 @@ function getLinksForRole(user) {
     { to: '/transactions', label: 'My Activity' },
     { to: '/stations', label: 'Stations' },
     { to: '/notifications', label: 'Notifications' },
+    { to: '/profile', label: 'Profile' },
   ]
 }
 

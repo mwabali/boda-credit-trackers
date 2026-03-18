@@ -1,0 +1,175 @@
+.page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.title {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.description {
+  margin: 0;
+  color: #55637b;
+  line-height: 1.55;
+  max-width: 48rem;
+}
+
+.profileShell {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.identityCard,
+.detailCard {
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(226, 232, 240, 0.92);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
+}
+
+.identityCard {
+  padding: 1.4rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.15rem;
+  align-items: center;
+}
+
+.avatar {
+  width: 4.9rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #f59e0b 0%, #c2410c 100%);
+  color: #fff7ed;
+  font-weight: 800;
+  font-size: 1.45rem;
+  box-shadow: 0 14px 28px rgba(194, 65, 12, 0.18);
+}
+
+.identityBody {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.roleTag {
+  margin: 0;
+  color: #9a3412;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.identityBody h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.45rem;
+}
+
+.identityBody p {
+  margin: 0;
+  color: #55637b;
+}
+
+.statusChip {
+  margin-top: 0.4rem;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.statusApproved {
+  background: rgba(220, 252, 231, 0.95);
+  color: #166534;
+}
+
+.statusPending {
+  background: rgba(254, 243, 199, 0.96);
+  color: #92400e;
+}
+
+.detailCard {
+  padding: 1.3rem 1.35rem;
+  display: grid;
+  gap: 0.95rem;
+}
+
+.detailCard h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 1.2rem;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.detailGrid div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.detailGrid dt {
+  color: #8a4b20;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.detailGrid dd {
+  margin: 0;
+  color: #172033;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.companySummary {
+  margin: 0;
+  color: #55637b;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .page {
+    gap: 1.15rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .description {
+    font-size: 0.94rem;
+  }
+
+  .identityCard {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .identityBody {
+    justify-items: center;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+}

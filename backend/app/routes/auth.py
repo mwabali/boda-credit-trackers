@@ -97,6 +97,15 @@ def register():
         company_name = (
             payload.get("companyName") or payload.get("company_name") or "Total"
         ).strip()
+        station_name = (
+            payload.get("stationName") or payload.get("station_name") or ""
+        ).strip()
+        station_location = (
+            payload.get("stationLocation") or payload.get("station_location") or ""
+        ).strip()
+        authority_confirmed = bool(
+            payload.get("authorityConfirmed") or payload.get("authority_confirmed")
+        )
 
         if role not in {"company", "station", "rider"}:
             return jsonify({"success": False, "message": "Please choose a valid portal"}), 400
@@ -180,6 +189,35 @@ def register():
             account.company_name = "Total"
             account.approval_status = "approved"
         else:
+            if not company_name or not station_name or not station_location:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Company name, station name, and station location are required",
+                        }
+                    ),
+                    400,
+                )
+
+            if not authority_confirmed:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "You must confirm that you are authorized to create this company account",
+                        }
+                    ),
+                    400,
+                )
+
+            station = Station(
+                name=station_name,
+                company_name=company_name,
+                location=station_location,
+                status="active",
+            )
+            db.session.add(station)
             account.approval_status = "approved"
 
         account.set_password(password)

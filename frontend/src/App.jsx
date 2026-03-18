@@ -5,6 +5,7 @@ import AddCreditPage from './pages/AddCreditPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import NotificationsPage from './pages/NotificationsPage'
+import ProfilePage from './pages/ProfilePage'
 import RidersPage from './pages/RidersPage'
 import StationsPage from './pages/StationsPage'
 import TransactionsPage from './pages/TransactionsPage'
@@ -26,6 +27,7 @@ function App() {
       <Route element={<ProtectedRoute allowPending />}>
         <Route element={<MainLayout />}>
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
 

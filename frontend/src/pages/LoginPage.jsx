@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFormik } from 'formik'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import * as Yup from 'yup'
@@ -38,6 +38,8 @@ function LoginPage() {
   const [activeMode, setActiveMode] = useState('login')
   const [portalOptions, setPortalOptions] = useState({ companies: ['Total'], stations: [] })
   const [isLoadingPortalOptions, setIsLoadingPortalOptions] = useState(true)
+  const [showAuthorityModal, setShowAuthorityModal] = useState(false)
+  const authorityConfirmedRef = useRef(false)
 
   const selectedPortal = useMemo(
     () => PORTALS.find((portal) => portal.role === activeRole) || PORTALS[0],
@@ -109,6 +111,8 @@ function LoginPage() {
     initialValues: {
       fullName: '',
       companyName: 'Total',
+      stationName: '',
+      stationLocation: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -119,8 +123,18 @@ function LoginPage() {
     validationSchema: Yup.object({
       fullName: Yup.string().trim().required('Full name is required'),
       companyName: Yup.string().when([], {
-        is: () => activeRole === 'station',
+        is: () => activeRole === 'station' || activeRole === 'company',
         then: (schema) => schema.required('Company is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      stationName: Yup.string().when([], {
+        is: () => activeRole === 'company',
+        then: (schema) => schema.trim().required('First station name is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      stationLocation: Yup.string().when([], {
+        is: () => activeRole === 'company',
+        then: (schema) => schema.trim().required('Station location is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
       email: Yup.string().email('Enter a valid email').required('Email is required'),
@@ -151,9 +165,21 @@ function LoginPage() {
         const payload = {
           role: activeRole,
           fullName: values.fullName,
-          companyName: activeRole === 'station' ? values.companyName : 'Total',
+          companyName:
+            activeRole === 'rider' ? 'Total' : values.companyName,
           email: values.email,
           password: values.password,
+        }
+
+        if (activeRole === 'company') {
+          if (!authorityConfirmedRef.current) {
+            setShowAuthorityModal(true)
+            setSubmitting(false)
+            return
+          }
+          payload.stationName = values.stationName
+          payload.stationLocation = values.stationLocation
+          payload.authorityConfirmed = true
         }
 
         if (activeRole === 'station') {
@@ -182,6 +208,7 @@ function LoginPage() {
       } catch (error) {
         showError(error.message)
       } finally {
+        authorityConfirmedRef.current = false
         setSubmitting(false)
       }
     },
@@ -193,6 +220,8 @@ function LoginPage() {
       values: {
         fullName: '',
         companyName: 'Total',
+        stationName: '',
+        stationLocation: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -201,6 +230,8 @@ function LoginPage() {
         licensePlate: '',
       },
     })
+    setShowAuthorityModal(false)
+    authorityConfirmedRef.current = false
   }, [activeRole]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const stationsForSelectedCompany = portalOptions.stations.filter(
@@ -209,6 +240,12 @@ function LoginPage() {
 
   if (isAuthenticated) {
     return <Navigate to="/home" replace />
+  }
+
+  const confirmAuthorityAndSubmit = async () => {
+    setShowAuthorityModal(false)
+    authorityConfirmedRef.current = true
+    await signupFormik.submitForm()
   }
 
   return (
@@ -330,6 +367,68 @@ function LoginPage() {
                   <span className={styles.errorText}>{signupFormik.errors.fullName}</span>
                 ) : null}
               </label>
+
+              {activeRole === 'company' ? (
+                <>
+                  <label className={styles.field}>
+                    Company name
+                    <input
+                      id="companyName"
+                      name="companyName"
+                      type="text"
+                      value={signupFormik.values.companyName}
+                      onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      placeholder="Company legal or trading name"
+                    />
+                    {signupFormik.touched.companyName && signupFormik.errors.companyName ? (
+                      <span className={styles.errorText}>{signupFormik.errors.companyName}</span>
+                    ) : null}
+                  </label>
+
+                  <div className={styles.fieldRow}>
+                    <label className={styles.field}>
+                      First station name
+                      <input
+                        id="stationName"
+                        name="stationName"
+                        type="text"
+                        value={signupFormik.values.stationName}
+                        onChange={signupFormik.handleChange}
+                        onBlur={signupFormik.handleBlur}
+                        placeholder="Buruburu"
+                      />
+                      {signupFormik.touched.stationName && signupFormik.errors.stationName ? (
+                        <span className={styles.errorText}>{signupFormik.errors.stationName}</span>
+                      ) : null}
+                    </label>
+
+                    <label className={styles.field}>
+                      Station location
+                      <input
+                        id="stationLocation"
+                        name="stationLocation"
+                        type="text"
+                        value={signupFormik.values.stationLocation}
+                        onChange={signupFormik.handleChange}
+                        onBlur={signupFormik.handleBlur}
+                        placeholder="Nairobi, Buruburu"
+                      />
+                      {signupFormik.touched.stationLocation &&
+                      signupFormik.errors.stationLocation ? (
+                        <span className={styles.errorText}>
+                          {signupFormik.errors.stationLocation}
+                        </span>
+                      ) : null}
+                    </label>
+                  </div>
+
+                  <p className={styles.helperText}>
+                    Your first station is listed during company onboarding so your team can begin
+                    assigning station managers immediately.
+                  </p>
+                </>
+              ) : null}
 
               {activeRole === 'station' ? (
                 <>
@@ -488,6 +587,48 @@ function LoginPage() {
           )}
         </div>
       </section>
+
+      {showAuthorityModal ? (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.modalCard}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="authority-confirmation-title"
+            aria-describedby="authority-confirmation-description"
+          >
+            <p className={styles.modalEyebrow}>Company account confirmation</p>
+            <h2 id="authority-confirmation-title" className={styles.modalTitle}>
+              Confirm your authority to act for this business
+            </h2>
+            <p id="authority-confirmation-description" className={styles.modalDescription}>
+              By continuing, you confirm that you are duly authorized to create and administer a
+              Boda Credit account on behalf of {signupFormik.values.companyName || 'this company'},
+              and that the company and station details you have entered are accurate to the best of
+              your knowledge.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalSecondaryButton}
+                onClick={() => {
+                  setShowAuthorityModal(false)
+                  authorityConfirmedRef.current = false
+                }}
+              >
+                Go back
+              </button>
+              <button
+                type="button"
+                className={styles.modalPrimaryButton}
+                onClick={confirmAuthorityAndSubmit}
+              >
+                I confirm and want to create the account
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }
