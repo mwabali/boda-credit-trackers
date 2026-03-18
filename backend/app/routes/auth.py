@@ -94,9 +94,7 @@ def register():
         email = (payload.get("email") or "").strip().lower()
         password = payload.get("password") or ""
         full_name = (payload.get("fullName") or payload.get("full_name") or "").strip()
-        company_name = (
-            payload.get("companyName") or payload.get("company_name") or "Total"
-        ).strip()
+        company_name = (payload.get("companyName") or payload.get("company_name") or "").strip()
         station_name = (
             payload.get("stationName") or payload.get("station_name") or ""
         ).strip()

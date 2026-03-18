@@ -110,7 +110,7 @@ function LoginPage() {
     enableReinitialize: true,
     initialValues: {
       fullName: '',
-      companyName: 'Total',
+      companyName: '',
       stationName: '',
       stationLocation: '',
       email: '',
@@ -165,8 +165,7 @@ function LoginPage() {
         const payload = {
           role: activeRole,
           fullName: values.fullName,
-          companyName:
-            activeRole === 'rider' ? 'Total' : values.companyName,
+          companyName: activeRole === 'rider' ? 'Total' : values.companyName.trim(),
           email: values.email,
           password: values.password,
         }
@@ -219,7 +218,7 @@ function LoginPage() {
     signupFormik.resetForm({
       values: {
         fullName: '',
-        companyName: 'Total',
+        companyName: activeRole === 'station' ? portalOptions.companies[0] || '' : '',
         stationName: '',
         stationLocation: '',
         email: '',
@@ -232,7 +231,13 @@ function LoginPage() {
     })
     setShowAuthorityModal(false)
     authorityConfirmedRef.current = false
-  }, [activeRole]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeRole, portalOptions.companies]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (activeRole === 'station' && !signupFormik.values.companyName && portalOptions.companies[0]) {
+      signupFormik.setFieldValue('companyName', portalOptions.companies[0], false)
+    }
+  }, [activeRole, portalOptions.companies, signupFormik])
 
   const stationsForSelectedCompany = portalOptions.stations.filter(
     (station) => station.companyName === signupFormik.values.companyName
@@ -442,6 +447,7 @@ function LoginPage() {
                       onBlur={signupFormik.handleBlur}
                       disabled={isLoadingPortalOptions}
                     >
+                      <option value="">Select company</option>
                       {portalOptions.companies.map((companyName) => (
                         <option key={companyName} value={companyName}>
                           {companyName}
