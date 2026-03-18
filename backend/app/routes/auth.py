@@ -19,14 +19,14 @@ def normalize_phone(value):
 @auth_bp.get("/portal-options")
 def portal_options():
     try:
-        company_names = [
-            row[0]
-            for row in db.session.query(Station.company_name)
-            .distinct()
-            .order_by(func.lower(Station.company_name))
-            .all()
-            if row[0]
-        ]
+        company_names = sorted(
+            {
+                row[0]
+                for row in db.session.query(Station.company_name).all()
+                if row[0]
+            },
+            key=lambda company_name: company_name.lower(),
+        )
 
         if "Total" not in company_names:
             company_names.insert(0, "Total")
