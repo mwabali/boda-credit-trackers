@@ -25,6 +25,20 @@ The current app supports the core MVP flows:
 
 The current station model assumes a single company using the platform and stores branches under `Total`.
 
+## Auth Layer
+
+The app now supports role-based login for three access levels:
+
+- `company`
+- `station`
+- `rider`
+
+Access is enforced by the Flask backend and reflected in the frontend navigation and route protection.
+
+- Company users can access the full operational dashboard
+- Station users see only their assigned station data and station-scoped transactions
+- Rider users get a mobile-friendly view focused on their own activity and balances
+
 ## Data Model Relationships
 
 The backend uses three core models:
@@ -80,6 +94,8 @@ If you need a custom local port, create `backend/.env`:
 ```env
 PORT=5050
 FLASK_DEBUG=1
+SECRET_KEY=replace-this-locally
+AUTH_TOKEN_MAX_AGE_SECONDS=604800
 ```
 
 ### Frontend
@@ -115,6 +131,8 @@ Schema files live in:
 - [backend/sql/002_create_riders_table.sql](/Users/brian.bett/.mounty/Transcend/2026%20Engagements/Engagements/Moringa_SE-Program/Development/code/se-prep/phase-4/Boda_Credit/backend/sql/002_create_riders_table.sql)
 - [backend/sql/003_create_stations_table.sql](/Users/brian.bett/.mounty/Transcend/2026%20Engagements/Engagements/Moringa_SE-Program/Development/code/se-prep/phase-4/Boda_Credit/backend/sql/003_create_stations_table.sql)
 - [backend/sql/004_create_transactions_table.sql](/Users/brian.bett/.mounty/Transcend/2026%20Engagements/Engagements/Moringa_SE-Program/Development/code/se-prep/phase-4/Boda_Credit/backend/sql/004_create_transactions_table.sql)
+- [backend/sql/007_create_auth_accounts_table.sql](/Users/brian.bett/.mounty/Transcend/2026%20Engagements/Engagements/Moringa_SE-Program/Development/code/se-prep/phase-4/Boda_Credit/backend/sql/007_create_auth_accounts_table.sql)
+- [backend/sql/008_harden_public_rls.sql](/Users/brian.bett/.mounty/Transcend/2026%20Engagements/Engagements/Moringa_SE-Program/Development/code/se-prep/phase-4/Boda_Credit/backend/sql/008_harden_public_rls.sql)
 
 One-time migration snapshot for the current local data:
 
@@ -136,6 +154,8 @@ Required environment variables:
 ```env
 DATABASE_URL=your_supabase_postgres_connection_string
 FLASK_DEBUG=0
+SECRET_KEY=your-production-secret
+AUTH_TOKEN_MAX_AGE_SECONDS=604800
 ```
 
 Notes:
@@ -169,7 +189,14 @@ source venv/bin/activate
 python run_seeds.py
 ```
 
+Demo seeded accounts:
+
+- Company: `growth.manager@total.co.ke` / `TotalGrowth2026!`
+- Station: `eldoret.rep@total.co.ke` / `StationRep2026!`
+- Rider: `john.kamau@rider.bodacredit.app` / `RiderAccess2026!`
+
 ## Notes
 
 - Local database files and frontend cache folders should remain untracked.
 - Supabase is now the source of truth for deployed data.
+- Because the frontend does not call Supabase directly, apply [backend/sql/008_harden_public_rls.sql](/Users/brian.bett/.mounty/Transcend/2026%20Engagements/Engagements/Moringa_SE-Program/Development/code/se-prep/phase-4/Boda_Credit/backend/sql/008_harden_public_rls.sql) to block direct anon/authenticated API access to the public tables and address the security-advisor findings.
