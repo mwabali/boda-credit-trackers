@@ -17,21 +17,35 @@ function NotificationsPage() {
     user?.role === 'station' && user?.approvalStatus && user.approvalStatus !== 'approved'
 
   const loadNotifications = useCallback(async () => {
+    if (!user?.id) {
+      setNotifications([])
+      setPendingApprovals([])
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsLoading(true)
       const payload = await request('/notifications')
       setNotifications(payload.data?.notifications || [])
       setPendingApprovals(payload.data?.pendingStationApprovals || [])
     } catch (error) {
+      setNotifications([])
+      setPendingApprovals([])
       showError(error.message)
     } finally {
       setIsLoading(false)
     }
-  }, [showError])
+  }, [showError, user?.id])
 
   useEffect(() => {
     loadNotifications()
   }, [loadNotifications])
+
+  useEffect(() => {
+    setNotifications([])
+    setPendingApprovals([])
+  }, [user?.id])
 
   useEffect(() => {
     if (location.state?.pendingApproval) {
