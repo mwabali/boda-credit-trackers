@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
 from sqlalchemy import inspect, text
+from sqlalchemy.exc import OperationalError
 from app.config import Config
 from app.database.db import init_db
 
@@ -27,7 +28,11 @@ def create_app():
     with app.app_context():
         from app.database.db import db
 
-        db.create_all()
+        try:
+            db.create_all()
+        except OperationalError as error:
+            if "already exists" not in str(error).lower():
+                raise
         inspector = inspect(db.engine)
 
         schema_changed = False
