@@ -28,9 +28,6 @@ def portal_options():
             key=lambda company_name: company_name.lower(),
         )
 
-        if "Total" not in company_names:
-            company_names.insert(0, "Total")
-
         stations = (
             Station.query.filter(Station.status == "active")
             .order_by(func.lower(Station.company_name), func.lower(Station.name))
@@ -122,11 +119,15 @@ def register():
         if AuthAccount.query.filter_by(email=email).first():
             return jsonify({"success": False, "message": "An account with that email already exists"}), 409
 
+        account_company_name = "Independent"
+        if role in {"company", "station"}:
+            account_company_name = company_name
+
         account = AuthAccount(
             email=email,
             role=role,
             full_name=full_name,
-            company_name=company_name or "Total",
+            company_name=account_company_name,
         )
 
         if role == "station":
