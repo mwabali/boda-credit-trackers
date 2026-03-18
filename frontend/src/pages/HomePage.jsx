@@ -258,7 +258,6 @@ function HomePage() {
         value: `${analytics.settlementRate || 0}%`,
         meta: `${analytics.suspendedRiders || 0} riders suspended`,
         accent: 'recovery',
-        wide: true,
       },
     ]
   }, [
@@ -299,7 +298,10 @@ function HomePage() {
 
       {isLoading ? <p className={styles.feedbackMessage}>Loading dashboard data...</p> : null}
 
-      <section className={styles.statsGrid} aria-label="Dashboard highlights">
+      <section
+        className={`${styles.statsGrid} ${role === 'company' ? styles.companyStatsGrid : ''}`}
+        aria-label="Dashboard highlights"
+      >
         {statCards.map((card) => (
           <article
             key={card.title}
