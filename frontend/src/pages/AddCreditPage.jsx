@@ -6,7 +6,7 @@ import { request } from '../lib/api'
 import styles from './AddCreditPage.module.css'
 
 function AddCreditPage() {
-  const { user } = useAuth()
+  const { user, refreshSession } = useAuth()
   const { showError, showSuccess } = useToast()
   const [riders, setRiders] = useState([])
   const [stations, setStations] = useState([])
@@ -17,8 +17,8 @@ function AddCreditPage() {
   useEffect(() => {
     async function loadFormOptions() {
       try {
-      setIsLoading(true)
-      setError('')
+        setIsLoading(true)
+        setError('')
 
         const optionsPayload = await request('/dashboard/form-options')
 
@@ -33,12 +33,17 @@ function AddCreditPage() {
     }
 
     loadFormOptions()
-  }, [])
+  }, [user?.id, showError])
 
   const handleSubmit = async (formData) => {
     try {
       setIsSubmitting(true)
       setError('')
+
+      const activeUser = await refreshSession()
+      if (!activeUser || activeUser.role !== 'rider') {
+        throw new Error('Please sign in to your rider account before sending a credit request')
+      }
 
       await request('/transactions', {
         method: 'POST',

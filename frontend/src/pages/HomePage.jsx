@@ -38,7 +38,7 @@ const dashboardSections = [
 ]
 
 function HomePage() {
-  const { user } = useAuth()
+  const { user, refreshSession } = useAuth()
   const { showError, showSuccess } = useToast()
   const companyLabel =
     user?.role !== 'rider' && user?.companyName ? `.${user.companyName}` : ''
@@ -146,6 +146,11 @@ function HomePage() {
     try {
       setIsSubmitting(true)
       setError('')
+
+      const activeUser = await refreshSession()
+      if (!activeUser || activeUser.role !== 'rider') {
+        throw new Error('Please sign in to your rider account before sending a credit request')
+      }
 
       let riderId = formData.riderId
 
