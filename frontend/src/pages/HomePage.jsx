@@ -47,7 +47,8 @@ const dashboardSections = [
 function HomePage() {
   const { user } = useAuth()
   const { showError, showSuccess } = useToast()
-  const companyLabel = '.Total'
+  const companyLabel =
+    user?.role !== 'rider' && user?.companyName ? `.${user.companyName}` : ''
   const [riders, setRiders] = useState([])
   const [stations, setStations] = useState([])
   const [transactions, setTransactions] = useState([])
