@@ -14,50 +14,6 @@ def normalize_phone(value):
     return (value or "").strip().replace(" ", "")
 
 
-@auth_bp.get("/signup-options")
-def signup_options():
-    try:
-        stations = (
-            Station.query.filter(Station.status == "active")
-            .order_by(Station.created_at.desc())
-            .all()
-        )
-        riders = (
-            Rider.query.filter(Rider.status != "suspended")
-            .order_by(Rider.created_at.desc())
-            .all()
-        )
-
-        return jsonify(
-            {
-                "success": True,
-                "data": {
-                    "stations": [
-                        {
-                            "id": station.id,
-                            "name": station.name,
-                            "displayName": f"{station.company_name} {station.name}".strip(),
-                            "location": station.location,
-                            "hasAccount": bool(station.account),
-                        }
-                        for station in stations
-                    ],
-                    "riders": [
-                        {
-                            "id": rider.id,
-                            "name": rider.name,
-                            "licensePlate": rider.license_plate,
-                            "hasAccount": bool(rider.account),
-                        }
-                        for rider in riders
-                    ],
-                },
-            }
-        )
-    except Exception as error:
-        return jsonify({"success": False, "message": str(error)}), 500
-
-
 @auth_bp.post("/login")
 def login():
     try:
@@ -129,9 +85,13 @@ def register():
             full_name=full_name,
             company_name=company_name or "Total",
         )
+        rider = None
+        station = None
 
         if role == "station":
-            station_id = payload.get("stationId") or payload.get("station_id")
+            branch_name = (payload.get("branchName") or payload.get("branch_name") or "").strip()
+            location = (payload.get("location") or "").strip()
+            manager_name = (payload.get("managerName") or payload.get("manager_name") or "").strip()
             management_phoneline = normalize_phone(
                 payload.get("managementPhoneline")
                 or payload.get("management_phoneline")
@@ -139,66 +99,59 @@ def register():
                 or payload.get("manager_phone")
             )
 
-            if not station_id or not management_phoneline:
+            if not branch_name or not location or not manager_name or not management_phoneline:
                 return (
                     jsonify(
                         {
                             "success": False,
-                            "message": "Station and management phoneline are required",
+                            "message": "Branch name, location, manager name, and management phoneline are required",
                         }
                     ),
                     400,
                 )
 
-            station = Station.query.get(station_id)
-            if not station:
-                return jsonify({"success": False, "message": "Selected station was not found"}), 404
-            if station.account:
-                return jsonify({"success": False, "message": "That station already has an account"}), 409
-            if normalize_phone(station.manager_phone) != management_phoneline:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "message": "Management phoneline does not match our station records",
-                        }
-                    ),
-                    400,
-                )
+            station = Station(
+                name=branch_name,
+                company_name=company_name or "Total",
+                location=location,
+                manager_name=manager_name,
+                manager_phone=management_phoneline,
+                status="active",
+            )
+            db.session.add(station)
+            db.session.flush()
 
             account.station_id = station.id
             account.company_name = station.company_name
 
         elif role == "rider":
-            rider_id = payload.get("riderId") or payload.get("rider_id")
             phone = normalize_phone(payload.get("phone"))
+            license_plate = (
+                payload.get("licensePlate")
+                or payload.get("license_plate")
+                or payload.get("number_plate")
+                or ""
+            ).strip()
 
-            if not rider_id or not phone:
+            if not phone or not license_plate:
                 return (
                     jsonify(
                         {
                             "success": False,
-                            "message": "Rider and phone number are required",
+                            "message": "Phone number and number plate are required",
                         }
                     ),
                     400,
                 )
 
-            rider = Rider.query.get(rider_id)
-            if not rider:
-                return jsonify({"success": False, "message": "Selected rider was not found"}), 404
-            if rider.account:
-                return jsonify({"success": False, "message": "That rider already has an account"}), 409
-            if normalize_phone(rider.phone) != phone:
-                return (
-                    jsonify(
-                        {
-                            "success": False,
-                            "message": "Phone number does not match our rider records",
-                        }
-                    ),
-                    400,
-                )
+            rider = Rider(
+                name=full_name,
+                phone=phone,
+                license_plate=license_plate,
+                status="active",
+            )
+            db.session.add(rider)
+            db.session.flush()
 
             account.rider_id = rider.id
             account.company_name = "Total"

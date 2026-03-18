@@ -5,7 +5,6 @@ import * as Yup from 'yup'
 import logo from '../assets/Boda_Credit_logo.svg'
 import { useAuth } from '../auth/AuthProvider'
 import { useToast } from '../components/ToastProvider'
-import { request } from '../lib/api'
 import styles from './LoginPage.module.css'
 
 const PORTALS = [
@@ -36,41 +35,11 @@ function LoginPage() {
   const location = useLocation()
   const [activeRole, setActiveRole] = useState('company')
   const [activeMode, setActiveMode] = useState('login')
-  const [signupOptions, setSignupOptions] = useState({ stations: [], riders: [] })
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true)
 
   const selectedPortal = useMemo(
     () => PORTALS.find((portal) => portal.role === activeRole) || PORTALS[0],
     [activeRole]
   )
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function loadOptions() {
-      try {
-        setIsLoadingOptions(true)
-        const payload = await request('/auth/signup-options')
-        if (isMounted) {
-          setSignupOptions(payload.data || { stations: [], riders: [] })
-        }
-      } catch (error) {
-        if (isMounted) {
-          showError(error.message, 'Unable to load sign-up options')
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingOptions(false)
-        }
-      }
-    }
-
-    loadOptions()
-
-    return () => {
-      isMounted = false
-    }
-  }, [showError])
 
   const loginFormik = useFormik({
     enableReinitialize: true,
@@ -100,22 +69,18 @@ function LoginPage() {
     enableReinitialize: true,
     initialValues: {
       fullName: '',
-      companyName: activeRole === 'company' ? 'Total' : 'Total',
       email: '',
       password: '',
       confirmPassword: '',
-      stationId: '',
+      branchName: '',
+      location: '',
+      managerName: '',
       managementPhoneline: '',
-      riderId: '',
       phone: '',
+      licensePlate: '',
     },
     validationSchema: Yup.object({
       fullName: Yup.string().trim().required('Full name is required'),
-      companyName: Yup.string().when([], {
-        is: () => activeRole === 'company',
-        then: (schema) => schema.trim().required('Company name is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
       email: Yup.string().email('Enter a valid email').required('Email is required'),
       password: Yup.string()
         .min(8, 'Password must be at least 8 characters')
@@ -123,9 +88,19 @@ function LoginPage() {
       confirmPassword: Yup.string()
         .oneOf([Yup.ref('password')], 'Passwords must match')
         .required('Please confirm your password'),
-      stationId: Yup.string().when([], {
+      branchName: Yup.string().when([], {
         is: () => activeRole === 'station',
-        then: (schema) => schema.required('Station is required'),
+        then: (schema) => schema.trim().required('Branch name is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      location: Yup.string().when([], {
+        is: () => activeRole === 'station',
+        then: (schema) => schema.trim().required('Location is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      managerName: Yup.string().when([], {
+        is: () => activeRole === 'station',
+        then: (schema) => schema.trim().required('Manager name is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
       managementPhoneline: Yup.string().when([], {
@@ -133,14 +108,14 @@ function LoginPage() {
         then: (schema) => schema.trim().required('Management phoneline is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
-      riderId: Yup.string().when([], {
-        is: () => activeRole === 'rider',
-        then: (schema) => schema.required('Rider profile is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
       phone: Yup.string().when([], {
         is: () => activeRole === 'rider',
         then: (schema) => schema.trim().required('Phone number is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      licensePlate: Yup.string().when([], {
+        is: () => activeRole === 'rider',
+        then: (schema) => schema.trim().required('Number plate is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
     }),
@@ -149,19 +124,21 @@ function LoginPage() {
         const payload = {
           role: activeRole,
           fullName: values.fullName,
-          companyName: activeRole === 'company' ? values.companyName : 'Total',
+          companyName: 'Total',
           email: values.email,
           password: values.password,
         }
 
         if (activeRole === 'station') {
-          payload.stationId = Number(values.stationId)
+          payload.branchName = values.branchName
+          payload.location = values.location
+          payload.managerName = values.managerName
           payload.managementPhoneline = values.managementPhoneline
         }
 
         if (activeRole === 'rider') {
-          payload.riderId = Number(values.riderId)
           payload.phone = values.phone
+          payload.licensePlate = values.licensePlate
         }
 
         await register(payload)
@@ -180,14 +157,15 @@ function LoginPage() {
     signupFormik.resetForm({
       values: {
         fullName: '',
-        companyName: 'Total',
         email: '',
         password: '',
         confirmPassword: '',
-        stationId: '',
+        branchName: '',
+        location: '',
+        managerName: '',
         managementPhoneline: '',
-        riderId: '',
         phone: '',
+        licensePlate: '',
       },
     })
   }, [activeRole]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -319,45 +297,53 @@ function LoginPage() {
                 ) : null}
               </label>
 
-              {activeRole === 'company' ? (
-                <label className={styles.field}>
-                  Company name
-                  <input
-                    id="companyName"
-                    name="companyName"
-                    type="text"
-                    value={signupFormik.values.companyName}
-                    onChange={signupFormik.handleChange}
-                    onBlur={signupFormik.handleBlur}
-                    placeholder="Company name"
-                  />
-                  {signupFormik.touched.companyName && signupFormik.errors.companyName ? (
-                    <span className={styles.errorText}>{signupFormik.errors.companyName}</span>
-                  ) : null}
-                </label>
-              ) : null}
-
               {activeRole === 'station' ? (
                 <>
                   <label className={styles.field}>
-                    Station
-                    <select
-                      id="stationId"
-                      name="stationId"
-                      value={signupFormik.values.stationId}
+                    Branch name
+                    <input
+                      id="branchName"
+                      name="branchName"
+                      type="text"
+                      value={signupFormik.values.branchName}
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
-                      disabled={isLoadingOptions}
-                    >
-                      <option value="">Select station</option>
-                      {stationOptions.map((station) => (
-                        <option key={station.id} value={station.id}>
-                          {station.displayName}
-                        </option>
-                      ))}
-                    </select>
-                    {signupFormik.touched.stationId && signupFormik.errors.stationId ? (
-                      <span className={styles.errorText}>{signupFormik.errors.stationId}</span>
+                      placeholder="Buruburu"
+                    />
+                    {signupFormik.touched.branchName && signupFormik.errors.branchName ? (
+                      <span className={styles.errorText}>{signupFormik.errors.branchName}</span>
+                    ) : null}
+                  </label>
+
+                  <label className={styles.field}>
+                    Location
+                    <input
+                      id="location"
+                      name="location"
+                      type="text"
+                      value={signupFormik.values.location}
+                      onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      placeholder="Buruburu, Nairobi"
+                    />
+                    {signupFormik.touched.location && signupFormik.errors.location ? (
+                      <span className={styles.errorText}>{signupFormik.errors.location}</span>
+                    ) : null}
+                  </label>
+
+                  <label className={styles.field}>
+                    Manager name
+                    <input
+                      id="managerName"
+                      name="managerName"
+                      type="text"
+                      value={signupFormik.values.managerName}
+                      onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      placeholder="Station manager name"
+                    />
+                    {signupFormik.touched.managerName && signupFormik.errors.managerName ? (
+                      <span className={styles.errorText}>{signupFormik.errors.managerName}</span>
                     ) : null}
                   </label>
 
@@ -370,7 +356,7 @@ function LoginPage() {
                       value={signupFormik.values.managementPhoneline}
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
-                      placeholder="Enter the station phoneline"
+                      placeholder="Station contact number"
                     />
                     {signupFormik.touched.managementPhoneline &&
                     signupFormik.errors.managementPhoneline ? (
@@ -385,28 +371,6 @@ function LoginPage() {
               {activeRole === 'rider' ? (
                 <>
                   <label className={styles.field}>
-                    Rider profile
-                    <select
-                      id="riderId"
-                      name="riderId"
-                      value={signupFormik.values.riderId}
-                      onChange={signupFormik.handleChange}
-                      onBlur={signupFormik.handleBlur}
-                      disabled={isLoadingOptions}
-                    >
-                      <option value="">Select rider</option>
-                      {riderOptions.map((rider) => (
-                        <option key={rider.id} value={rider.id}>
-                          {rider.name} ({rider.licensePlate})
-                        </option>
-                      ))}
-                    </select>
-                    {signupFormik.touched.riderId && signupFormik.errors.riderId ? (
-                      <span className={styles.errorText}>{signupFormik.errors.riderId}</span>
-                    ) : null}
-                  </label>
-
-                  <label className={styles.field}>
                     Phone number
                     <input
                       id="phone"
@@ -415,10 +379,26 @@ function LoginPage() {
                       value={signupFormik.values.phone}
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
-                      placeholder="Enter the phone on your rider profile"
+                      placeholder="Your active phone number"
                     />
                     {signupFormik.touched.phone && signupFormik.errors.phone ? (
                       <span className={styles.errorText}>{signupFormik.errors.phone}</span>
+                    ) : null}
+                  </label>
+
+                  <label className={styles.field}>
+                    Number plate
+                    <input
+                      id="licensePlate"
+                      name="licensePlate"
+                      type="text"
+                      value={signupFormik.values.licensePlate}
+                      onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      placeholder="UAB 123X"
+                    />
+                    {signupFormik.touched.licensePlate && signupFormik.errors.licensePlate ? (
+                      <span className={styles.errorText}>{signupFormik.errors.licensePlate}</span>
                     ) : null}
                   </label>
                 </>
@@ -483,7 +463,7 @@ function LoginPage() {
               <button
                 type="submit"
                 className={styles.submitButton}
-                disabled={signupFormik.isSubmitting || isLoadingOptions}
+                disabled={signupFormik.isSubmitting}
               >
                 {signupFormik.isSubmitting ? 'Creating account...' : 'Create account'}
               </button>
