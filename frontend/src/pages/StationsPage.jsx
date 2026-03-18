@@ -52,10 +52,35 @@ function StationsPage() {
     [stations]
   )
 
+  const primaryStation = stations[0] || null
   const stationsWithManagers = useMemo(
     () => stations.filter((station) => station.managerName).length,
     [stations]
   )
+
+  const stationStatusLabel = useMemo(() => {
+    if (!primaryStation?.status) {
+      return 'Unknown'
+    }
+
+    return primaryStation.status.charAt(0).toUpperCase() + primaryStation.status.slice(1)
+  }, [primaryStation?.status])
+
+  const stationManagerAssigned = useMemo(
+    () => Boolean(primaryStation?.managerName || user?.fullName),
+    [primaryStation?.managerName, user?.fullName]
+  )
+
+  const stationLocationParts = useMemo(() => {
+    if (!primaryStation?.location) {
+      return []
+    }
+
+    return primaryStation.location
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  }, [primaryStation?.location])
 
   const stationListRows = useMemo(
     () =>
@@ -141,52 +166,112 @@ function StationsPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Fuel Stations Network</h1>
+        <h1 className={styles.title}>
+          {user?.role === 'station' ? 'My Station' : 'Fuel Stations Network'}
+        </h1>
         <p className={styles.description}>
-          Live station directory backed by the current backend station records.
+          {user?.role === 'station'
+            ? 'Review the station profile tied to your account, keep an eye on branch status, and confirm the details riders rely on.'
+            : 'Live station directory backed by the current backend station records.'}
         </p>
       </header>
 
       <section className={styles.statsGrid} aria-label="Station summary">
-        <article className={styles.statCard}>
-          <h2>Total Stations</h2>
-          <div className={styles.metricRow}>
-            <img
-              src={stationsIcon}
-              alt=""
-              aria-hidden="true"
-              className={`${styles.metricIcon} ${styles.totalIcon}`}
-            />
-            <p className={styles.statValue}>{stations.length}</p>
-          </div>
-          <span className={styles.statMeta}>registered partner locations</span>
-        </article>
-        <article className={styles.statCard}>
-          <h2>Active Stations</h2>
-          <div className={styles.metricRow}>
-            <img
-              src={stationsIcon}
-              alt=""
-              aria-hidden="true"
-              className={`${styles.metricIcon} ${styles.activeIcon}`}
-            />
-            <p className={styles.statValue}>{activeStations}</p>
-          </div>
-          <span className={styles.statMeta}>currently serving riders</span>
-        </article>
-        <article className={`${styles.statCard} ${styles.statCardWide}`}>
-          <h2>Management Phonelines</h2>
-          <div className={styles.metricRow}>
-            <img
-              src={stationsIcon}
-              alt=""
-              aria-hidden="true"
-              className={`${styles.metricIcon} ${styles.contactIcon}`}
-            />
-            <p className={styles.statValue}>{stationsWithManagers}</p>
-          </div>
-          <span className={styles.statMeta}>stations with phonelines recorded</span>
-        </article>
+        {user?.role === 'station' ? (
+          <>
+            <article className={styles.statCard}>
+              <h2>Linked Station</h2>
+              <div className={styles.metricRow}>
+                <img
+                  src={stationsIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${styles.metricIcon} ${styles.totalIcon}`}
+                />
+                <p className={styles.statValue}>{primaryStation ? 1 : 0}</p>
+              </div>
+              <span className={styles.statMeta}>station profile connected to your account</span>
+            </article>
+            <article className={styles.statCard}>
+              <h2>Operating Status</h2>
+              <div className={styles.metricRow}>
+                <img
+                  src={stationsIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${styles.metricIcon} ${styles.activeIcon}`}
+                />
+                <p className={styles.statValueSmall}>{stationStatusLabel}</p>
+              </div>
+              <span className={styles.statMeta}>
+                {primaryStation?.status === 'active'
+                  ? 'ready to receive rider requests'
+                  : 'review this status with your company admin if it looks wrong'}
+              </span>
+            </article>
+            <article className={`${styles.statCard} ${styles.statCardWide}`}>
+              <h2>Profile Readiness</h2>
+              <div className={styles.metricRow}>
+                <img
+                  src={stationsIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${styles.metricIcon} ${styles.contactIcon}`}
+                />
+                <p className={styles.statValueSmall}>
+                  {stationManagerAssigned ? 'Assigned' : 'Incomplete'}
+                </p>
+              </div>
+              <span className={styles.statMeta}>
+                {stationLocationParts.length
+                  ? `Location on record: ${stationLocationParts.join(' • ')}`
+                  : 'Station location still needs to be confirmed'}
+              </span>
+            </article>
+          </>
+        ) : (
+          <>
+            <article className={styles.statCard}>
+              <h2>Total Stations</h2>
+              <div className={styles.metricRow}>
+                <img
+                  src={stationsIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${styles.metricIcon} ${styles.totalIcon}`}
+                />
+                <p className={styles.statValue}>{stations.length}</p>
+              </div>
+              <span className={styles.statMeta}>registered partner locations</span>
+            </article>
+            <article className={styles.statCard}>
+              <h2>Active Stations</h2>
+              <div className={styles.metricRow}>
+                <img
+                  src={stationsIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${styles.metricIcon} ${styles.activeIcon}`}
+                />
+                <p className={styles.statValue}>{activeStations}</p>
+              </div>
+              <span className={styles.statMeta}>currently serving riders</span>
+            </article>
+            <article className={`${styles.statCard} ${styles.statCardWide}`}>
+              <h2>Management Phonelines</h2>
+              <div className={styles.metricRow}>
+                <img
+                  src={stationsIcon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${styles.metricIcon} ${styles.contactIcon}`}
+                />
+                <p className={styles.statValue}>{stationsWithManagers}</p>
+              </div>
+              <span className={styles.statMeta}>stations with phonelines recorded</span>
+            </article>
+          </>
+        )}
       </section>
 
       {canManageStations ? (
