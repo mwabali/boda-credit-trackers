@@ -174,9 +174,6 @@ function LoginPage() {
     return <Navigate to="/home" replace />
   }
 
-  const stationOptions = signupOptions.stations.filter((station) => !station.hasAccount)
-  const riderOptions = signupOptions.riders.filter((rider) => !rider.hasAccount)
-
   return (
     <main className={styles.page}>
       <section className={styles.shell}>
