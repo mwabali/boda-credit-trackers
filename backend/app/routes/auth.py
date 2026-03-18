@@ -1,9 +1,11 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from app.database.db import db
 from app.utils.db_errors import format_integrity_error
 from app.utils.auth import auth_required, generate_auth_token, resolve_request_account
+from app.utils.notifications import create_notification, notify_company_accounts
 from models import AuthAccount, Rider, Station
 
 
@@ -12,6 +14,40 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 def normalize_phone(value):
     return (value or "").strip().replace(" ", "")
+
+
+@auth_bp.get("/portal-options")
+def portal_options():
+    try:
+        company_names = [
+            row[0]
+            for row in db.session.query(Station.company_name)
+            .distinct()
+            .order_by(func.lower(Station.company_name))
+            .all()
+            if row[0]
+        ]
+
+        if "Total" not in company_names:
+            company_names.insert(0, "Total")
+
+        stations = (
+            Station.query.filter(Station.status == "active")
+            .order_by(func.lower(Station.company_name), func.lower(Station.name))
+            .all()
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "data": {
+                    "companies": company_names,
+                    "stations": [station.to_dict() for station in stations],
+                },
+            }
+        )
+    except Exception as error:
+        return jsonify({"success": False, "message": str(error)}), 500
 
 
 @auth_bp.post("/login")
@@ -85,44 +121,31 @@ def register():
             full_name=full_name,
             company_name=company_name or "Total",
         )
-        rider = None
-        station = None
 
         if role == "station":
-            branch_name = (payload.get("branchName") or payload.get("branch_name") or "").strip()
-            location = (payload.get("location") or "").strip()
-            manager_name = (payload.get("managerName") or payload.get("manager_name") or "").strip()
-            management_phoneline = normalize_phone(
-                payload.get("managementPhoneline")
-                or payload.get("management_phoneline")
-                or payload.get("managerPhone")
-                or payload.get("manager_phone")
-            )
-
-            if not branch_name or not location or not manager_name or not management_phoneline:
+            station_id = payload.get("stationId") or payload.get("station_id")
+            if not company_name or not station_id:
                 return (
                     jsonify(
                         {
                             "success": False,
-                            "message": "Branch name, location, manager name, and management phoneline are required",
+                            "message": "Company and station are required",
                         }
                     ),
                     400,
                 )
 
-            station = Station(
-                name=branch_name,
-                company_name=company_name or "Total",
-                location=location,
-                manager_name=manager_name,
-                manager_phone=management_phoneline,
-                status="active",
-            )
-            db.session.add(station)
-            db.session.flush()
+            station = Station.query.get(station_id)
+            if not station:
+                return jsonify({"success": False, "message": "Selected station was not found"}), 404
+            if station.company_name != company_name:
+                return jsonify({"success": False, "message": "Selected station does not belong to that company"}), 400
+            if station.account:
+                return jsonify({"success": False, "message": "That station already has a station manager account"}), 409
 
             account.station_id = station.id
             account.company_name = station.company_name
+            account.approval_status = "pending"
 
         elif role == "rider":
             phone = normalize_phone(payload.get("phone"))
@@ -155,16 +178,49 @@ def register():
 
             account.rider_id = rider.id
             account.company_name = "Total"
+            account.approval_status = "approved"
+        else:
+            account.approval_status = "approved"
 
         account.set_password(password)
         db.session.add(account)
+        db.session.flush()
+
+        if role == "station":
+            create_notification(
+                account.id,
+                "Approval pending",
+                "Your station manager account is waiting for company approval. You can check this page for updates.",
+                notification_type="warning",
+                action_path="/notifications",
+            )
+            notify_company_accounts(
+                account.company_name,
+                "New station manager application",
+                f"{account.full_name} has requested access for {station.company_name} {station.name}.",
+                notification_type="approval",
+                action_path="/notifications",
+            )
+        else:
+            create_notification(
+                account.id,
+                "Account ready",
+                "Your account is ready to use.",
+                notification_type="success",
+                action_path="/home",
+            )
+
         db.session.commit()
 
         return (
             jsonify(
                 {
                     "success": True,
-                    "message": "Account created successfully",
+                    "message": (
+                        "Account created. Approval is pending."
+                        if role == "station"
+                        else "Account created successfully"
+                    ),
                     "token": generate_auth_token(account),
                     "data": account.to_session_dict(),
                 }

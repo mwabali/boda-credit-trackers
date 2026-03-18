@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
 from app.database.db import db
-from app.utils.auth import auth_required, resolve_request_account, roles_required
+from app.utils.auth import approved_access_required, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.station_company import hydrate_station, prepare_station_payload
 from models import Station
@@ -14,7 +14,7 @@ VALID_STATION_STATUSES = {"active", "closed", "maintenance"}
 
 
 @stations_bp.get("")
-@auth_required
+@approved_access_required
 def list_stations():
     try:
         account = resolve_request_account()
@@ -47,7 +47,7 @@ def list_stations():
 
 
 @stations_bp.get("/<int:station_id>")
-@auth_required
+@approved_access_required
 def get_station(station_id):
     try:
         account = resolve_request_account()

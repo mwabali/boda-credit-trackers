@@ -4,7 +4,12 @@ import { useAuth } from '../auth/AuthProvider'
 import logo from '../assets/Boda_Credit_logo.svg'
 import styles from './Sidebar.module.css'
 
-function getLinksForRole(role) {
+function getLinksForRole(user) {
+  if (user?.role === 'station' && user?.approvalStatus !== 'approved') {
+    return [{ to: '/notifications', label: 'Notifications' }]
+  }
+
+  const role = user?.role
   if (role === 'company') {
     return [
       { to: '/home', label: 'Dashboard' },
@@ -12,6 +17,7 @@ function getLinksForRole(role) {
       { to: '/stations', label: 'Fuel Stations' },
       { to: '/transactions', label: 'Transactions' },
       { to: '/add-credit', label: 'Add Credit' },
+      { to: '/notifications', label: 'Notifications' },
     ]
   }
 
@@ -21,6 +27,7 @@ function getLinksForRole(role) {
       { to: '/stations', label: 'My Station' },
       { to: '/transactions', label: 'Transactions' },
       { to: '/add-credit', label: 'Add Credit' },
+      { to: '/notifications', label: 'Notifications' },
     ]
   }
 
@@ -28,6 +35,7 @@ function getLinksForRole(role) {
     { to: '/home', label: 'Dashboard' },
     { to: '/transactions', label: 'My Activity' },
     { to: '/stations', label: 'Stations' },
+    { to: '/notifications', label: 'Notifications' },
   ]
 }
 
@@ -35,7 +43,7 @@ function Sidebar() {
   const { user, logout } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
-  const links = getLinksForRole(user?.role)
+  const links = getLinksForRole(user)
 
   useEffect(() => {
     setIsMenuOpen(false)

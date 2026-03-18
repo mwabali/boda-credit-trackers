@@ -4,6 +4,7 @@ import MainLayout from './layout/MainLayout'
 import AddCreditPage from './pages/AddCreditPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import NotificationsPage from './pages/NotificationsPage'
 import RidersPage from './pages/RidersPage'
 import StationsPage from './pages/StationsPage'
 import TransactionsPage from './pages/TransactionsPage'
@@ -19,6 +20,12 @@ function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
           <Route path="/stations" element={<StationsPage />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowPending />}>
+        <Route element={<MainLayout />}>
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
       </Route>
 

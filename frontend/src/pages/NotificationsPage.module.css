@@ -1,0 +1,144 @@
+.page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.title {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+}
+
+.description {
+  margin: 0;
+  color: #5f6c82;
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.pendingBanner,
+.sectionCard {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  border-radius: 26px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.07);
+}
+
+.pendingBanner {
+  padding: 1.35rem 1.45rem;
+  background: rgba(255, 247, 237, 0.9);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.pendingBanner h2,
+.sectionHeader h2,
+.approvalBody h3,
+.notificationBody h3 {
+  margin: 0;
+  color: #172033;
+}
+
+.pendingBanner p,
+.approvalBody p,
+.notificationBody p,
+.emptyState {
+  margin: 0;
+  color: #5f6c82;
+  line-height: 1.55;
+}
+
+.sectionCard {
+  padding: 1.35rem 1.45rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.sectionHeader span,
+.notificationType {
+  color: #8a4b20;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.approvalList,
+.notificationList {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.approvalCard,
+.notificationCard {
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  background: rgba(248, 250, 252, 0.88);
+  padding: 1rem 1.05rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.notificationRead {
+  opacity: 0.82;
+}
+
+.approvalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.approveButton,
+.rejectButton,
+.readButton {
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.approveButton {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+  color: #ecfdf5;
+}
+
+.rejectButton {
+  background: rgba(185, 28, 28, 0.1);
+  color: #991b1b;
+}
+
+.readButton {
+  justify-self: start;
+  background: rgba(180, 83, 9, 0.1);
+  color: #9a3412;
+}
+
+@media (max-width: 640px) {
+  .description,
+  .pendingBanner p,
+  .approvalBody p,
+  .notificationBody p,
+  .emptyState {
+    font-size: 0.92rem;
+  }
+
+  .sectionHeader {
+    align-items: start;
+    flex-direction: column;
+  }
+}

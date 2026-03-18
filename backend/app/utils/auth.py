@@ -56,6 +56,38 @@ def auth_required(view_func):
     return wrapper
 
 
+def account_has_data_access(account):
+    if not account:
+        return False
+    if account.role != "station":
+        return True
+    return account.approval_status == "approved"
+
+
+def approved_access_required(view_func):
+    @wraps(view_func)
+    def wrapper(*args, **kwargs):
+        account = resolve_request_account()
+        if not account:
+            return jsonify({"success": False, "message": "Authentication required"}), 401
+
+        if not account_has_data_access(account):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Your station access is still pending approval",
+                        "code": "PENDING_APPROVAL",
+                    }
+                ),
+                403,
+            )
+
+        return view_func(*args, **kwargs)
+
+    return wrapper
+
+
 def roles_required(*roles):
     def decorator(view_func):
         @wraps(view_func)
@@ -69,6 +101,18 @@ def roles_required(*roles):
 
             if account.role not in roles:
                 return jsonify({"success": False, "message": "Access denied"}), 403
+
+            if not account_has_data_access(account):
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Your station access is still pending approval",
+                            "code": "PENDING_APPROVAL",
+                        }
+                    ),
+                    403,
+                )
 
             return view_func(*args, **kwargs)
 

@@ -188,6 +188,13 @@
   line-height: 1.4;
 }
 
+.helperText {
+  margin: -0.2rem 0 0;
+  color: #8a4b20;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 .submitButton {
   border: none;
   border-radius: 999px;

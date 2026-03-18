@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
-from app.utils.auth import auth_required, resolve_request_account
+from app.utils.auth import approved_access_required, resolve_request_account
 from app.routes.transactions import serialize_transaction
 from app.utils.rider_balances import get_outstanding_balance_map
 from app.utils.station_company import hydrate_station
@@ -13,7 +13,7 @@ dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 
 @dashboard_bp.get("")
-@auth_required
+@approved_access_required
 def get_dashboard_payload():
     try:
         account = resolve_request_account()
@@ -92,7 +92,7 @@ def get_dashboard_payload():
 
 
 @dashboard_bp.get("/form-options")
-@auth_required
+@approved_access_required
 def get_form_options():
     try:
         account = resolve_request_account()

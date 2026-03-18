@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider'
 
-function ProtectedRoute({ allowedRoles = [] }) {
+function ProtectedRoute({ allowedRoles = [], allowPending = false }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const location = useLocation()
 
@@ -15,6 +15,21 @@ function ProtectedRoute({ allowedRoles = [] }) {
 
   if (allowedRoles.length && !allowedRoles.includes(user?.role)) {
     return <Navigate to="/home" replace />
+  }
+
+  if (
+    !allowPending &&
+    user?.role === 'station' &&
+    user?.approvalStatus &&
+    user.approvalStatus !== 'approved'
+  ) {
+    return (
+      <Navigate
+        to="/notifications"
+        replace
+        state={{ pendingApproval: true, from: location.pathname }}
+      />
+    )
   }
 
   return <Outlet />

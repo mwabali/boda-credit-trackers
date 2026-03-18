@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from app.database.db import db
-from app.utils.auth import auth_required, resolve_request_account, roles_required
+from app.utils.auth import approved_access_required, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import get_outstanding_balance_map
 from models import Rider, Transaction
@@ -16,7 +16,7 @@ VALID_RIDER_STATUSES = {"active", "suspended", "inactive"}
 
 
 @riders_bp.get("")
-@auth_required
+@approved_access_required
 def list_riders():
     try:
         account = resolve_request_account()
@@ -51,7 +51,7 @@ def list_riders():
 
 
 @riders_bp.get("/<int:rider_id>")
-@auth_required
+@approved_access_required
 def get_rider(rider_id):
     try:
         account = resolve_request_account()

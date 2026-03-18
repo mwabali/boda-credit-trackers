@@ -13,6 +13,8 @@ VALID_STATION_STATUSES = {"active", "closed", "maintenance"}
 VALID_TRANSACTION_STATUSES = {"pending", "approved", "paid", "cancelled"}
 VALID_PAYMENT_METHODS = {"credit", "cash", "mobile_money", "card"}
 VALID_ACCOUNT_ROLES = {"company", "station", "rider"}
+VALID_ACCOUNT_APPROVAL_STATUSES = {"pending", "approved", "rejected"}
+VALID_NOTIFICATION_TYPES = {"info", "success", "warning", "approval"}
 
 
 def serialize_datetime(value):
@@ -308,6 +310,10 @@ class AuthAccount(db.Model):
             name="check_auth_accounts_role_valid",
         ),
         CheckConstraint(
+            "approval_status IN ('pending', 'approved', 'rejected')",
+            name="check_auth_accounts_approval_status_valid",
+        ),
+        CheckConstraint(
             "(station_id IS NULL) OR (rider_id IS NULL)",
             name="check_auth_accounts_single_profile_link",
         ),
@@ -322,6 +328,9 @@ class AuthAccount(db.Model):
     station_id = db.Column(db.Integer, db.ForeignKey("stations.id"), unique=True)
     rider_id = db.Column(db.Integer, db.ForeignKey("riders.id"), unique=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    approval_status = db.Column(db.String(20), nullable=False, default="approved")
+    approved_at = db.Column(db.String(64))
+    approved_by_account_id = db.Column(db.Integer, db.ForeignKey("auth_accounts.id"))
     created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
     updated_at = db.Column(
         db.String(64),
@@ -332,6 +341,13 @@ class AuthAccount(db.Model):
 
     station = db.relationship("Station", back_populates="account", lazy="joined")
     rider = db.relationship("Rider", back_populates="account", lazy="joined")
+    approved_by = db.relationship("AuthAccount", remote_side=[id], lazy="joined")
+    notifications = db.relationship(
+        "Notification",
+        back_populates="recipient_account",
+        lazy="select",
+        foreign_keys="Notification.recipient_account_id",
+    )
 
     @validates("email")
     def validate_email(self, key, value):
@@ -353,6 +369,12 @@ class AuthAccount(db.Model):
             raise ValueError("Account role is invalid")
         return value
 
+    @validates("approval_status")
+    def validate_approval_status(self, key, value):
+        if value not in VALID_ACCOUNT_APPROVAL_STATUSES:
+            raise ValueError("Approval status is invalid")
+        return value
+
     def set_password(self, raw_password):
         trimmed_password = (raw_password or "").strip()
         if len(trimmed_password) < 8:
@@ -372,6 +394,9 @@ class AuthAccount(db.Model):
             "stationId": self.station_id,
             "riderId": self.rider_id,
             "isActive": self.is_active,
+            "approvalStatus": self.approval_status,
+            "approvedAt": serialize_datetime(self.approved_at),
+            "approvedByAccountId": self.approved_by_account_id,
             "created_at": serialize_datetime(self.created_at),
             "updated_at": serialize_datetime(self.updated_at),
         }
@@ -396,3 +421,62 @@ class AuthAccount(db.Model):
             }
 
         return payload
+
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+    __table_args__ = (
+        CheckConstraint(
+            "type IN ('info', 'success', 'warning', 'approval')",
+            name="check_notifications_type_valid",
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    recipient_account_id = db.Column(
+        db.Integer, db.ForeignKey("auth_accounts.id"), nullable=False
+    )
+    title = db.Column(db.String(160), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(20), nullable=False, default="info")
+    is_read = db.Column(db.Boolean, nullable=False, default=False)
+    action_path = db.Column(db.String(255))
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
+
+    recipient_account = db.relationship(
+        "AuthAccount",
+        back_populates="notifications",
+        lazy="joined",
+        foreign_keys=[recipient_account_id],
+    )
+
+    @validates("title", "message")
+    def validate_text(self, key, value):
+        cleaned_value = (value or "").strip()
+        if not cleaned_value:
+            raise ValueError(f"{key.title()} is required")
+        return cleaned_value
+
+    @validates("type")
+    def validate_type(self, key, value):
+        if value not in VALID_NOTIFICATION_TYPES:
+            raise ValueError("Notification type is invalid")
+        return value
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "message": self.message,
+            "type": self.type,
+            "isRead": self.is_read,
+            "actionPath": self.action_path,
+            "created_at": serialize_datetime(self.created_at),
+            "updated_at": serialize_datetime(self.updated_at),
+        }

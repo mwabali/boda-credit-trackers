@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from app.database.db import db
-from app.utils.auth import auth_required, resolve_request_account, roles_required
+from app.utils.auth import approved_access_required, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import sync_rider_balance
 from app.utils.station_company import hydrate_station
@@ -33,7 +33,7 @@ def serialize_transaction(transaction, include_all=False):
 
 
 @transactions_bp.get("/stats/dashboard")
-@auth_required
+@approved_access_required
 def transaction_dashboard_stats():
     try:
         account = resolve_request_account()
@@ -63,7 +63,7 @@ def transaction_dashboard_stats():
 
 
 @transactions_bp.get("")
-@auth_required
+@approved_access_required
 def list_transactions():
     try:
         account = resolve_request_account()

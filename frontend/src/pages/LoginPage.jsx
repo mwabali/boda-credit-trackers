@@ -5,6 +5,7 @@ import * as Yup from 'yup'
 import logo from '../assets/Boda_Credit_logo.svg'
 import { useAuth } from '../auth/AuthProvider'
 import { useToast } from '../components/ToastProvider'
+import { request } from '../lib/api'
 import styles from './LoginPage.module.css'
 
 const PORTALS = [
@@ -18,13 +19,13 @@ const PORTALS = [
     role: 'station',
     eyebrow: 'Station portal',
     title: 'Station access',
-    description: 'Manage one station location, record credit, and track branch activity.',
+    description: 'Manage your station location, record credit, and track branch activity.',
   },
   {
     role: 'rider',
     eyebrow: 'Rider portal',
     title: 'Rider access',
-    description: 'Check your balances, recent credit activity, and approved station network.',
+    description: 'Check your balances and recent credit activity from your phone.',
   },
 ]
 
@@ -35,11 +36,41 @@ function LoginPage() {
   const location = useLocation()
   const [activeRole, setActiveRole] = useState('company')
   const [activeMode, setActiveMode] = useState('login')
+  const [portalOptions, setPortalOptions] = useState({ companies: ['Total'], stations: [] })
+  const [isLoadingPortalOptions, setIsLoadingPortalOptions] = useState(true)
 
   const selectedPortal = useMemo(
     () => PORTALS.find((portal) => portal.role === activeRole) || PORTALS[0],
     [activeRole]
   )
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadPortalOptions() {
+      try {
+        setIsLoadingPortalOptions(true)
+        const payload = await request('/auth/portal-options')
+        if (isMounted) {
+          setPortalOptions(payload.data || { companies: ['Total'], stations: [] })
+        }
+      } catch (error) {
+        if (isMounted) {
+          showError(error.message, 'Unable to load portal options')
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingPortalOptions(false)
+        }
+      }
+    }
+
+    loadPortalOptions()
+
+    return () => {
+      isMounted = false
+    }
+  }, [showError])
 
   const loginFormik = useFormik({
     enableReinitialize: true,
@@ -54,8 +85,16 @@ function LoginPage() {
     onSubmit: async (values, { setSubmitting }) => {
       try {
         const sessionUser = await login(values.email, values.password)
-        showSuccess('You have signed in successfully.', `Welcome to ${selectedPortal.title}`)
-        navigate(location.state?.from?.pathname || '/home', { replace: true })
+        if (sessionUser?.role === 'station' && sessionUser?.approvalStatus !== 'approved') {
+          showSuccess(
+            'You are signed in. Your station access is still waiting for approval.',
+            'Approval pending'
+          )
+          navigate('/notifications', { replace: true })
+        } else {
+          showSuccess('You have signed in successfully.', `Welcome to ${selectedPortal.title}`)
+          navigate(location.state?.from?.pathname || '/home', { replace: true })
+        }
         return sessionUser
       } catch (error) {
         showError(error.message)
@@ -69,18 +108,21 @@ function LoginPage() {
     enableReinitialize: true,
     initialValues: {
       fullName: '',
+      companyName: 'Total',
       email: '',
       password: '',
       confirmPassword: '',
-      branchName: '',
-      location: '',
-      managerName: '',
-      managementPhoneline: '',
+      stationId: '',
       phone: '',
       licensePlate: '',
     },
     validationSchema: Yup.object({
       fullName: Yup.string().trim().required('Full name is required'),
+      companyName: Yup.string().when([], {
+        is: () => activeRole === 'station',
+        then: (schema) => schema.required('Company is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
       email: Yup.string().email('Enter a valid email').required('Email is required'),
       password: Yup.string()
         .min(8, 'Password must be at least 8 characters')
@@ -88,24 +130,9 @@ function LoginPage() {
       confirmPassword: Yup.string()
         .oneOf([Yup.ref('password')], 'Passwords must match')
         .required('Please confirm your password'),
-      branchName: Yup.string().when([], {
+      stationId: Yup.string().when([], {
         is: () => activeRole === 'station',
-        then: (schema) => schema.trim().required('Branch name is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-      location: Yup.string().when([], {
-        is: () => activeRole === 'station',
-        then: (schema) => schema.trim().required('Location is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-      managerName: Yup.string().when([], {
-        is: () => activeRole === 'station',
-        then: (schema) => schema.trim().required('Manager name is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-      managementPhoneline: Yup.string().when([], {
-        is: () => activeRole === 'station',
-        then: (schema) => schema.trim().required('Management phoneline is required'),
+        then: (schema) => schema.required('Station is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
       phone: Yup.string().when([], {
@@ -124,16 +151,13 @@ function LoginPage() {
         const payload = {
           role: activeRole,
           fullName: values.fullName,
-          companyName: 'Total',
+          companyName: activeRole === 'station' ? values.companyName : 'Total',
           email: values.email,
           password: values.password,
         }
 
         if (activeRole === 'station') {
-          payload.branchName = values.branchName
-          payload.location = values.location
-          payload.managerName = values.managerName
-          payload.managementPhoneline = values.managementPhoneline
+          payload.stationId = Number(values.stationId)
         }
 
         if (activeRole === 'rider') {
@@ -141,9 +165,20 @@ function LoginPage() {
           payload.licensePlate = values.licensePlate
         }
 
-        await register(payload)
-        showSuccess('Your account has been created successfully.', `${selectedPortal.title} ready`)
-        navigate('/home', { replace: true })
+        const sessionUser = await register(payload)
+        if (sessionUser?.role === 'station' && sessionUser?.approvalStatus !== 'approved') {
+          showSuccess(
+            'Your station manager account has been created and is now awaiting company approval.',
+            'Approval pending'
+          )
+          navigate('/notifications', { replace: true })
+        } else {
+          showSuccess(
+            'Your account has been created successfully.',
+            `${selectedPortal.title} ready`
+          )
+          navigate('/home', { replace: true })
+        }
       } catch (error) {
         showError(error.message)
       } finally {
@@ -157,18 +192,20 @@ function LoginPage() {
     signupFormik.resetForm({
       values: {
         fullName: '',
+        companyName: 'Total',
         email: '',
         password: '',
         confirmPassword: '',
-        branchName: '',
-        location: '',
-        managerName: '',
-        managementPhoneline: '',
+        stationId: '',
         phone: '',
         licensePlate: '',
       },
     })
   }, [activeRole]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const stationsForSelectedCompany = portalOptions.stations.filter(
+    (station) => station.companyName === signupFormik.values.companyName
+  )
 
   if (isAuthenticated) {
     return <Navigate to="/home" replace />
@@ -297,71 +334,54 @@ function LoginPage() {
               {activeRole === 'station' ? (
                 <>
                   <label className={styles.field}>
-                    Branch name
-                    <input
-                      id="branchName"
-                      name="branchName"
-                      type="text"
-                      value={signupFormik.values.branchName}
+                    Company
+                    <select
+                      id="companyName"
+                      name="companyName"
+                      value={signupFormik.values.companyName}
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
-                      placeholder="Buruburu"
-                    />
-                    {signupFormik.touched.branchName && signupFormik.errors.branchName ? (
-                      <span className={styles.errorText}>{signupFormik.errors.branchName}</span>
+                      disabled={isLoadingPortalOptions}
+                    >
+                      {portalOptions.companies.map((companyName) => (
+                        <option key={companyName} value={companyName}>
+                          {companyName}
+                        </option>
+                      ))}
+                    </select>
+                    {signupFormik.touched.companyName && signupFormik.errors.companyName ? (
+                      <span className={styles.errorText}>{signupFormik.errors.companyName}</span>
                     ) : null}
                   </label>
 
                   <label className={styles.field}>
-                    Location
-                    <input
-                      id="location"
-                      name="location"
-                      type="text"
-                      value={signupFormik.values.location}
+                    Station
+                    <select
+                      id="stationId"
+                      name="stationId"
+                      value={signupFormik.values.stationId}
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
-                      placeholder="Buruburu, Nairobi"
-                    />
-                    {signupFormik.touched.location && signupFormik.errors.location ? (
-                      <span className={styles.errorText}>{signupFormik.errors.location}</span>
+                      disabled={isLoadingPortalOptions || stationsForSelectedCompany.length === 0}
+                    >
+                      <option value="">Select station</option>
+                      {stationsForSelectedCompany.map((station) => (
+                        <option key={station.id} value={station.id}>
+                          {station.displayName}
+                        </option>
+                      ))}
+                    </select>
+                    {signupFormik.touched.stationId && signupFormik.errors.stationId ? (
+                      <span className={styles.errorText}>{signupFormik.errors.stationId}</span>
                     ) : null}
                   </label>
 
-                  <label className={styles.field}>
-                    Manager name
-                    <input
-                      id="managerName"
-                      name="managerName"
-                      type="text"
-                      value={signupFormik.values.managerName}
-                      onChange={signupFormik.handleChange}
-                      onBlur={signupFormik.handleBlur}
-                      placeholder="Station manager name"
-                    />
-                    {signupFormik.touched.managerName && signupFormik.errors.managerName ? (
-                      <span className={styles.errorText}>{signupFormik.errors.managerName}</span>
-                    ) : null}
-                  </label>
-
-                  <label className={styles.field}>
-                    Management phoneline
-                    <input
-                      id="managementPhoneline"
-                      name="managementPhoneline"
-                      type="text"
-                      value={signupFormik.values.managementPhoneline}
-                      onChange={signupFormik.handleChange}
-                      onBlur={signupFormik.handleBlur}
-                      placeholder="Station contact number"
-                    />
-                    {signupFormik.touched.managementPhoneline &&
-                    signupFormik.errors.managementPhoneline ? (
-                      <span className={styles.errorText}>
-                        {signupFormik.errors.managementPhoneline}
-                      </span>
-                    ) : null}
-                  </label>
+                  {stationsForSelectedCompany.length === 0 ? (
+                    <p className={styles.helperText}>
+                      No stations have been listed under this company yet. Ask the company team to
+                      create the station first.
+                    </p>
+                  ) : null}
                 </>
               ) : null}
 
