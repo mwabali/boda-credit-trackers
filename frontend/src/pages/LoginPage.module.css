@@ -9,7 +9,7 @@
 }
 
 .shell {
-  width: min(72rem, 100%);
+  width: min(78rem, 100%);
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   gap: 1.5rem;
@@ -28,7 +28,7 @@
 .brandPanel {
   padding: 2.5rem;
   display: grid;
-  align-content: space-between;
+  align-content: start;
   gap: 2rem;
 }
 
@@ -43,12 +43,13 @@
 }
 
 .eyebrow,
-.formTag {
+.formTag,
+.portalEyebrow {
   margin: 0;
   color: #9a3412;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
@@ -59,16 +60,50 @@
 }
 
 .heroCopy h1 {
-  font-size: clamp(2.1rem, 4vw, 3.4rem);
+  font-size: clamp(2.1rem, 4vw, 3.1rem);
   line-height: 0.98;
 }
 
 .heroCopy p,
 .formHeader p,
-.demoPanel li {
+.portalCard span,
+.errorText {
   margin: 0;
   color: #55637b;
   line-height: 1.55;
+}
+
+.portalGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.portalCard {
+  border: 1px solid rgba(251, 191, 36, 0.26);
+  border-radius: 22px;
+  padding: 1.2rem 1.25rem;
+  background: rgba(255, 250, 245, 0.82);
+  display: grid;
+  gap: 0.45rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.portalCard strong {
+  color: #172033;
+  font-size: 1.1rem;
+}
+
+.portalCard:hover {
+  transform: translateY(-1px);
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.portalCardActive {
+  border-color: rgba(180, 83, 9, 0.72);
+  background: linear-gradient(135deg, rgba(255, 247, 237, 0.96), rgba(255, 237, 213, 0.92));
+  box-shadow: 0 20px 35px rgba(180, 83, 9, 0.12);
 }
 
 .formCard {
@@ -83,15 +118,55 @@
   gap: 0.55rem;
 }
 
+.modeSwitch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.35rem;
+  border-radius: 18px;
+  background: rgba(255, 247, 237, 0.82);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+}
+
+.modeButton,
+.modeButtonActive {
+  border: none;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  color: #7c2d12;
+  background: transparent;
+}
+
+.modeButtonActive {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #fff7ed;
+  box-shadow: 0 12px 24px rgba(180, 83, 9, 0.2);
+}
+
+.formFields {
+  display: grid;
+  gap: 1rem;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
 .field {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.45rem;
   color: #1f2937;
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-.field input {
+.field input,
+.field select {
   width: 100%;
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 16px;
@@ -101,9 +176,16 @@
   background: rgba(255, 255, 255, 0.92);
 }
 
-.field input:focus {
+.field input:focus,
+.field select:focus {
   outline: 2px solid rgba(234, 88, 12, 0.25);
   border-color: rgba(234, 88, 12, 0.45);
+}
+
+.errorText {
+  color: #b91c1c;
+  font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .submitButton {
@@ -123,29 +205,6 @@
   cursor: wait;
 }
 
-.demoPanel {
-  display: grid;
-  gap: 0.45rem;
-  padding: 1rem 1rem 1.05rem;
-  border-radius: 18px;
-  background: rgba(255, 247, 237, 0.82);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-}
-
-.demoTitle {
-  margin: 0;
-  color: #7c2d12;
-  font-size: 0.9rem;
-  font-weight: 800;
-}
-
-.demoPanel ul {
-  margin: 0;
-  padding-left: 1rem;
-  display: grid;
-  gap: 0.3rem;
-}
-
 @media (max-width: 900px) {
   .shell {
     grid-template-columns: 1fr;
@@ -158,6 +217,10 @@
 
   .formCard {
     padding: 1.35rem;
+  }
+
+  .portalGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -173,12 +236,20 @@
   }
 
   .heroCopy h1 {
-    font-size: 2.35rem;
+    font-size: 2.2rem;
   }
 
   .heroCopy p,
-  .formHeader p,
-  .demoPanel li {
+  .formHeader p {
     font-size: 0.92rem;
+  }
+
+  .portalGrid,
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
+
+  .portalCard {
+    padding: 1rem 1.05rem;
   }
 }

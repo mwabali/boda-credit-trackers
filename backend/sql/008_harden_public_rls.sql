@@ -1,47 +1,78 @@
-ALTER TABLE public.riders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.stations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_accounts ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'riders'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.riders ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.riders FORCE ROW LEVEL SECURITY';
+    EXECUTE 'REVOKE ALL ON TABLE public.riders FROM anon, authenticated';
+    EXECUTE 'DROP POLICY IF EXISTS riders_deny_direct_api ON public.riders';
+    EXECUTE $policy$
+      CREATE POLICY riders_deny_direct_api
+      ON public.riders
+      FOR ALL
+      TO anon, authenticated
+      USING (false)
+      WITH CHECK (false)
+    $policy$;
+  END IF;
 
-ALTER TABLE public.riders FORCE ROW LEVEL SECURITY;
-ALTER TABLE public.stations FORCE ROW LEVEL SECURITY;
-ALTER TABLE public.transactions FORCE ROW LEVEL SECURITY;
-ALTER TABLE public.auth_accounts FORCE ROW LEVEL SECURITY;
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'stations'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.stations ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.stations FORCE ROW LEVEL SECURITY';
+    EXECUTE 'REVOKE ALL ON TABLE public.stations FROM anon, authenticated';
+    EXECUTE 'DROP POLICY IF EXISTS stations_deny_direct_api ON public.stations';
+    EXECUTE $policy$
+      CREATE POLICY stations_deny_direct_api
+      ON public.stations
+      FOR ALL
+      TO anon, authenticated
+      USING (false)
+      WITH CHECK (false)
+    $policy$;
+  END IF;
 
-REVOKE ALL ON TABLE public.riders FROM anon, authenticated;
-REVOKE ALL ON TABLE public.stations FROM anon, authenticated;
-REVOKE ALL ON TABLE public.transactions FROM anon, authenticated;
-REVOKE ALL ON TABLE public.auth_accounts FROM anon, authenticated;
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'transactions'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.transactions FORCE ROW LEVEL SECURITY';
+    EXECUTE 'REVOKE ALL ON TABLE public.transactions FROM anon, authenticated';
+    EXECUTE 'DROP POLICY IF EXISTS transactions_deny_direct_api ON public.transactions';
+    EXECUTE $policy$
+      CREATE POLICY transactions_deny_direct_api
+      ON public.transactions
+      FOR ALL
+      TO anon, authenticated
+      USING (false)
+      WITH CHECK (false)
+    $policy$;
+  END IF;
 
-DROP POLICY IF EXISTS riders_deny_direct_api ON public.riders;
-DROP POLICY IF EXISTS stations_deny_direct_api ON public.stations;
-DROP POLICY IF EXISTS transactions_deny_direct_api ON public.transactions;
-DROP POLICY IF EXISTS auth_accounts_deny_direct_api ON public.auth_accounts;
-
-CREATE POLICY riders_deny_direct_api
-ON public.riders
-FOR ALL
-TO anon, authenticated
-USING (false)
-WITH CHECK (false);
-
-CREATE POLICY stations_deny_direct_api
-ON public.stations
-FOR ALL
-TO anon, authenticated
-USING (false)
-WITH CHECK (false);
-
-CREATE POLICY transactions_deny_direct_api
-ON public.transactions
-FOR ALL
-TO anon, authenticated
-USING (false)
-WITH CHECK (false);
-
-CREATE POLICY auth_accounts_deny_direct_api
-ON public.auth_accounts
-FOR ALL
-TO anon, authenticated
-USING (false)
-WITH CHECK (false);
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'auth_accounts'
+  ) THEN
+    EXECUTE 'ALTER TABLE public.auth_accounts ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.auth_accounts FORCE ROW LEVEL SECURITY';
+    EXECUTE 'REVOKE ALL ON TABLE public.auth_accounts FROM anon, authenticated';
+    EXECUTE 'DROP POLICY IF EXISTS auth_accounts_deny_direct_api ON public.auth_accounts';
+    EXECUTE $policy$
+      CREATE POLICY auth_accounts_deny_direct_api
+      ON public.auth_accounts
+      FOR ALL
+      TO anon, authenticated
+      USING (false)
+      WITH CHECK (false)
+    $policy$;
+  END IF;
+END $$;

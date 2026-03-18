@@ -86,6 +86,19 @@ function AuthProvider({ children }) {
     return payload.data || null
   }, [])
 
+  const register = useCallback(async (registrationPayload) => {
+    const payload = await request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(registrationPayload),
+    })
+
+    const nextToken = payload.token || ''
+    writeStoredToken(nextToken)
+    setToken(nextToken)
+    setUser(payload.data || null)
+    return payload.data || null
+  }, [])
+
   const value = useMemo(
     () => ({
       token,
@@ -93,10 +106,11 @@ function AuthProvider({ children }) {
       isLoading,
       isAuthenticated: Boolean(token && user),
       login,
+      register,
       logout,
       refreshSession: () => hydrateSession(readStoredToken()),
     }),
-    [hydrateSession, isLoading, login, logout, token, user]
+    [hydrateSession, isLoading, login, logout, register, token, user]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
