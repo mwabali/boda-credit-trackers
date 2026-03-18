@@ -124,13 +124,17 @@ function TransactionsPage() {
 
   const canManageTransactions = user?.role === 'station'
   const pageTitle =
-    user?.role === 'rider' ? 'My Credit Activity' : 'Credit Transaction Log'
+    user?.role === 'rider'
+      ? 'My Credit Activity'
+      : user?.role === 'station'
+        ? 'Approval Queue'
+        : 'Credit Transaction Log'
   const pageDescription =
     user?.role === 'rider'
       ? 'Review the credit entries linked to your rider account.'
       : user?.role === 'station'
-        ? 'Track station credit activity, review rider requests, and resolve branch-level conflicts.'
-      : 'Live transaction table backed by the current backend credit records.'
+        ? 'Review incoming rider requests, approve or decline entries, and keep your station ledger moving cleanly.'
+        : 'Live transaction table backed by the current backend credit records.'
 
   return (
     <main className={styles.page}>
@@ -141,7 +145,7 @@ function TransactionsPage() {
 
       <section className={styles.statsGrid} aria-label="Transaction summary">
         <article className={styles.statCard}>
-          <h2>Total Credit Transactions</h2>
+          <h2>{user?.role === 'station' ? 'Requests Logged' : 'Total Credit Transactions'}</h2>
           <div className={styles.metricRow}>
             <img
               src={transactionsIcon}
@@ -151,10 +155,14 @@ function TransactionsPage() {
             />
             <p className={styles.statValue}>{stats.total}</p>
           </div>
-          <span className={styles.statMeta}>credit records in the ledger</span>
+          <span className={styles.statMeta}>
+            {user?.role === 'station'
+              ? 'all requests currently attached to your station'
+              : 'credit records in the ledger'}
+          </span>
         </article>
         <article className={`${styles.statCard} ${styles.amountCard}`}>
-          <h2>Monthly KES Pumped</h2>
+          <h2>{user?.role === 'station' ? 'Monthly KES Requested' : 'Monthly KES Pumped'}</h2>
           <div className={`${styles.metricRow} ${styles.amountMetricRow}`}>
             <img
               src={transactionsIcon}
@@ -166,10 +174,14 @@ function TransactionsPage() {
               {currentMonthAmountDisplay}
             </p>
           </div>
-          <span className={styles.statMeta}>rounded monthly amount recorded in KES</span>
+          <span className={styles.statMeta}>
+            {user?.role === 'station'
+              ? 'rounded request volume currently routed through this station'
+              : 'rounded monthly amount recorded in KES'}
+          </span>
         </article>
         <article className={`${styles.statCard} ${styles.statCardWide}`}>
-          <h2>Pending Payments</h2>
+          <h2>{user?.role === 'station' ? 'Awaiting Review' : 'Pending Payments'}</h2>
           <div className={styles.metricRow}>
             <img
               src={transactionsIcon}
@@ -179,7 +191,11 @@ function TransactionsPage() {
             />
             <p className={styles.statValue}>{stats.pending}</p>
           </div>
-          <span className={styles.statMeta}>transactions awaiting settlement</span>
+          <span className={styles.statMeta}>
+            {user?.role === 'station'
+              ? 'requests that still need a station decision or settlement'
+              : 'transactions awaiting settlement'}
+          </span>
         </article>
       </section>
 

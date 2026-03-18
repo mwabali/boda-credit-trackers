@@ -85,17 +85,19 @@ function RidersPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Riders Management</h1>
+        <h1 className={styles.title}>
+          {user?.role === 'station' ? 'Rider Oversight' : 'Riders Management'}
+        </h1>
         <p className={styles.description}>
           {user?.role === 'station'
-            ? 'Monitor riders linked to your station and intervene when a rider account needs attention.'
+            ? 'Review rider standing at your station, resolve conflicts, and pause access when a rider account needs intervention.'
             : 'View riders currently interacting with your company fuel credit service.'}
         </p>
       </header>
 
       <section className={styles.statsGrid} aria-label="Riders summary">
         <article className={styles.statCard}>
-          <h2>Total Riders</h2>
+          <h2>{user?.role === 'station' ? 'Riders in Scope' : 'Total Riders'}</h2>
           <div className={styles.metricRow}>
             <img
               src={ridersIcon}
@@ -105,10 +107,14 @@ function RidersPage() {
             />
             <p className={styles.statValue}>{riders.length}</p>
           </div>
-          <span className={styles.statMeta}>registered rider profiles</span>
+          <span className={styles.statMeta}>
+            {user?.role === 'station'
+              ? 'rider profiles currently interacting with your station'
+              : 'registered rider profiles'}
+          </span>
         </article>
         <article className={styles.statCard}>
-          <h2>Active Riders</h2>
+          <h2>{user?.role === 'station' ? 'Clear to Fuel' : 'Active Riders'}</h2>
           <div className={styles.metricRow}>
             <img
               src={ridersIcon}
@@ -118,10 +124,14 @@ function RidersPage() {
             />
             <p className={styles.statValue}>{activeRiders}</p>
           </div>
-          <span className={styles.statMeta}>currently active riders</span>
+          <span className={styles.statMeta}>
+            {user?.role === 'station'
+              ? 'accounts that can currently submit or fulfil requests'
+              : 'currently active riders'}
+          </span>
         </article>
         <article className={`${styles.statCard} ${styles.statCardWide}`}>
-          <h2>Total Debt (Overall)</h2>
+          <h2>{user?.role === 'station' ? 'Outstanding Rider Exposure' : 'Total Debt (Overall)'}</h2>
           <div className={styles.metricRow}>
             <img
               src={ridersIcon}
@@ -131,7 +141,11 @@ function RidersPage() {
             />
             <p className={styles.statValue}>{formatCurrency(totalDebt)}</p>
           </div>
-          <span className={styles.statMeta}>outstanding rider balances</span>
+          <span className={styles.statMeta}>
+            {user?.role === 'station'
+              ? 'open rider balances currently tied to your station'
+              : 'outstanding rider balances'}
+          </span>
         </article>
       </section>
 
@@ -149,8 +163,8 @@ function RidersPage() {
                 <th>Name</th>
                 <th>Number Plate</th>
                 <th>Phone</th>
-                <th>Debt</th>
-                <th>Status</th>
+                <th>{user?.role === 'station' ? 'Exposure' : 'Debt'}</th>
+                <th>{user?.role === 'station' ? 'Access Control' : 'Status'}</th>
               </tr>
             </thead>
             <tbody>
