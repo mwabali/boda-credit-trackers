@@ -39,7 +39,9 @@ def transaction_dashboard_stats():
         account = resolve_request_account()
         query = Transaction.query
 
-        if account.role == "station":
+        if account.role == "company":
+            query = query.join(Station).filter(Station.company_name == account.company_name)
+        elif account.role == "station":
             query = query.filter_by(station_id=account.station_id)
         elif account.role == "rider":
             query = query.filter_by(rider_id=account.rider_id)
@@ -72,7 +74,9 @@ def list_transactions():
         include_stats = request.args.get("stats") == "dashboard"
 
         query = Transaction.query
-        if account.role == "station":
+        if account.role == "company":
+            query = query.join(Station).filter(Station.company_name == account.company_name)
+        elif account.role == "station":
             query = query.filter(Transaction.station_id == account.station_id)
         elif account.role == "rider":
             query = query.filter(Transaction.rider_id == account.rider_id)
@@ -96,7 +100,11 @@ def list_transactions():
 
         if include_stats:
             stats_query = Transaction.query
-            if account.role == "station":
+            if account.role == "company":
+                stats_query = stats_query.join(Station).filter(
+                    Station.company_name == account.company_name
+                )
+            elif account.role == "station":
                 stats_query = stats_query.filter(Transaction.station_id == account.station_id)
             elif account.role == "rider":
                 stats_query = stats_query.filter(Transaction.rider_id == account.rider_id)
@@ -113,20 +121,17 @@ def list_transactions():
 
 
 @transactions_bp.post("")
-@roles_required("company", "station")
+@roles_required("rider")
 def create_transaction():
     try:
         account = resolve_request_account()
         payload = request.get_json() or {}
-        rider_id = payload.get("riderId")
+        rider_id = account.rider_id
         station_id = payload.get("stationId")
         amount = payload.get("amount")
 
         if not rider_id or not station_id or not amount:
             return jsonify({"success": False, "message": "Missing required fields"}), 400
-
-        if account.role == "station":
-            station_id = account.station_id
 
         rider = Rider.query.get(rider_id)
         station = Station.query.get(station_id)
@@ -137,12 +142,27 @@ def create_transaction():
                 404,
             )
 
+        if rider.status != "active":
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Your rider account is not currently allowed to request credit",
+                    }
+                ),
+                403,
+            )
+
+        if station.status != "active":
+            return jsonify({"success": False, "message": "Selected station is not active"}), 403
+
         transaction = Transaction(
             rider_id=rider_id,
             station_id=station_id,
             amount=amount,
             liters=payload.get("liters"),
             notes=payload.get("notes"),
+            status="pending",
         )
         db.session.add(transaction)
         db.session.commit()
@@ -161,7 +181,7 @@ def create_transaction():
 
 
 @transactions_bp.patch("/<int:transaction_id>")
-@roles_required("company", "station")
+@roles_required("station")
 def patch_transaction_status(transaction_id):
     try:
         account = resolve_request_account()
@@ -197,7 +217,7 @@ def patch_transaction_status(transaction_id):
 
 
 @transactions_bp.delete("/<int:transaction_id>")
-@roles_required("company", "station")
+@roles_required("station")
 def delete_transaction(transaction_id):
     try:
         account = resolve_request_account()

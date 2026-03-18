@@ -192,6 +192,15 @@
   cursor: pointer;
 }
 
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .statsGrid {
     grid-template-columns: 1fr;

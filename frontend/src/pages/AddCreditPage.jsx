@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../auth/AuthProvider'
 import CreditForm from '../components/CreditForm'
 import { useToast } from '../components/ToastProvider'
 import { request } from '../lib/api'
 import styles from './AddCreditPage.module.css'
 
 function AddCreditPage() {
+  const { user } = useAuth()
   const { showError, showSuccess } = useToast()
   const [riders, setRiders] = useState([])
   const [stations, setStations] = useState([])
@@ -38,29 +40,16 @@ function AddCreditPage() {
       setIsSubmitting(true)
       setError('')
 
-      let riderId = formData.riderId
-
-      if (formData.riderMode === 'new') {
-        const riderPayload = await request('/riders', {
-          method: 'POST',
-          body: JSON.stringify(formData.newRider),
-        })
-
-        riderId = riderPayload.data.id
-        setRiders((currentRiders) => [riderPayload.data, ...currentRiders])
-      }
-
       await request('/transactions', {
         method: 'POST',
         body: JSON.stringify({
-          riderId,
           stationId: formData.stationId,
           amount: formData.amount,
           liters: formData.liters,
         }),
       })
 
-      showSuccess('Credit transaction saved successfully.', 'Transaction saved')
+      showSuccess('Your fuel credit request has been sent successfully.', 'Request submitted')
     } catch (submitError) {
       setError(submitError.message)
       showError(submitError.message)
@@ -72,9 +61,9 @@ function AddCreditPage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Add Credit Transaction</h1>
+        <h1 className={styles.title}>Request Fuel Credit</h1>
         <p className={styles.description}>
-          Add a new fuel credit entry for a rider at a specific station.
+          Submit a manual fuel credit request and route it to your preferred station for review.
         </p>
       </header>
 
@@ -86,6 +75,8 @@ function AddCreditPage() {
           stations={stations}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
+          submitLabel="Submit Request"
+          lockedRider={user?.rider || riders[0] || null}
         />
       </section>
     </main>

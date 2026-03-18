@@ -94,6 +94,11 @@ function HomePage() {
     [transactions]
   )
 
+  const visibleDashboardSections = useMemo(
+    () => dashboardSections.filter((section) => section.to !== '/add-credit'),
+    []
+  )
+
   const handleQuickCredit = async (formData) => {
     try {
       setIsSubmitting(true)
@@ -140,7 +145,7 @@ function HomePage() {
         title: 'Station Dashboard',
         companyMark: companyLabel,
         description:
-          'Manage credit activity for your assigned station and keep rider servicing moving.',
+          'Track your station performance, review rider credit activity, and resolve branch-level issues.',
       }
     }
 
@@ -149,7 +154,7 @@ function HomePage() {
         title: 'Rider Dashboard',
         companyMark: '',
         description:
-          'Track your credit balance, review recent fuel activity, and stay current on outstanding payments.',
+          'Request fuel credit, track your balance, and review recent activity from your phone.',
       }
     }
 
@@ -242,7 +247,7 @@ function HomePage() {
     ]
   }, [primaryRider?.currentBalance, riders.length, role, stations.length, stats.pending, stats.total])
 
-  const showQuickCredit = role !== 'rider'
+  const showQuickCredit = role === 'rider'
   const showStationDirectory = role === 'company'
   const showNavCards = role === 'company'
 
@@ -287,19 +292,18 @@ function HomePage() {
             <article className={styles.extensionCard}>
               <div className={styles.sectionHeader}>
                 <p className={styles.sectionTag}>Live form preview</p>
-                <h2>{role === 'station' ? 'Station credit entry' : 'Credit entry form'}</h2>
+                <h2>Fuel credit request</h2>
                 <p>
-                  {role === 'station'
-                    ? 'Log a new credit entry for your station using the live rider list.'
-                    : 'Create a quick transaction from the dashboard using live rider and station options.'}
+                  Submit a fuel credit request to your chosen station using your rider account details.
                 </p>
               </div>
               <CreditForm
                 riders={riders}
                 stations={stations}
                 onSubmit={handleQuickCredit}
-                submitLabel="Save From Dashboard"
+                submitLabel="Submit Request"
                 isSubmitting={isSubmitting}
+                lockedRider={user?.rider || primaryRider || null}
               />
             </article>
           ) : null}
@@ -358,7 +362,7 @@ function HomePage() {
 
       {showNavCards ? (
         <section className={styles.cardGrid} aria-label="Primary navigation">
-          {dashboardSections.map((section) => (
+          {visibleDashboardSections.map((section) => (
             <article key={section.to} className={styles.navCard}>
               <img
                 src={section.icon}

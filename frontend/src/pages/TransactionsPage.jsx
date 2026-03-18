@@ -122,12 +122,14 @@ function TransactionsPage() {
     }
   }
 
-  const canManageTransactions = user?.role === 'company' || user?.role === 'station'
+  const canManageTransactions = user?.role === 'station'
   const pageTitle =
     user?.role === 'rider' ? 'My Credit Activity' : 'Credit Transaction Log'
   const pageDescription =
     user?.role === 'rider'
       ? 'Review the credit entries linked to your rider account.'
+      : user?.role === 'station'
+        ? 'Track station credit activity, review rider requests, and resolve branch-level conflicts.'
       : 'Live transaction table backed by the current backend credit records.'
 
   return (

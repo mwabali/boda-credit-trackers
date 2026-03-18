@@ -23,8 +23,13 @@ function CreditForm({
   onSubmit,
   submitLabel = 'Save Credit',
   isSubmitting = false,
+  lockedRider = null,
 }) {
   const hasStations = stations.length > 0
+  const isLockedToRider = Boolean(lockedRider?.id)
+  const defaultRiderName = lockedRider?.name || ''
+  const defaultRiderPhone = lockedRider?.phone || ''
+  const defaultRiderPlate = lockedRider?.licensePlate || lockedRider?.number_plate || ''
 
   const validationSchema = useMemo(
     () =>
@@ -71,11 +76,19 @@ function CreditForm({
           .positive('Litres must be greater than 0')
           .required('Litres are required'),
       }),
-    []
+    [isLockedToRider]
   )
 
   const formik = useFormik({
-    initialValues,
+    enableReinitialize: true,
+    initialValues: {
+      ...initialValues,
+      riderMode: isLockedToRider ? 'existing' : initialValues.riderMode,
+      riderId: isLockedToRider ? String(lockedRider.id) : initialValues.riderId,
+      riderName: isLockedToRider ? defaultRiderName : initialValues.riderName,
+      number_plate: isLockedToRider ? defaultRiderPlate : initialValues.number_plate,
+      phone: isLockedToRider ? defaultRiderPhone : initialValues.phone,
+    },
     validationSchema,
     validate: (values) => {
       const errors = {}
@@ -88,9 +101,9 @@ function CreditForm({
     },
     onSubmit: async (values, { resetForm }) => {
       const payload =
-        values.riderMode === 'existing'
+        isLockedToRider || values.riderMode === 'existing'
           ? {
-              riderMode: values.riderMode,
+              riderMode: 'existing',
               riderId: Number(values.riderId),
               number_plate: values.number_plate,
               phone: values.phone,
@@ -114,7 +127,16 @@ function CreditForm({
         await onSubmit(payload)
       }
 
-      resetForm()
+      resetForm({
+        values: {
+          ...initialValues,
+          riderMode: isLockedToRider ? 'existing' : initialValues.riderMode,
+          riderId: isLockedToRider ? String(lockedRider.id) : initialValues.riderId,
+          riderName: isLockedToRider ? defaultRiderName : initialValues.riderName,
+          number_plate: isLockedToRider ? defaultRiderPlate : initialValues.number_plate,
+          phone: isLockedToRider ? defaultRiderPhone : initialValues.phone,
+        },
+      })
     },
   })
 
@@ -156,31 +178,38 @@ function CreditForm({
           </p>
         ) : null}
 
-        <fieldset className={styles.modeGroup}>
-          <legend>Rider entry</legend>
-          <label className={styles.modeOption}>
-            <input
-              type="radio"
-              name="riderMode"
-              value="existing"
-              checked={formik.values.riderMode === 'existing'}
-              onChange={handleRiderModeChange}
-            />
-            Existing rider
-          </label>
-          <label className={styles.modeOption}>
-            <input
-              type="radio"
-              name="riderMode"
-              value="new"
-              checked={formik.values.riderMode === 'new'}
-              onChange={handleRiderModeChange}
-            />
-            New rider
-          </label>
-        </fieldset>
+        {!isLockedToRider ? (
+          <fieldset className={styles.modeGroup}>
+            <legend>Rider entry</legend>
+            <label className={styles.modeOption}>
+              <input
+                type="radio"
+                name="riderMode"
+                value="existing"
+                checked={formik.values.riderMode === 'existing'}
+                onChange={handleRiderModeChange}
+              />
+              Existing rider
+            </label>
+            <label className={styles.modeOption}>
+              <input
+                type="radio"
+                name="riderMode"
+                value="new"
+                checked={formik.values.riderMode === 'new'}
+                onChange={handleRiderModeChange}
+              />
+              New rider
+            </label>
+          </fieldset>
+        ) : null}
 
-        {formik.values.riderMode === 'existing' ? (
+        {isLockedToRider ? (
+          <label className={styles.field} htmlFor="riderName">
+            Rider
+            <input id="riderName" name="riderName" type="text" value={defaultRiderName} readOnly />
+          </label>
+        ) : formik.values.riderMode === 'existing' ? (
           <label className={styles.field} htmlFor="riderId">
             Rider
             <select
@@ -232,7 +261,7 @@ function CreditForm({
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             placeholder={
-              formik.values.riderMode === 'existing'
+              isLockedToRider || formik.values.riderMode === 'existing'
                 ? 'Auto-filled from rider'
                 : 'Enter rider number plate'
             }
@@ -254,7 +283,7 @@ function CreditForm({
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             placeholder={
-              formik.values.riderMode === 'existing'
+              isLockedToRider || formik.values.riderMode === 'existing'
                 ? 'Auto-filled from rider'
                 : '+254712345678'
             }

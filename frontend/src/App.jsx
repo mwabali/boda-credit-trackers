@@ -31,13 +31,13 @@ function App() {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['company']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['company', 'station']} />}>
         <Route element={<MainLayout />}>
           <Route path="/riders" element={<RidersPage />} />
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['company', 'station']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['rider']} />}>
         <Route element={<MainLayout />}>
           <Route path="/add-credit" element={<AddCreditPage />} />
         </Route>

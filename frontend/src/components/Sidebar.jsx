@@ -19,7 +19,6 @@ function getLinksForRole(user) {
       { to: '/riders', label: 'Riders' },
       { to: '/stations', label: 'Fuel Stations' },
       { to: '/transactions', label: 'Transactions' },
-      { to: '/add-credit', label: 'Add Credit' },
       { to: '/notifications', label: 'Notifications' },
       { to: '/profile', label: 'Profile' },
     ]
@@ -30,7 +29,7 @@ function getLinksForRole(user) {
       { to: '/home', label: 'Dashboard' },
       { to: '/stations', label: 'My Station' },
       { to: '/transactions', label: 'Transactions' },
-      { to: '/add-credit', label: 'Add Credit' },
+      { to: '/riders', label: 'Riders' },
       { to: '/notifications', label: 'Notifications' },
       { to: '/profile', label: 'Profile' },
     ]
@@ -38,6 +37,7 @@ function getLinksForRole(user) {
 
   return [
     { to: '/home', label: 'Dashboard' },
+    { to: '/add-credit', label: 'Request Credit' },
     { to: '/transactions', label: 'My Activity' },
     { to: '/stations', label: 'Stations' },
     { to: '/notifications', label: 'Notifications' },

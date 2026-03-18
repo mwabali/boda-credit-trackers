@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../auth/AuthProvider'
 import ridersIcon from '../assets/Riders_icon.svg'
 import { useToast } from '../components/ToastProvider'
 import { request } from '../lib/api'
@@ -10,6 +11,7 @@ function formatRiderId(id) {
 }
 
 function RidersPage() {
+  const { user } = useAuth()
   const { showError, showSuccess } = useToast()
   const [riders, setRiders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -78,12 +80,16 @@ function RidersPage() {
     }
   }
 
+  const canManageRiders = user?.role === 'station'
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Riders Management</h1>
         <p className={styles.description}>
-          Live rider registry view backed by the current backend rider records.
+          {user?.role === 'station'
+            ? 'Monitor riders linked to your station and intervene when a rider account needs attention.'
+            : 'View riders currently interacting with your company fuel credit service.'}
         </p>
       </header>
 
@@ -164,19 +170,25 @@ function RidersPage() {
                   <td>{rider.phone}</td>
                   <td>{rider.debt}</td>
                   <td>
-                    <select
-                      className={`${styles.statusSelect} ${styles[rider.statusValue]}`}
-                      value={rider.statusValue}
-                      onChange={(event) =>
-                        handleStatusChange(Number(rider.id.slice(1)), event.target.value)
-                      }
-                      disabled={isUpdatingStatus}
-                      aria-label={`Update ${rider.name} status`}
-                    >
-                      <option value="active">Active</option>
-                      <option value="suspended">Suspended</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
+                    {canManageRiders ? (
+                      <select
+                        className={`${styles.statusSelect} ${styles[rider.statusValue]}`}
+                        value={rider.statusValue}
+                        onChange={(event) =>
+                          handleStatusChange(Number(rider.id.slice(1)), event.target.value)
+                        }
+                        disabled={isUpdatingStatus}
+                        aria-label={`Update ${rider.name} status`}
+                      >
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    ) : (
+                      <span className={`${styles.statusBadge} ${styles[rider.statusValue]}`}>
+                        {rider.status}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -7,7 +7,7 @@ from app.database.db import db
 from app.utils.auth import approved_access_required, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import get_outstanding_balance_map
-from models import Rider, Transaction
+from models import Rider, Station, Transaction
 
 
 riders_bp = Blueprint("riders", __name__, url_prefix="/riders")
@@ -25,7 +25,13 @@ def list_riders():
 
         query = Rider.query
 
-        if account.role == "station":
+        if account.role == "company":
+            query = query.filter(
+                Rider.transactions.any(
+                    Transaction.station.has(Station.company_name == account.company_name)
+                )
+            )
+        elif account.role == "station":
             query = query.filter(
                 Rider.transactions.any(Transaction.station_id == account.station_id)
             )
@@ -65,6 +71,14 @@ def get_rider(rider_id):
 
         if not rider:
             return jsonify({"success": False, "message": "Rider not found"}), 404
+
+        if account.role == "company":
+            has_company_transaction = any(
+                transaction.station and transaction.station.company_name == account.company_name
+                for transaction in rider.transactions
+            )
+            if not has_company_transaction:
+                return jsonify({"success": False, "message": "Access denied"}), 403
 
         if account.role == "rider" and account.rider_id != rider_id:
             return jsonify({"success": False, "message": "Access denied"}), 403
@@ -155,9 +169,10 @@ def create_rider():
 
 
 @riders_bp.patch("/<int:rider_id>")
-@roles_required("company")
+@roles_required("station")
 def patch_rider_status(rider_id):
     try:
+        account = resolve_request_account()
         rider = Rider.query.get(rider_id)
 
         if not rider:
@@ -166,6 +181,14 @@ def patch_rider_status(rider_id):
         status = (request.get_json() or {}).get("status")
         if status not in VALID_RIDER_STATUSES:
             return jsonify({"success": False, "message": "Invalid rider status"}), 400
+
+        has_station_transaction = Rider.query.filter(
+            Rider.id == rider_id,
+            Rider.transactions.any(Transaction.station_id == account.station_id),
+        ).first()
+
+        if not has_station_transaction:
+            return jsonify({"success": False, "message": "Access denied"}), 403
 
         rider.status = status
         db.session.commit()

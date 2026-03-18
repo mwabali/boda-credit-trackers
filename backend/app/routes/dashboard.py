@@ -25,7 +25,17 @@ def get_dashboard_payload():
             joinedload(Transaction.station),
         )
 
-        if account.role == "station":
+        if account.role == "company":
+            riders_query = riders_query.filter(
+                Rider.transactions.any(
+                    Transaction.station.has(Station.company_name == account.company_name)
+                )
+            )
+            stations_query = stations_query.filter(Station.company_name == account.company_name)
+            transactions_query = transactions_query.join(Station).filter(
+                Station.company_name == account.company_name
+            )
+        elif account.role == "station":
             riders_query = riders_query.filter(
                 Rider.transactions.any(Transaction.station_id == account.station_id)
             )
@@ -61,7 +71,11 @@ def get_dashboard_payload():
         ]
 
         stats_query = Transaction.query
-        if account.role == "station":
+        if account.role == "company":
+            stats_query = stats_query.join(Station).filter(
+                Station.company_name == account.company_name
+            )
+        elif account.role == "station":
             stats_query = stats_query.filter(Transaction.station_id == account.station_id)
         elif account.role == "rider":
             stats_query = stats_query.filter(Transaction.rider_id == account.rider_id)
@@ -95,14 +109,24 @@ def get_form_options():
     try:
         account = resolve_request_account()
 
-        if account.role == "rider":
-            return jsonify({"success": False, "message": "Access denied"}), 403
-
         riders_query = Rider.query
         stations_query = Station.query
 
-        if account.role == "station":
+        if account.role == "company":
+            riders_query = riders_query.filter(
+                Rider.transactions.any(
+                    Transaction.station.has(Station.company_name == account.company_name)
+                )
+            )
+            stations_query = stations_query.filter(Station.company_name == account.company_name)
+        elif account.role == "station":
             stations_query = stations_query.filter(Station.id == account.station_id)
+            riders_query = riders_query.filter(
+                Rider.transactions.any(Transaction.station_id == account.station_id)
+            )
+        elif account.role == "rider":
+            riders_query = riders_query.filter(Rider.id == account.rider_id)
+            stations_query = stations_query.filter(Station.status == "active")
 
         riders = riders_query.order_by(Rider.created_at.desc()).all()
         stations = stations_query.order_by(Station.created_at.desc()).all()
