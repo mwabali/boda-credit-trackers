@@ -26,7 +26,9 @@ def list_riders():
         query = Rider.query
 
         if account.role == "station":
-            query = query.join(Transaction).filter(Transaction.station_id == account.station_id)
+            query = query.filter(
+                Rider.transactions.any(Transaction.station_id == account.station_id)
+            )
         elif account.role == "rider":
             query = query.filter(Rider.id == account.rider_id)
 
@@ -36,7 +38,7 @@ def list_riders():
         if search:
             query = query.filter(func.lower(Rider.name).like(f"%{search}%"))
 
-        riders = query.distinct(Rider.id).order_by(Rider.created_at.desc()).all()
+        riders = query.order_by(Rider.created_at.desc()).all()
         balance_map = get_outstanding_balance_map([rider.id for rider in riders])
 
         data = []

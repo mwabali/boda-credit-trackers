@@ -26,8 +26,8 @@ def get_dashboard_payload():
         )
 
         if account.role == "station":
-            riders_query = riders_query.join(Transaction).filter(
-                Transaction.station_id == account.station_id
+            riders_query = riders_query.filter(
+                Rider.transactions.any(Transaction.station_id == account.station_id)
             )
             stations_query = stations_query.filter(Station.id == account.station_id)
             transactions_query = transactions_query.filter(
@@ -35,17 +35,15 @@ def get_dashboard_payload():
             )
         elif account.role == "rider":
             riders_query = riders_query.filter(Rider.id == account.rider_id)
-            stations_query = stations_query.join(Transaction).filter(
-                Transaction.rider_id == account.rider_id
+            stations_query = stations_query.filter(
+                Station.transactions.any(Transaction.rider_id == account.rider_id)
             )
             transactions_query = transactions_query.filter(
                 Transaction.rider_id == account.rider_id
             )
 
-        riders = riders_query.distinct(Rider.id).order_by(Rider.created_at.desc()).all()
-        stations = (
-            stations_query.distinct(Station.id).order_by(Station.created_at.desc()).all()
-        )
+        riders = riders_query.order_by(Rider.created_at.desc()).all()
+        stations = stations_query.order_by(Station.created_at.desc()).all()
         transactions = transactions_query.order_by(Transaction.created_at.desc()).limit(5).all()
 
         balance_map = get_outstanding_balance_map([rider.id for rider in riders])
