@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta
+
 from flask import Blueprint, jsonify, request
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 from app.database.db import db
 from app.utils.auth import (
@@ -9,11 +12,81 @@ from app.utils.auth import (
     roles_required,
     station_belongs_to_account_company,
 )
-from app.utils.notifications import create_notification
-from models import AuthAccount, Notification, current_timestamp
+from app.utils.notifications import create_notification, notify_company_accounts_once
+from models import AuthAccount, Notification, Station, Transaction, current_timestamp
 
 
 notifications_bp = Blueprint("notifications", __name__, url_prefix="/notifications")
+
+QUIET_STATION_LOOKBACK_DAYS = 7
+HIGH_PENDING_EXPOSURE_THRESHOLD = 5000
+
+
+def emit_company_health_notifications(account):
+    company_name = get_account_company_name(account)
+    station_query = Station.query
+
+    if account.company_id:
+        station_query = station_query.filter(Station.company_id == account.company_id)
+    else:
+        station_query = station_query.filter(Station.company_name == company_name)
+
+    stations = station_query.order_by(Station.created_at.desc()).all()
+    if not stations:
+        return
+
+    station_ids = [station.id for station in stations]
+    recent_cutoff = (datetime.utcnow() - timedelta(days=QUIET_STATION_LOOKBACK_DAYS)).isoformat()
+
+    recent_transactions = (
+        Transaction.query.options(joinedload(Transaction.station))
+        .filter(Transaction.station_id.in_(station_ids), Transaction.created_at >= recent_cutoff)
+        .all()
+    )
+
+    transactions_by_station = {station_id: [] for station_id in station_ids}
+    for transaction in recent_transactions:
+        transactions_by_station.setdefault(transaction.station_id, []).append(transaction)
+
+    for station in stations:
+        station_transactions = transactions_by_station.get(station.id, [])
+        station_display_name = station.to_dict().get("displayName") or f"{station.company_name} {station.name}".strip()
+
+        if station.status == "active" and not station_transactions:
+            notify_company_accounts_once(
+                company_id=account.company_id,
+                company_name=company_name,
+                title="Station activity has gone quiet",
+                message=f"{station_display_name} has not recorded a credit request in the last {QUIET_STATION_LOOKBACK_DAYS} days.",
+                notification_type="warning",
+                action_path="/stations",
+                dedupe_hours=24,
+            )
+
+        pending_exposure = sum(
+            float(transaction.amount or 0)
+            for transaction in station_transactions
+            if transaction.status in {"pending", "approved"}
+        )
+        pending_count = sum(
+            1
+            for transaction in station_transactions
+            if transaction.status in {"pending", "approved"}
+        )
+
+        if pending_exposure >= HIGH_PENDING_EXPOSURE_THRESHOLD or pending_count >= 3:
+            notify_company_accounts_once(
+                company_id=account.company_id,
+                company_name=company_name,
+                title="Station pending exposure is rising",
+                message=(
+                    f"{station_display_name} is carrying {pending_count} unsettled requests worth "
+                    f"Ksh {int(round(pending_exposure)):,}. Review station activity for follow-up."
+                ),
+                notification_type="approval",
+                action_path="/transactions",
+                dedupe_hours=12,
+            )
 
 
 @notifications_bp.get("")
@@ -21,6 +94,10 @@ notifications_bp = Blueprint("notifications", __name__, url_prefix="/notificatio
 def list_notifications():
     try:
         account = resolve_request_account()
+        if account.role == "company":
+            emit_company_health_notifications(account)
+            db.session.commit()
+
         notifications = (
             Notification.query.filter(
                 Notification.recipient_account_id == account.id,

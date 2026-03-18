@@ -225,7 +225,42 @@ def patch_transaction_status(transaction_id):
                 400,
             )
 
+        previous_status = transaction.status
         transaction.status = status
+
+        rider_account = getattr(transaction.rider, "account", None) if transaction.rider else None
+        if rider_account and rider_account.is_active and previous_status != status:
+            station_display_name = (
+                hydrate_station(transaction.station)["displayName"]
+                if transaction.station
+                else "your selected station"
+            )
+
+            if status == "approved":
+                create_notification(
+                    rider_account.id,
+                    "Credit request approved",
+                    f"Your fuel credit request at {station_display_name} has been approved and is ready for fulfilment.",
+                    notification_type="success",
+                    action_path="/transactions",
+                )
+            elif status == "cancelled":
+                create_notification(
+                    rider_account.id,
+                    "Credit request declined",
+                    f"Your fuel credit request at {station_display_name} was declined. Please review the request details or contact the station.",
+                    notification_type="warning",
+                    action_path="/transactions",
+                )
+            elif status == "paid":
+                create_notification(
+                    rider_account.id,
+                    "Credit request settled",
+                    f"Your fuel credit request at {station_display_name} has been marked as paid.",
+                    notification_type="success",
+                    action_path="/transactions",
+                )
+
         db.session.commit()
         sync_rider_balance(transaction.rider_id)
 
