@@ -116,8 +116,8 @@ def create_station():
                 "company_id": account.company_id,
                 "company_name": account.company_name,
                 "location": location,
-                "manager_name": (payload.get("managerName") or "").strip() or None,
-                "manager_phone": (payload.get("managerPhone") or "").strip() or None,
+                "manager_name": None,
+                "manager_phone": None,
             }
         )
 
@@ -231,17 +231,10 @@ def update_station(station_id):
             {
                 "name": (payload.get("name") or station.name).strip(),
                 "company_name": station.company_name,
+                "company_id": station.company_id,
                 "location": (payload.get("location") or station.location).strip(),
-                "manager_name": (
-                    payload.get("managerName")
-                    if "managerName" in payload
-                    else station.manager_name
-                ),
-                "manager_phone": (
-                    payload.get("managerPhone")
-                    if "managerPhone" in payload
-                    else station.manager_phone
-                ),
+                "manager_name": station.manager_name,
+                "manager_phone": station.manager_phone,
                 "status": status,
             }
         )

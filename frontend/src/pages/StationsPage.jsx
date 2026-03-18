@@ -12,8 +12,6 @@ import styles from './StationsPage.module.css'
 const initialStationValues = {
   name: '',
   location: '',
-  managerName: '',
-  managerPhone: '',
 }
 
 function formatStationId(id) {
@@ -55,7 +53,7 @@ function StationsPage() {
   )
 
   const stationsWithManagers = useMemo(
-    () => stations.filter((station) => station.managerPhone).length,
+    () => stations.filter((station) => station.managerName).length,
     [stations]
   )
 
@@ -99,16 +97,6 @@ function StationsPage() {
           .trim()
           .min(2, 'Location must be at least 2 characters')
           .required('Location is required'),
-        managerName: Yup.string()
-          .trim()
-          .min(2, 'Manager name must be at least 2 characters')
-          .nullable(),
-        managerPhone: Yup.string()
-          .trim()
-          .matches(/^\+?[0-9]{10,15}$/, {
-            message: 'Use a valid phone number like +254712345678',
-            excludeEmptyString: true,
-          }),
       }),
     []
   )
@@ -124,8 +112,6 @@ function StationsPage() {
         const payload = {
           name: values.name.trim(),
           location: values.location.trim(),
-          managerName: values.managerName.trim(),
-          managerPhone: values.managerPhone.trim(),
         }
 
         await request('/stations', {
@@ -209,8 +195,8 @@ function StationsPage() {
           <div className={styles.formIntro}>
             <h2 className={styles.formTitle}>Add a Station</h2>
             <p className={styles.formDescription}>
-              Create a station here so it becomes available immediately in the Add
-              Credit form.
+              Enlist a station under your company. A station manager can later claim
+              it through the station portal and await approval.
             </p>
           </div>
           <button
@@ -262,37 +248,10 @@ function StationsPage() {
               ) : null}
             </label>
 
-            <label className={styles.field}>
-              Manager Name
-              <input
-                type="text"
-                name="managerName"
-                value={formik.values.managerName}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                placeholder="Optional"
-                className={showFieldError('managerName') ? styles.fieldInputError : ''}
-              />
-              {showFieldError('managerName') ? (
-                <span className={styles.fieldError}>{formik.errors.managerName}</span>
-              ) : null}
-            </label>
-
-            <label className={styles.field}>
-              Management Phoneline
-              <input
-                type="tel"
-                name="managerPhone"
-                value={formik.values.managerPhone}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                placeholder="+254 7xx xxx xxx"
-                className={showFieldError('managerPhone') ? styles.fieldInputError : ''}
-              />
-              {showFieldError('managerPhone') ? (
-                <span className={styles.fieldError}>{formik.errors.managerPhone}</span>
-              ) : null}
-            </label>
+            <div className={styles.formNote}>
+              Manager details are assigned from the real station manager account after
+              signup and company approval.
+            </div>
 
             <button
               type="submit"

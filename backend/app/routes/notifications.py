@@ -115,6 +115,8 @@ def review_station_account(account_id):
         station_account.approved_by_account_id = reviewer.id
 
         if decision == "approved":
+            if station_account.station:
+                station_account.station.manager_name = station_account.full_name
             create_notification(
                 station_account.id,
                 "Station access approved",

@@ -12,7 +12,8 @@ from models import Rider, Station, Transaction
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 
-def build_transaction_analytics(transactions):
+def build_transaction_analytics(transactions, stations=None):
+    stations = stations or []
     total_amount = 0
     paid_amount = 0
     outstanding_amount = 0
@@ -21,6 +22,24 @@ def build_transaction_analytics(transactions):
     cancelled_count = 0
 
     per_station = {}
+
+    for station in stations:
+        station_id = station.id
+        per_station[station_id] = {
+            "id": station_id,
+            "name": station.name,
+            "displayName": hydrate_station(station)["displayName"],
+            "status": station.status,
+            "totalTransactions": 0,
+            "totalAmount": 0,
+            "outstandingAmount": 0,
+            "paidAmount": 0,
+            "pendingCount": 0,
+            "approvedCount": 0,
+            "paidCount": 0,
+            "cancelledCount": 0,
+            "activeRiders": set(),
+        }
 
     for transaction in transactions:
         amount = float(transaction.amount or 0)
@@ -161,7 +180,19 @@ def get_dashboard_payload():
         all_transactions = transactions_query.order_by(Transaction.created_at.desc()).all()
         transactions = all_transactions[:5]
 
-        balance_map = get_outstanding_balance_map([rider.id for rider in riders])
+        balance_kwargs = {}
+        if account.role == "company":
+            balance_kwargs = {
+                "company_id": account.company_id,
+                "company_name": get_account_company_name(account),
+            }
+        elif account.role == "station":
+            balance_kwargs = {"station_id": account.station_id}
+
+        balance_map = get_outstanding_balance_map(
+            [rider.id for rider in riders],
+            **balance_kwargs,
+        )
 
         rider_data = []
         for rider in riders:
@@ -194,7 +225,7 @@ def get_dashboard_payload():
             "paid": stats_query.filter(Transaction.status == "paid").count(),
         }
 
-        analytics = build_transaction_analytics(all_transactions)
+        analytics = build_transaction_analytics(all_transactions, stations)
         analytics["suspendedRiders"] = sum(1 for rider in riders if rider.status == "suspended")
         analytics["inactiveRiders"] = sum(1 for rider in riders if rider.status == "inactive")
         analytics["activeStations"] = sum(1 for station in stations if station.status == "active")
