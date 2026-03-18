@@ -4,9 +4,14 @@ from sqlalchemy.exc import IntegrityError
 
 from app.database.db import db
 from app.utils.db_errors import format_integrity_error
-from app.utils.auth import auth_required, generate_auth_token, resolve_request_account
+from app.utils.auth import (
+    auth_required,
+    generate_auth_token,
+    get_account_company_name,
+    resolve_request_account,
+)
 from app.utils.notifications import create_notification, notify_company_accounts
-from models import AuthAccount, Rider, Station
+from models import AuthAccount, Company, Rider, Station
 
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -22,7 +27,7 @@ def portal_options():
         company_names = sorted(
             {
                 row[0]
-                for row in db.session.query(Station.company_name).all()
+                for row in db.session.query(Company.name).all()
                 if row[0]
             },
             key=lambda company_name: company_name.lower(),
@@ -120,14 +125,29 @@ def register():
             return jsonify({"success": False, "message": "An account with that email already exists"}), 409
 
         account_company_name = "Independent"
+        account_company = None
         if role in {"company", "station"}:
             account_company_name = company_name
+
+        if role == "company":
+            if not company_name:
+                return (
+                    jsonify({"success": False, "message": "Company name is required"}),
+                    400,
+                )
+            account_company = Company.query.filter(func.lower(Company.name) == company_name.lower()).first()
+            if not account_company:
+                account_company = Company(name=company_name)
+                db.session.add(account_company)
+                db.session.flush()
+            account_company_name = account_company.name
 
         account = AuthAccount(
             email=email,
             role=role,
             full_name=full_name,
             company_name=account_company_name,
+            company_id=account_company.id if account_company else None,
         )
 
         if role == "station":
@@ -146,13 +166,16 @@ def register():
             station = Station.query.get(station_id)
             if not station:
                 return jsonify({"success": False, "message": "Selected station was not found"}), 404
-            if station.company_name != company_name:
+            if (station.company and station.company.name != company_name) or (
+                not station.company and station.company_name != company_name
+            ):
                 return jsonify({"success": False, "message": "Selected station does not belong to that company"}), 400
             if station.account:
                 return jsonify({"success": False, "message": "That station already has a station manager account"}), 409
 
             account.station_id = station.id
-            account.company_name = station.company_name
+            account.company_id = station.company_id
+            account.company_name = station.company.name if station.company else station.company_name
             account.approval_status = "pending"
 
         elif role == "rider":
@@ -212,6 +235,7 @@ def register():
 
             station = Station(
                 name=station_name,
+                company_id=account_company.id,
                 company_name=company_name,
                 location=station_location,
                 status="active",
@@ -232,9 +256,10 @@ def register():
                 action_path="/notifications",
             )
             notify_company_accounts(
-                account.company_name,
-                "New station manager application",
-                f"{account.full_name} has requested access for {station.company_name} {station.name}.",
+                company_id=account.company_id,
+                company_name=get_account_company_name(account),
+                title="New station manager application",
+                message=f"{account.full_name} has requested access for {(station.company.name if station.company else station.company_name)} {station.name}.",
                 notification_type="approval",
                 action_path="/notifications",
             )

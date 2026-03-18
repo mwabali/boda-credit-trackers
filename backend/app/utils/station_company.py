@@ -1,4 +1,4 @@
-DEFAULT_COMPANY_NAME = "Total"
+DEFAULT_COMPANY_NAME = "Independent"
 LEGACY_COMPANY_PREFIXES = ["Total", "Shell", "Gapco", "City Oil"]
 
 
@@ -20,7 +20,17 @@ def get_station_company_name(station=None):
     station = station or {}
 
     if isinstance(station, dict):
-        return station.get("companyName") or station.get("company_name") or DEFAULT_COMPANY_NAME
+        company = station.get("company") or {}
+        return (
+            company.get("name")
+            or station.get("companyName")
+            or station.get("company_name")
+            or DEFAULT_COMPANY_NAME
+        )
+
+    company = getattr(station, "company", None)
+    if company and getattr(company, "name", None):
+        return company.name
 
     return getattr(station, "company_name", DEFAULT_COMPANY_NAME)
 
@@ -53,6 +63,7 @@ def prepare_station_payload(payload=None):
     return {
         **payload,
         "name": normalize_station_branch_name(payload.get("name")),
+        "company_id": payload.get("company_id") or payload.get("companyId"),
         "company_name": payload.get("company_name")
         or payload.get("companyName")
         or DEFAULT_COMPANY_NAME,

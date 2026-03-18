@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from app.database.db import db
-from app.utils.auth import approved_access_required, resolve_request_account, roles_required
+from app.utils.auth import approved_access_required, get_account_company_name, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import get_outstanding_balance_map
 from models import Rider, Station, Transaction
@@ -26,9 +26,14 @@ def list_riders():
         query = Rider.query
 
         if account.role == "company":
+            station_scope = (
+                Station.company_id == account.company_id
+                if account.company_id
+                else Station.company_name == get_account_company_name(account)
+            )
             query = query.filter(
                 Rider.transactions.any(
-                    Transaction.station.has(Station.company_name == account.company_name)
+                    Transaction.station.has(station_scope)
                 )
             )
         elif account.role == "station":
@@ -74,7 +79,14 @@ def get_rider(rider_id):
 
         if account.role == "company":
             has_company_transaction = any(
-                transaction.station and transaction.station.company_name == account.company_name
+                transaction.station
+                and (
+                    (account.company_id and transaction.station.company_id == account.company_id)
+                    or (
+                        not account.company_id
+                        and transaction.station.company_name == get_account_company_name(account)
+                    )
+                )
                 for transaction in rider.transactions
             )
             if not has_company_transaction:

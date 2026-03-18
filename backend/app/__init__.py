@@ -7,6 +7,15 @@ from app.database.db import init_db
 
 load_dotenv()
 
+
+def _ensure_column(db, inspector, table_name, column_name, ddl):
+    existing_columns = {column["name"] for column in inspector.get_columns(table_name)}
+    if column_name not in existing_columns:
+        db.session.execute(text(ddl))
+        return True
+    return False
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -20,41 +29,117 @@ def create_app():
 
         db.create_all()
         inspector = inspect(db.engine)
+
+        schema_changed = False
+
+        if inspector.has_table("stations"):
+            schema_changed = _ensure_column(
+                db,
+                inspector,
+                "stations",
+                "company_id",
+                "ALTER TABLE stations ADD COLUMN company_id INTEGER",
+            ) or schema_changed
+            inspector = inspect(db.engine)
+
         if inspector.has_table("auth_accounts"):
-            existing_columns = {
-                column["name"] for column in inspector.get_columns("auth_accounts")
-            }
+            schema_changed = _ensure_column(
+                db,
+                inspector,
+                "auth_accounts",
+                "company_id",
+                "ALTER TABLE auth_accounts ADD COLUMN company_id INTEGER",
+            ) or schema_changed
+            inspector = inspect(db.engine)
 
-            if "approval_status" not in existing_columns:
-                db.session.execute(
-                    text(
-                        """
-                        ALTER TABLE auth_accounts
-                        ADD COLUMN approval_status VARCHAR(20) NOT NULL DEFAULT 'approved'
-                        """
-                    )
-                )
+        if inspector.has_table("auth_accounts"):
+            schema_changed = _ensure_column(
+                db,
+                inspector,
+                "auth_accounts",
+                "approval_status",
+                """
+                ALTER TABLE auth_accounts
+                ADD COLUMN approval_status VARCHAR(20) NOT NULL DEFAULT 'approved'
+                """,
+            ) or schema_changed
+            inspector = inspect(db.engine)
 
-            if "approved_at" not in existing_columns:
-                db.session.execute(
-                    text(
-                        """
-                        ALTER TABLE auth_accounts
-                        ADD COLUMN approved_at VARCHAR(64)
-                        """
-                    )
-                )
+            schema_changed = _ensure_column(
+                db,
+                inspector,
+                "auth_accounts",
+                "approved_at",
+                """
+                ALTER TABLE auth_accounts
+                ADD COLUMN approved_at VARCHAR(64)
+                """,
+            ) or schema_changed
+            inspector = inspect(db.engine)
 
-            if "approved_by_account_id" not in existing_columns:
-                db.session.execute(
-                    text(
-                        """
-                        ALTER TABLE auth_accounts
-                        ADD COLUMN approved_by_account_id INTEGER
-                        """
-                    )
-                )
+            schema_changed = _ensure_column(
+                db,
+                inspector,
+                "auth_accounts",
+                "approved_by_account_id",
+                """
+                ALTER TABLE auth_accounts
+                ADD COLUMN approved_by_account_id INTEGER
+                """,
+            ) or schema_changed
+            inspector = inspect(db.engine)
 
+        db.session.execute(
+            text(
+                """
+                INSERT INTO companies (name, created_at, updated_at)
+                SELECT DISTINCT company_name, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                FROM stations
+                WHERE company_name IS NOT NULL AND trim(company_name) <> ''
+                ON CONFLICT (name) DO NOTHING
+                """
+            )
+        )
+        db.session.execute(
+            text(
+                """
+                INSERT INTO companies (name, created_at, updated_at)
+                SELECT DISTINCT company_name, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                FROM auth_accounts
+                WHERE company_name IS NOT NULL
+                  AND trim(company_name) <> ''
+                  AND role IN ('company', 'station')
+                ON CONFLICT (name) DO NOTHING
+                """
+            )
+        )
+        db.session.execute(
+            text(
+                """
+                UPDATE stations
+                SET company_id = companies.id
+                FROM companies
+                WHERE stations.company_id IS NULL
+                  AND companies.name = stations.company_name
+                """
+            )
+        )
+        db.session.execute(
+            text(
+                """
+                UPDATE auth_accounts
+                SET company_id = companies.id
+                FROM companies
+                WHERE auth_accounts.company_id IS NULL
+                  AND auth_accounts.role IN ('company', 'station')
+                  AND companies.name = auth_accounts.company_name
+                """
+            )
+        )
+
+        if schema_changed:
+            db.session.commit()
+        else:
             db.session.commit()
 
     from app.routes.auth import auth_bp

@@ -64,6 +64,31 @@ def account_has_data_access(account):
     return account.approval_status == "approved"
 
 
+def get_account_company_name(account):
+    if not account:
+        return ""
+    if getattr(account, "company", None) and getattr(account.company, "name", None):
+        return account.company.name
+    return getattr(account, "company_name", "") or ""
+
+
+def station_belongs_to_account_company(account, station):
+    if not account or not station:
+        return False
+
+    account_company_id = getattr(account, "company_id", None)
+    station_company_id = getattr(station, "company_id", None)
+
+    if account_company_id and station_company_id:
+        return account_company_id == station_company_id
+
+    return get_account_company_name(account) == (
+        (getattr(station, "company", None) and getattr(station.company, "name", None))
+        or getattr(station, "company_name", "")
+        or ""
+    )
+
+
 def approved_access_required(view_func):
     @wraps(view_func)
     def wrapper(*args, **kwargs):

@@ -34,6 +34,38 @@ def current_timestamp():
     return datetime.utcnow().isoformat()
 
 
+class Company(db.Model):
+    __tablename__ = "companies"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, unique=True)
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
+
+    stations = db.relationship("Station", back_populates="company", lazy="select")
+    accounts = db.relationship("AuthAccount", back_populates="company", lazy="select")
+
+    @validates("name")
+    def validate_name(self, key, value):
+        cleaned_value = (value or "").strip()
+        if not cleaned_value:
+            raise ValueError("Company name is required")
+        return cleaned_value
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "created_at": serialize_datetime(self.created_at),
+            "updated_at": serialize_datetime(self.updated_at),
+        }
+
+
 class Rider(db.Model):
     __tablename__ = "riders"
     __table_args__ = (
@@ -121,6 +153,7 @@ class Station(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"))
     company_name = db.Column(db.String(100), nullable=False, default="Total")
     location = db.Column(db.String(200), nullable=False)
     manager_name = db.Column(db.String(100))
@@ -135,6 +168,7 @@ class Station(db.Model):
     )
 
     transactions = db.relationship("Transaction", back_populates="station", lazy="select")
+    company = db.relationship("Company", back_populates="stations", lazy="joined")
     account = db.relationship(
         "AuthAccount",
         back_populates="station",
@@ -175,13 +209,16 @@ class Station(db.Model):
 
     def to_dict(self):
         branch_name = self.name
-        display_name = f"{self.company_name} {branch_name}".strip()
+        company_name = self.company.name if self.company else self.company_name
+        display_name = f"{company_name} {branch_name}".strip()
 
         return {
             "id": self.id,
             "name": self.name,
-            "companyName": self.company_name,
-            "company_name": self.company_name,
+            "companyId": self.company_id,
+            "company_id": self.company_id,
+            "companyName": company_name,
+            "company_name": company_name,
             "location": self.location,
             "managerName": self.manager_name,
             "manager_name": self.manager_name,
@@ -324,6 +361,7 @@ class AuthAccount(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False)
     full_name = db.Column(db.String(120), nullable=False)
+    company_id = db.Column(db.Integer, db.ForeignKey("companies.id"))
     company_name = db.Column(db.String(100), nullable=False, default="Total")
     station_id = db.Column(db.Integer, db.ForeignKey("stations.id"), unique=True)
     rider_id = db.Column(db.Integer, db.ForeignKey("riders.id"), unique=True)
@@ -339,6 +377,7 @@ class AuthAccount(db.Model):
         onupdate=current_timestamp,
     )
 
+    company = db.relationship("Company", back_populates="accounts", lazy="joined")
     station = db.relationship("Station", back_populates="account", lazy="joined")
     rider = db.relationship("Rider", back_populates="account", lazy="joined")
     approved_by = db.relationship("AuthAccount", remote_side=[id], lazy="joined")
@@ -385,12 +424,14 @@ class AuthAccount(db.Model):
         return check_password_hash(self.password_hash, raw_password or "")
 
     def to_dict(self):
+        company_name = self.company.name if self.company else self.company_name
         return {
             "id": self.id,
             "email": self.email,
             "role": self.role,
             "fullName": self.full_name,
-            "companyName": self.company_name,
+            "companyId": self.company_id,
+            "companyName": company_name,
             "stationId": self.station_id,
             "riderId": self.rider_id,
             "isActive": self.is_active,
@@ -408,9 +449,12 @@ class AuthAccount(db.Model):
             payload["station"] = {
                 "id": self.station.id,
                 "name": self.station.name,
-                "displayName": f"{self.station.company_name} {self.station.name}".strip(),
+                "displayName": f"{(self.station.company.name if self.station.company else self.station.company_name)} {self.station.name}".strip(),
                 "location": self.station.location,
             }
+
+        if self.company:
+            payload["company"] = self.company.to_dict()
 
         if self.rider:
             payload["rider"] = {

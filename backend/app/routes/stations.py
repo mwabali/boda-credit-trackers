@@ -2,7 +2,13 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
 from app.database.db import db
-from app.utils.auth import approved_access_required, resolve_request_account, roles_required
+from app.utils.auth import (
+    approved_access_required,
+    get_account_company_name,
+    resolve_request_account,
+    roles_required,
+    station_belongs_to_account_company,
+)
 from app.utils.db_errors import format_integrity_error
 from app.utils.station_company import hydrate_station, prepare_station_payload
 from models import Station
@@ -22,7 +28,10 @@ def list_stations():
 
         query = Station.query
         if account.role == "company":
-            query = query.filter(Station.company_name == account.company_name)
+            if account.company_id:
+                query = query.filter(Station.company_id == account.company_id)
+            else:
+                query = query.filter(Station.company_name == get_account_company_name(account))
         elif account.role == "station":
             query = query.filter(Station.id == account.station_id)
         elif account.role == "rider" and not status:
@@ -58,7 +67,7 @@ def get_station(station_id):
         if not station:
             return jsonify({"success": False, "message": "Station not found"}), 404
 
-        if account.role == "company" and station.company_name != account.company_name:
+        if account.role == "company" and not station_belongs_to_account_company(account, station):
             return jsonify({"success": False, "message": "Access denied"}), 403
 
         if account.role == "station" and account.station_id != station_id:
@@ -85,6 +94,7 @@ def get_station(station_id):
 @roles_required("company")
 def create_station():
     try:
+        account = resolve_request_account()
         payload = request.get_json() or {}
         name = (payload.get("name") or "").strip()
         location = (payload.get("location") or "").strip()
@@ -103,6 +113,7 @@ def create_station():
         station_payload = prepare_station_payload(
             {
                 "name": name,
+                "company_id": account.company_id,
                 "company_name": account.company_name,
                 "location": location,
                 "manager_name": (payload.get("managerName") or "").strip() or None,
@@ -164,7 +175,7 @@ def patch_station_status(station_id):
         if status not in VALID_STATION_STATUSES:
             return jsonify({"success": False, "message": "Invalid station status"}), 400
 
-        if station.company_name != account.company_name:
+        if not station_belongs_to_account_company(account, station):
             return jsonify({"success": False, "message": "Access denied"}), 403
 
         station.status = status
@@ -213,7 +224,7 @@ def update_station(station_id):
         if status and status not in VALID_STATION_STATUSES:
             return jsonify({"success": False, "message": "Invalid station status"}), 400
 
-        if station.company_name != account.company_name:
+        if not station_belongs_to_account_company(account, station):
             return jsonify({"success": False, "message": "Access denied"}), 403
 
         station_payload = prepare_station_payload(

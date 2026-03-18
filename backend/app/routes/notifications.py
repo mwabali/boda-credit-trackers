@@ -1,7 +1,13 @@
 from flask import Blueprint, jsonify, request
 
 from app.database.db import db
-from app.utils.auth import auth_required, resolve_request_account, roles_required
+from app.utils.auth import (
+    auth_required,
+    get_account_company_name,
+    resolve_request_account,
+    roles_required,
+    station_belongs_to_account_company,
+)
 from app.utils.notifications import create_notification
 from models import AuthAccount, Notification, current_timestamp
 
@@ -25,23 +31,26 @@ def list_notifications():
         }
 
         if account.role == "company":
-            pending_accounts = (
-                AuthAccount.query.filter_by(
-                    role="station",
-                    company_name=account.company_name,
-                    approval_status="pending",
-                    is_active=True,
-                )
-                .order_by(AuthAccount.created_at.desc())
-                .all()
+            pending_query = AuthAccount.query.filter_by(
+                role="station",
+                approval_status="pending",
+                is_active=True,
             )
+            if account.company_id:
+                pending_query = pending_query.filter(AuthAccount.company_id == account.company_id)
+            else:
+                pending_query = pending_query.filter(
+                    AuthAccount.company_name == get_account_company_name(account)
+                )
+
+            pending_accounts = pending_query.order_by(AuthAccount.created_at.desc()).all()
 
             payload["pendingStationApprovals"] = [
                 {
                     "id": pending_account.id,
                     "fullName": pending_account.full_name,
                     "email": pending_account.email,
-                    "companyName": pending_account.company_name,
+                    "companyName": pending_account.company.name if pending_account.company else pending_account.company_name,
                     "station": pending_account.station.to_dict() if pending_account.station else None,
                     "created_at": pending_account.created_at,
                 }
@@ -87,7 +96,7 @@ def review_station_account(account_id):
         if not station_account or station_account.role != "station":
             return jsonify({"success": False, "message": "Station account not found"}), 404
 
-        if station_account.company_name != reviewer.company_name:
+        if not station_belongs_to_account_company(reviewer, station_account.station):
             return jsonify({"success": False, "message": "Access denied"}), 403
 
         station_account.approval_status = decision

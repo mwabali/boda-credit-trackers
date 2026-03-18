@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
-from app.utils.auth import approved_access_required, resolve_request_account
+from app.utils.auth import approved_access_required, get_account_company_name, resolve_request_account
 from app.routes.transactions import serialize_transaction
 from app.utils.rider_balances import get_outstanding_balance_map
 from app.utils.station_company import hydrate_station
@@ -26,15 +26,18 @@ def get_dashboard_payload():
         )
 
         if account.role == "company":
+            station_scope = (
+                Station.company_id == account.company_id
+                if account.company_id
+                else Station.company_name == get_account_company_name(account)
+            )
             riders_query = riders_query.filter(
                 Rider.transactions.any(
-                    Transaction.station.has(Station.company_name == account.company_name)
+                    Transaction.station.has(station_scope)
                 )
             )
-            stations_query = stations_query.filter(Station.company_name == account.company_name)
-            transactions_query = transactions_query.join(Station).filter(
-                Station.company_name == account.company_name
-            )
+            stations_query = stations_query.filter(station_scope)
+            transactions_query = transactions_query.join(Station).filter(station_scope)
         elif account.role == "station":
             riders_query = riders_query.filter(
                 Rider.transactions.any(Transaction.station_id == account.station_id)
@@ -72,9 +75,12 @@ def get_dashboard_payload():
 
         stats_query = Transaction.query
         if account.role == "company":
-            stats_query = stats_query.join(Station).filter(
-                Station.company_name == account.company_name
+            station_scope = (
+                Station.company_id == account.company_id
+                if account.company_id
+                else Station.company_name == get_account_company_name(account)
             )
+            stats_query = stats_query.join(Station).filter(station_scope)
         elif account.role == "station":
             stats_query = stats_query.filter(Transaction.station_id == account.station_id)
         elif account.role == "rider":
@@ -113,12 +119,17 @@ def get_form_options():
         stations_query = Station.query
 
         if account.role == "company":
+            station_scope = (
+                Station.company_id == account.company_id
+                if account.company_id
+                else Station.company_name == get_account_company_name(account)
+            )
             riders_query = riders_query.filter(
                 Rider.transactions.any(
-                    Transaction.station.has(Station.company_name == account.company_name)
+                    Transaction.station.has(station_scope)
                 )
             )
-            stations_query = stations_query.filter(Station.company_name == account.company_name)
+            stations_query = stations_query.filter(station_scope)
         elif account.role == "station":
             stations_query = stations_query.filter(Station.id == account.station_id)
             riders_query = riders_query.filter(

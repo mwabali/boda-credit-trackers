@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 
 from app.database.db import db
-from app.utils.auth import approved_access_required, resolve_request_account, roles_required
+from app.utils.auth import approved_access_required, get_account_company_name, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
 from app.utils.rider_balances import sync_rider_balance
 from app.utils.station_company import hydrate_station
@@ -40,7 +40,12 @@ def transaction_dashboard_stats():
         query = Transaction.query
 
         if account.role == "company":
-            query = query.join(Station).filter(Station.company_name == account.company_name)
+            station_scope = (
+                Station.company_id == account.company_id
+                if account.company_id
+                else Station.company_name == get_account_company_name(account)
+            )
+            query = query.join(Station).filter(station_scope)
         elif account.role == "station":
             query = query.filter_by(station_id=account.station_id)
         elif account.role == "rider":
@@ -75,7 +80,12 @@ def list_transactions():
 
         query = Transaction.query
         if account.role == "company":
-            query = query.join(Station).filter(Station.company_name == account.company_name)
+            station_scope = (
+                Station.company_id == account.company_id
+                if account.company_id
+                else Station.company_name == get_account_company_name(account)
+            )
+            query = query.join(Station).filter(station_scope)
         elif account.role == "station":
             query = query.filter(Transaction.station_id == account.station_id)
         elif account.role == "rider":
@@ -101,9 +111,12 @@ def list_transactions():
         if include_stats:
             stats_query = Transaction.query
             if account.role == "company":
-                stats_query = stats_query.join(Station).filter(
-                    Station.company_name == account.company_name
+                station_scope = (
+                    Station.company_id == account.company_id
+                    if account.company_id
+                    else Station.company_name == get_account_company_name(account)
                 )
+                stats_query = stats_query.join(Station).filter(station_scope)
             elif account.role == "station":
                 stats_query = stats_query.filter(Transaction.station_id == account.station_id)
             elif account.role == "rider":

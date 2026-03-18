@@ -14,12 +14,24 @@ def create_notification(recipient_account_id, title, message, notification_type=
     return notification
 
 
-def notify_company_accounts(company_name, title, message, notification_type="approval", action_path=None):
-    company_accounts = (
-        AuthAccount.query.filter_by(role="company", company_name=company_name, is_active=True)
-        .order_by(AuthAccount.created_at.desc())
-        .all()
-    )
+def notify_company_accounts(
+    company_id=None,
+    company_name=None,
+    title="",
+    message="",
+    notification_type="approval",
+    action_path=None,
+):
+    query = AuthAccount.query.filter_by(role="company", is_active=True)
+
+    if company_id:
+        query = query.filter(AuthAccount.company_id == company_id)
+    elif company_name:
+        query = query.filter(AuthAccount.company_name == company_name)
+    else:
+        return []
+
+    company_accounts = query.order_by(AuthAccount.created_at.desc()).all()
 
     notifications = []
     for account in company_accounts:
