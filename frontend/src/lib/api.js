@@ -2,10 +2,23 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ||
   'http://localhost:5050'
 
+function getAuthToken() {
+  if (typeof window === 'undefined') {
+    return ''
+  }
+
+  return window.localStorage.getItem('boda_credit_auth_token') || ''
+}
+
 async function request(path, options = {}) {
   const headers = {
     Accept: 'application/json',
     ...options.headers,
+  }
+
+  const authToken = getAuthToken()
+  if (authToken && !headers.Authorization) {
+    headers.Authorization = `Bearer ${authToken}`
   }
 
   const hasJsonBody =

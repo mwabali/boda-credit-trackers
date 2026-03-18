@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../auth/AuthProvider'
 import transactionsIcon from '../assets/Transactions_icon.svg'
 import CreditTable from '../components/CreditTable'
 import { useToast } from '../components/ToastProvider'
@@ -14,6 +15,7 @@ function formatCompactKes(value) {
 }
 
 function TransactionsPage() {
+  const { user } = useAuth()
   const { showError, showSuccess } = useToast()
   const [transactions, setTransactions] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
@@ -120,13 +122,19 @@ function TransactionsPage() {
     }
   }
 
+  const canManageTransactions = user?.role === 'company' || user?.role === 'station'
+  const pageTitle =
+    user?.role === 'rider' ? 'My Credit Activity' : 'Credit Transaction Log'
+  const pageDescription =
+    user?.role === 'rider'
+      ? 'Review the credit entries linked to your rider account.'
+      : 'Live transaction table backed by the current backend credit records.'
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Credit Transaction Log</h1>
-        <p className={styles.description}>
-          Live transaction table backed by the current backend credit records.
-        </p>
+        <h1 className={styles.title}>{pageTitle}</h1>
+        <p className={styles.description}>{pageDescription}</p>
       </header>
 
       <section className={styles.statsGrid} aria-label="Transaction summary">
@@ -178,14 +186,14 @@ function TransactionsPage() {
         <CreditTable
           transactions={tableTransactions}
           showPhone={false}
-          onStatusChange={handleStatusChange}
-          onDeleteTransaction={requestDeleteTransaction}
+          onStatusChange={canManageTransactions ? handleStatusChange : undefined}
+          onDeleteTransaction={canManageTransactions ? requestDeleteTransaction : undefined}
           isUpdatingStatus={isUpdatingStatus}
           isDeletingTransaction={isDeletingTransaction}
         />
       ) : null}
 
-      {pendingDeleteId ? (
+      {pendingDeleteId && canManageTransactions ? (
         <div className={styles.modalOverlay} role="presentation">
           <div
             className={styles.confirmationModal}

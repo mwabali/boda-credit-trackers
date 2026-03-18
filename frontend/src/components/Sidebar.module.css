@@ -41,6 +41,42 @@
   gap: 0.6rem;
 }
 
+.accountPanel {
+  margin-top: auto;
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem 0.2rem 0;
+}
+
+.accountRole {
+  margin: 0;
+  color: #9a3412;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.accountName {
+  margin: 0;
+  color: #172033;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.logoutButton {
+  margin-top: 0.5rem;
+  border: 1px solid rgba(198, 107, 8, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 247, 237, 0.88);
+  color: #7c2d12;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.72rem 0.95rem;
+  cursor: pointer;
+}
+
 .navLink {
   display: block;
   text-decoration: none;
@@ -139,6 +175,10 @@
 
   .navLinksOpen {
     display: flex;
+  }
+
+  .accountPanel {
+    padding: 0.65rem 0.2rem 0.1rem;
   }
 
   .navLink {

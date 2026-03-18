@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../auth/AuthProvider'
 import CreditForm from '../components/CreditForm'
 import CreditTable from '../components/CreditTable'
 import StationList from '../components/StationList'
@@ -7,6 +8,7 @@ import { useToast } from '../components/ToastProvider'
 import ridersIcon from '../assets/Riders_icon.svg'
 import stationsIcon from '../assets/Stations_icon.svg'
 import transactionsIcon from '../assets/Transactions_icon.svg'
+import { formatCurrency } from '../lib/formatters'
 import { request } from '../lib/api'
 import { mapTransactionToRow } from '../lib/mappers'
 import styles from './HomePage.module.css'
@@ -43,6 +45,7 @@ const dashboardSections = [
 ]
 
 function HomePage() {
+  const { user } = useAuth()
   const { showError, showSuccess } = useToast()
   const companyLabel = '.Total'
   const [riders, setRiders] = useState([])
@@ -78,7 +81,7 @@ function HomePage() {
 
   const stationListRows = useMemo(
     () =>
-      stations.map((station) => ({
+      stations.slice(0, 10).map((station) => ({
         ...station,
         phone: station.managerPhone || '--',
       })),
@@ -126,93 +129,219 @@ function HomePage() {
     }
   }
 
+  const role = user?.role || 'company'
+  const primaryRider = riders[0]
+  const primaryStation = stations[0]
+
+  const heroConfig = useMemo(() => {
+    if (role === 'station') {
+      return {
+        title: 'Station Dashboard',
+        companyMark: companyLabel,
+        description:
+          'Manage credit activity for your assigned station and keep rider servicing moving.',
+      }
+    }
+
+    if (role === 'rider') {
+      return {
+        title: 'Rider Dashboard',
+        companyMark: '',
+        description:
+          'Track your credit balance, review recent fuel activity, and stay current on outstanding payments.',
+      }
+    }
+
+    return {
+      title: 'Dashboard',
+      companyMark: companyLabel,
+      description:
+        'Track core workflows from one place with live backend records flowing into the dashboard.',
+    }
+  }, [companyLabel, role])
+
+  const statCards = useMemo(() => {
+    if (role === 'station') {
+      return [
+        {
+          title: 'Riders Served',
+          value: riders.length,
+          meta: 'riders linked to this station',
+          icon: ridersIcon,
+          iconClassName: styles.ridersIcon,
+        },
+        {
+          title: 'Station Transactions',
+          value: stats.total,
+          meta: 'credit entries logged here',
+          icon: transactionsIcon,
+          iconClassName: styles.transactionsIcon,
+        },
+        {
+          title: 'Pending Payments',
+          value: stats.pending,
+          meta: 'transactions awaiting settlement',
+          icon: transactionsIcon,
+          iconClassName: styles.transactionsIcon,
+          wide: true,
+        },
+      ]
+    }
+
+    if (role === 'rider') {
+      return [
+        {
+          title: 'Outstanding Balance',
+          value: formatCurrency(primaryRider?.currentBalance || 0),
+          meta: 'current credit balance',
+          icon: transactionsIcon,
+          iconClassName: styles.transactionsIcon,
+        },
+        {
+          title: 'Credit Activity',
+          value: stats.total,
+          meta: 'transactions on your account',
+          icon: transactionsIcon,
+          iconClassName: styles.transactionsIcon,
+        },
+        {
+          title: 'Pending Payments',
+          value: stats.pending,
+          meta: 'unsettled entries on your profile',
+          icon: transactionsIcon,
+          iconClassName: styles.transactionsIcon,
+          wide: true,
+        },
+      ]
+    }
+
+    return [
+      {
+        title: 'Total Riders',
+        value: riders.length,
+        meta: 'active records loaded',
+        icon: ridersIcon,
+        iconClassName: styles.ridersIcon,
+      },
+      {
+        title: 'Total Stations',
+        value: stations.length,
+        meta: 'partner locations loaded',
+        icon: stationsIcon,
+        iconClassName: styles.stationsIcon,
+      },
+      {
+        title: 'Credit Activity',
+        value: stats.total,
+        meta: `${stats.pending} pending transactions`,
+        icon: transactionsIcon,
+        iconClassName: styles.transactionsIcon,
+        wide: true,
+      },
+    ]
+  }, [primaryRider?.currentBalance, riders.length, role, stations.length, stats.pending, stats.total])
+
+  const showQuickCredit = role !== 'rider'
+  const showStationDirectory = role === 'company'
+  const showNavCards = role === 'company'
+
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
         <div className={styles.heroTop}>
-          <h1 className={styles.title}>Dashboard</h1>
-          <span className={styles.companyMark}>{companyLabel}</span>
+          <h1 className={styles.title}>{heroConfig.title}</h1>
+          {heroConfig.companyMark ? (
+            <span className={styles.companyMark}>{heroConfig.companyMark}</span>
+          ) : null}
         </div>
-        <p className={styles.description}>
-          Track core workflows from one place with live backend records flowing
-          into the dashboard.
-        </p>
+        <p className={styles.description}>{heroConfig.description}</p>
       </header>
 
       {isLoading ? <p className={styles.feedbackMessage}>Loading dashboard data...</p> : null}
 
       <section className={styles.statsGrid} aria-label="Dashboard highlights">
-        <article className={styles.statCard}>
-          <h2>Total Riders</h2>
-          <div className={styles.metricRow}>
-            <img
-              src={ridersIcon}
-              alt=""
-              aria-hidden="true"
-              className={`${styles.metricIcon} ${styles.ridersIcon}`}
-            />
-            <p className={styles.statValue}>{riders.length}</p>
-          </div>
-          <span className={styles.statMeta}>active records loaded</span>
-        </article>
-        <article className={styles.statCard}>
-          <h2>Total Stations</h2>
-          <div className={styles.metricRow}>
-            <img
-              src={stationsIcon}
-              alt=""
-              aria-hidden="true"
-              className={`${styles.metricIcon} ${styles.stationsIcon}`}
-            />
-            <p className={styles.statValue}>{stations.length}</p>
-          </div>
-          <span className={styles.statMeta}>partner locations loaded</span>
-        </article>
-        <article className={`${styles.statCard} ${styles.statCardWide}`}>
-          <h2>Credit Activity</h2>
-          <div className={styles.metricRow}>
-            <img
-              src={transactionsIcon}
-              alt=""
-              aria-hidden="true"
-              className={`${styles.metricIcon} ${styles.transactionsIcon}`}
-            />
-            <p className={styles.statValue}>{stats.total}</p>
-          </div>
-          <span className={styles.statMeta}>{stats.pending} pending transactions</span>
-        </article>
+        {statCards.map((card) => (
+          <article
+            key={card.title}
+            className={`${styles.statCard} ${card.wide ? styles.statCardWide : ''}`}
+          >
+            <h2>{card.title}</h2>
+            <div className={styles.metricRow}>
+              <img
+                src={card.icon}
+                alt=""
+                aria-hidden="true"
+                className={`${styles.metricIcon} ${card.iconClassName}`}
+              />
+              <p className={styles.statValue}>{card.value}</p>
+            </div>
+            <span className={styles.statMeta}>{card.meta}</span>
+          </article>
+        ))}
       </section>
 
-      <section className={styles.extensionGrid} aria-label="Quick entries">
-        <article className={styles.extensionCard}>
-          <div className={styles.sectionHeader}>
-            <p className={styles.sectionTag}>Live form preview</p>
-            <h2>Credit entry form</h2>
-            <p>
-              Create a quick transaction from the dashboard using live rider and
-              station options.
-            </p>
-          </div>
-          <CreditForm
-            riders={riders}
-            stations={stations}
-            onSubmit={handleQuickCredit}
-            submitLabel="Save From Dashboard"
-            isSubmitting={isSubmitting}
-          />
-        </article>
+      {showQuickCredit || showStationDirectory ? (
+        <section className={styles.extensionGrid} aria-label="Quick entries">
+          {showQuickCredit ? (
+            <article className={styles.extensionCard}>
+              <div className={styles.sectionHeader}>
+                <p className={styles.sectionTag}>Live form preview</p>
+                <h2>{role === 'station' ? 'Station credit entry' : 'Credit entry form'}</h2>
+                <p>
+                  {role === 'station'
+                    ? 'Log a new credit entry for your station using the live rider list.'
+                    : 'Create a quick transaction from the dashboard using live rider and station options.'}
+                </p>
+              </div>
+              <CreditForm
+                riders={riders}
+                stations={stations}
+                onSubmit={handleQuickCredit}
+                submitLabel="Save From Dashboard"
+                isSubmitting={isSubmitting}
+              />
+            </article>
+          ) : null}
 
-        <article className={styles.extensionCard}>
-          <div className={styles.sectionHeader}>
-            <p className={styles.sectionTag}>Station list</p>
-            <h2>Station directory</h2>
-            <p>
-              Reference every active partner station without leaving the dashboard.
-            </p>
-          </div>
-          <StationList stations={stationListRows} />
-        </article>
-      </section>
+          {showStationDirectory ? (
+            <article className={styles.extensionCard}>
+              <div className={styles.sectionHeader}>
+                <p className={styles.sectionTag}>Station list</p>
+                <h2>Station directory</h2>
+                <p>
+                  Reference every active partner station without leaving the dashboard.
+                </p>
+              </div>
+              <StationList stations={stationListRows} />
+            </article>
+          ) : null}
+
+          {role === 'rider' && primaryStation ? null : null}
+        </section>
+      ) : null}
+
+      {role === 'rider' && primaryRider ? (
+        <section className={styles.extensionGrid} aria-label="Account snapshot">
+          <article className={styles.extensionCard}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.sectionTag}>Your profile</p>
+              <h2>{primaryRider.name}</h2>
+              <p>
+                Plate {primaryRider.licensePlate} • Phone {primaryRider.phone}
+              </p>
+            </div>
+          </article>
+          {primaryStation ? (
+            <article className={styles.extensionCard}>
+              <div className={styles.sectionHeader}>
+                <p className={styles.sectionTag}>Recent station</p>
+                <h2>{primaryStation.displayName}</h2>
+                <p>{primaryStation.location}</p>
+              </div>
+            </article>
+          ) : null}
+        </section>
+      ) : null}
 
       <section className={styles.tableSection}>
         <div className={styles.sectionHeader}>
@@ -226,23 +355,25 @@ function HomePage() {
         <CreditTable transactions={tableTransactions} showPhone={false} />
       </section>
 
-      <section className={styles.cardGrid} aria-label="Primary navigation">
-        {dashboardSections.map((section) => (
-          <article key={section.to} className={styles.navCard}>
-            <img
-              src={section.icon}
-              alt=""
-              aria-hidden="true"
-              className={`${styles.navCardIcon} ${section.iconClassName}`}
-            />
-            <h2>{section.title}</h2>
-            <p>{section.description}</p>
-            <Link to={section.to} className={styles.cardLink}>
-              Open section
-            </Link>
-          </article>
-        ))}
-      </section>
+      {showNavCards ? (
+        <section className={styles.cardGrid} aria-label="Primary navigation">
+          {dashboardSections.map((section) => (
+            <article key={section.to} className={styles.navCard}>
+              <img
+                src={section.icon}
+                alt=""
+                aria-hidden="true"
+                className={`${styles.navCardIcon} ${section.iconClassName}`}
+              />
+              <h2>{section.title}</h2>
+              <p>{section.description}</p>
+              <Link to={section.to} className={styles.cardLink}>
+                Open section
+              </Link>
+            </article>
+          ))}
+        </section>
+      ) : null}
     </main>
   )
 }

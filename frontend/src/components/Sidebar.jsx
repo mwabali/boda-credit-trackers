@@ -1,19 +1,41 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth/AuthProvider'
 import logo from '../assets/Boda_Credit_logo.svg'
 import styles from './Sidebar.module.css'
 
-const links = [
-  { to: '/home', label: 'Dashboard' },
-  { to: '/riders', label: 'Riders' },
-  { to: '/stations', label: 'Fuel Stations' },
-  { to: '/transactions', label: 'Transactions' },
-  { to: '/add-credit', label: 'Add Credit' },
-]
+function getLinksForRole(role) {
+  if (role === 'company') {
+    return [
+      { to: '/home', label: 'Dashboard' },
+      { to: '/riders', label: 'Riders' },
+      { to: '/stations', label: 'Fuel Stations' },
+      { to: '/transactions', label: 'Transactions' },
+      { to: '/add-credit', label: 'Add Credit' },
+    ]
+  }
+
+  if (role === 'station') {
+    return [
+      { to: '/home', label: 'Dashboard' },
+      { to: '/stations', label: 'My Station' },
+      { to: '/transactions', label: 'Transactions' },
+      { to: '/add-credit', label: 'Add Credit' },
+    ]
+  }
+
+  return [
+    { to: '/home', label: 'Dashboard' },
+    { to: '/transactions', label: 'My Activity' },
+    { to: '/stations', label: 'Stations' },
+  ]
+}
 
 function Sidebar() {
+  const { user, logout } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const location = useLocation()
+  const links = getLinksForRole(user?.role)
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -59,6 +81,14 @@ function Sidebar() {
             {link.label}
           </NavLink>
         ))}
+
+        <div className={styles.accountPanel}>
+          <p className={styles.accountRole}>{user?.role || 'Account'}</p>
+          <p className={styles.accountName}>{user?.fullName || 'Signed in user'}</p>
+          <button type="button" className={styles.logoutButton} onClick={logout}>
+            Sign out
+          </button>
+        </div>
       </nav>
     </aside>
   )

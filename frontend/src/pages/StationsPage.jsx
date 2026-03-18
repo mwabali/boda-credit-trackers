@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
+import { useAuth } from '../auth/AuthProvider'
 import stationsIcon from '../assets/Stations_icon.svg'
 import StationList from '../components/StationList'
 import { useToast } from '../components/ToastProvider'
@@ -20,6 +21,7 @@ function formatStationId(id) {
 }
 
 function StationsPage() {
+  const { user } = useAuth()
   const { showError, showSuccess } = useToast()
   const [stations, setStations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -147,6 +149,9 @@ function StationsPage() {
   const showFieldError = (fieldName) =>
     formik.touched[fieldName] && formik.errors[fieldName]
 
+  const canManageStations = user?.role === 'company'
+  const canToggleStatus = user?.role === 'company'
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -198,6 +203,7 @@ function StationsPage() {
         </article>
       </section>
 
+      {canManageStations ? (
       <section className={styles.formSection} aria-label="Add station">
         <div className={styles.formHeader}>
           <div className={styles.formIntro}>
@@ -298,6 +304,7 @@ function StationsPage() {
           </form>
         ) : null}
       </section>
+      ) : null}
 
       <section className={styles.cardsGrid} aria-label="Station cards">
         {isLoading ? <p className={styles.stateMessage}>Loading stations...</p> : null}
@@ -323,19 +330,25 @@ function StationsPage() {
                   </li>
                   <li className={styles.statusRow}>
                     <strong>Status:</strong>
-                    <select
-                      className={`${styles.statusSelect} ${styles[station.status]}`}
-                      value={station.status}
-                      onChange={(event) =>
-                        handleStatusChange(station.id, event.target.value)
-                      }
-                      disabled={isUpdatingStatus}
-                      aria-label={`Update ${station.name} status`}
-                    >
-                      <option value="active">Active</option>
-                      <option value="maintenance">Maintenance</option>
-                      <option value="closed">Closed</option>
-                    </select>
+                    {canToggleStatus ? (
+                      <select
+                        className={`${styles.statusSelect} ${styles[station.status]}`}
+                        value={station.status}
+                        onChange={(event) =>
+                          handleStatusChange(station.id, event.target.value)
+                        }
+                        disabled={isUpdatingStatus}
+                        aria-label={`Update ${station.name} status`}
+                      >
+                        <option value="active">Active</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="closed">Closed</option>
+                      </select>
+                    ) : (
+                      <span className={`${styles.statusSelect} ${styles[station.status]}`}>
+                        {station.status}
+                      </span>
+                    )}
                   </li>
                 </ul>
               </article>
