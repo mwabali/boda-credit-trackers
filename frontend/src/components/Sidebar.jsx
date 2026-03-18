@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import logo from '../assets/Boda_Credit_logo.svg'
+import { request } from '../lib/api'
 import styles from './Sidebar.module.css'
 
-function getLinksForRole(user) {
+function getLinksForRole(user, notificationCount = 0) {
   if (user?.role === 'station' && user?.approvalStatus !== 'approved') {
     return [
-      { to: '/notifications', label: 'Notifications' },
+      { to: '/notifications', label: 'Notifications', badge: notificationCount },
       { to: '/profile', label: 'Profile' },
     ]
   }
@@ -19,7 +20,7 @@ function getLinksForRole(user) {
       { to: '/riders', label: 'Riders' },
       { to: '/stations', label: 'Fuel Stations' },
       { to: '/transactions', label: 'Transactions' },
-      { to: '/notifications', label: 'Notifications' },
+      { to: '/notifications', label: 'Notifications', badge: notificationCount },
       { to: '/profile', label: 'Profile' },
     ]
   }
@@ -30,7 +31,7 @@ function getLinksForRole(user) {
       { to: '/stations', label: 'My Station' },
       { to: '/transactions', label: 'Transactions' },
       { to: '/riders', label: 'Riders' },
-      { to: '/notifications', label: 'Notifications' },
+      { to: '/notifications', label: 'Notifications', badge: notificationCount },
       { to: '/profile', label: 'Profile' },
     ]
   }
@@ -40,7 +41,7 @@ function getLinksForRole(user) {
     { to: '/add-credit', label: 'Request Credit' },
     { to: '/transactions', label: 'My Activity' },
     { to: '/stations', label: 'Stations' },
-    { to: '/notifications', label: 'Notifications' },
+    { to: '/notifications', label: 'Notifications', badge: notificationCount },
     { to: '/profile', label: 'Profile' },
   ]
 }
@@ -48,12 +49,46 @@ function getLinksForRole(user) {
 function Sidebar() {
   const { user, logout } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(0)
   const location = useLocation()
-  const links = getLinksForRole(user)
+  const links = getLinksForRole(user, notificationCount)
 
   useEffect(() => {
     setIsMenuOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadNotificationCount() {
+      if (!user?.id) {
+        setNotificationCount(0)
+        return
+      }
+
+      try {
+        const payload = await request('/notifications')
+        if (!isActive) {
+          return
+        }
+
+        const unreadNotifications =
+          payload.data?.notifications?.filter((notification) => !notification.isRead).length || 0
+        const pendingApprovals = payload.data?.pendingStationApprovals?.length || 0
+        setNotificationCount(unreadNotifications + pendingApprovals)
+      } catch (_error) {
+        if (isActive) {
+          setNotificationCount(0)
+        }
+      }
+    }
+
+    loadNotificationCount()
+
+    return () => {
+      isActive = false
+    }
+  }, [location.pathname, user?.id])
 
   return (
     <aside className={styles.sidebar}>
@@ -92,7 +127,8 @@ function Sidebar() {
               isActive ? `${styles.navLink} ${styles.active}` : styles.navLink
             }
           >
-            {link.label}
+            <span>{link.label}</span>
+            {link.badge ? <span className={styles.navBadge}>{link.badge}</span> : null}
           </NavLink>
         ))}
 

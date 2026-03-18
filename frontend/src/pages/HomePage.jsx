@@ -40,6 +40,7 @@ const dashboardSections = [
 function HomePage() {
   const { user, refreshSession } = useAuth()
   const { showError, showSuccess } = useToast()
+  const comparisonPageSize = 3
   const companyLabel =
     user?.role !== 'rider' && user?.companyName ? `.${user.companyName}` : ''
   const [riders, setRiders] = useState([])
@@ -58,6 +59,7 @@ function HomePage() {
     stationPerformance: [],
   })
   const [comparisonMetric, setComparisonMetric] = useState('totalAmount')
+  const [comparisonPage, setComparisonPage] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -318,7 +320,7 @@ function HomePage() {
     rows.sort(
       (left, right) => Number(right[comparisonMetric] || 0) - Number(left[comparisonMetric] || 0)
     )
-    return rows.slice(0, 5)
+    return rows
   }, [analytics.stationPerformance, comparisonMetric])
 
   const comparisonConfig = useMemo(() => {
@@ -346,6 +348,24 @@ function HomePage() {
   }, [comparisonMetric])
 
   const comparisonLeader = companyComparisonRows[0] || null
+  const comparisonPageCount = Math.max(1, Math.ceil(companyComparisonRows.length / comparisonPageSize))
+  const normalizedComparisonPage = Math.min(comparisonPage, comparisonPageCount - 1)
+  const comparisonRowsPage = useMemo(
+    () =>
+      companyComparisonRows.slice(
+        normalizedComparisonPage * comparisonPageSize,
+        normalizedComparisonPage * comparisonPageSize + comparisonPageSize
+      ),
+    [companyComparisonRows, normalizedComparisonPage]
+  )
+  const comparisonMaxValue = useMemo(
+    () => Math.max(...companyComparisonRows.map((item) => Number(item[comparisonMetric] || 0)), 1),
+    [companyComparisonRows, comparisonMetric]
+  )
+
+  useEffect(() => {
+    setComparisonPage(0)
+  }, [comparisonMetric, analytics.stationPerformance])
 
   return (
     <main className={styles.page}>
@@ -470,13 +490,9 @@ function HomePage() {
 
             {companyComparisonRows.length > 0 ? (
               <div className={styles.leaderboard}>
-                {companyComparisonRows.map((station) => {
-                  const maxValue = Math.max(
-                    ...companyComparisonRows.map((item) => Number(item[comparisonMetric] || 0)),
-                    1
-                  )
+                {comparisonRowsPage.map((station) => {
                   const currentValue = Number(station[comparisonMetric] || 0)
-                  const width = `${Math.max(10, (currentValue / maxValue) * 100)}%`
+                  const width = `${Math.max(10, (currentValue / comparisonMaxValue) * 100)}%`
 
                   return (
                     <div key={station.id} className={styles.leaderRow}>
@@ -495,6 +511,43 @@ function HomePage() {
                     </div>
                   )
                 })}
+
+                {comparisonPageCount > 1 ? (
+                  <div className={styles.paginationRow}>
+                    <button
+                      type="button"
+                      className={styles.paginationButton}
+                      onClick={() =>
+                        setComparisonPage((currentPage) =>
+                          Math.max(0, currentPage - 1)
+                        )
+                      }
+                      disabled={normalizedComparisonPage === 0}
+                    >
+                      Previous
+                    </button>
+                    <span className={styles.paginationMeta}>
+                      Showing {normalizedComparisonPage * comparisonPageSize + 1}-
+                      {Math.min(
+                        normalizedComparisonPage * comparisonPageSize + comparisonRowsPage.length,
+                        companyComparisonRows.length
+                      )}{' '}
+                      of {companyComparisonRows.length} stations
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.paginationButton}
+                      onClick={() =>
+                        setComparisonPage((currentPage) =>
+                          Math.min(comparisonPageCount - 1, currentPage + 1)
+                        )
+                      }
+                      disabled={normalizedComparisonPage >= comparisonPageCount - 1}
+                    >
+                      Next
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className={styles.comparisonEmptyState}>

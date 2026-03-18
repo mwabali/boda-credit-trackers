@@ -17,6 +17,11 @@ const initialValues = {
 
 const phonePattern = /^\+?[0-9]{10,15}$/
 
+function formatStationOptionLabel(station) {
+  const label = getStationDisplayName(station)
+  return label.length > 40 ? `${label.slice(0, 37).trim()}...` : label
+}
+
 function CreditForm({
   riders = [],
   stations = [],
@@ -307,8 +312,8 @@ function CreditForm({
           >
             <option value="">Select station</option>
             {stations.map((station) => (
-              <option key={station.id} value={station.id}>
-                {getStationDisplayName(station)}
+              <option key={station.id} value={station.id} title={getStationDisplayName(station)}>
+                {formatStationOptionLabel(station)}
               </option>
             ))}
           </select>
