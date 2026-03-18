@@ -280,9 +280,37 @@ function HomePage() {
 
   const companyComparisonRows = useMemo(() => {
     const rows = [...(analytics.stationPerformance || [])]
-    rows.sort((left, right) => Number(right[comparisonMetric] || 0) - Number(left[comparisonMetric] || 0))
+    rows.sort(
+      (left, right) => Number(right[comparisonMetric] || 0) - Number(left[comparisonMetric] || 0)
+    )
     return rows.slice(0, 5)
   }, [analytics.stationPerformance, comparisonMetric])
+
+  const comparisonConfig = useMemo(() => {
+    if (comparisonMetric === 'outstandingAmount') {
+      return {
+        title: 'Outstanding exposure',
+        description: 'Shows which stations are carrying the largest unsettled credit position.',
+        formatValue: (value) => formatCurrency(value),
+      }
+    }
+
+    if (comparisonMetric === 'approvalRate') {
+      return {
+        title: 'Approval conversion',
+        description: 'Shows how effectively each station is converting requests into approved or paid outcomes.',
+        formatValue: (value) => `${Math.round(value)}%`,
+      }
+    }
+
+    return {
+      title: 'Credit volume',
+      description: 'Shows the total value of credit requests processed by each station.',
+      formatValue: (value) => formatCurrency(value),
+    }
+  }, [comparisonMetric])
+
+  const comparisonLeader = companyComparisonRows[0] || null
 
   return (
     <main className={styles.page}>
@@ -386,35 +414,62 @@ function HomePage() {
               </button>
             </div>
 
-            <div className={styles.leaderboard}>
-              {companyComparisonRows.map((station) => {
-                const maxValue = Math.max(
-                  ...companyComparisonRows.map((item) => Number(item[comparisonMetric] || 0)),
-                  1
-                )
-                const currentValue = Number(station[comparisonMetric] || 0)
-                const width = `${Math.max(10, (currentValue / maxValue) * 100)}%`
-                const label =
-                  comparisonMetric === 'approvalRate'
-                    ? `${Math.round(currentValue)}%`
-                    : formatCurrency(currentValue)
-
-                return (
-                  <div key={station.id} className={styles.leaderRow}>
-                    <div className={styles.leaderMeta}>
-                      <strong>{station.displayName}</strong>
-                      <span>
-                        {station.totalTransactions} transactions • {station.activeRiders} riders
-                      </span>
-                    </div>
-                    <div className={styles.leaderBarTrack}>
-                      <span className={styles.leaderBarFill} style={{ width }} />
-                    </div>
-                    <strong className={styles.leaderValue}>{label}</strong>
-                  </div>
-                )
-              })}
+            <div className={styles.comparisonSummary}>
+              <div>
+                <p className={styles.comparisonEyebrow}>Now comparing</p>
+                <h3>{comparisonConfig.title}</h3>
+                <p>{comparisonConfig.description}</p>
+              </div>
+              {comparisonLeader ? (
+                <div className={styles.comparisonSpotlight}>
+                  <span className={styles.comparisonEyebrow}>Leading station</span>
+                  <strong>{comparisonLeader.displayName}</strong>
+                  <span>
+                    {comparisonConfig.formatValue(
+                      Number(comparisonLeader[comparisonMetric] || 0)
+                    )}
+                  </span>
+                </div>
+              ) : null}
             </div>
+
+            {companyComparisonRows.length > 0 ? (
+              <div className={styles.leaderboard}>
+                {companyComparisonRows.map((station) => {
+                  const maxValue = Math.max(
+                    ...companyComparisonRows.map((item) => Number(item[comparisonMetric] || 0)),
+                    1
+                  )
+                  const currentValue = Number(station[comparisonMetric] || 0)
+                  const width = `${Math.max(10, (currentValue / maxValue) * 100)}%`
+
+                  return (
+                    <div key={station.id} className={styles.leaderRow}>
+                      <div className={styles.leaderMeta}>
+                        <strong>{station.displayName}</strong>
+                        <span>
+                          {station.totalTransactions} transactions • {station.activeRiders} riders
+                        </span>
+                      </div>
+                      <div className={styles.leaderBarTrack}>
+                        <span className={styles.leaderBarFill} style={{ width }} />
+                      </div>
+                      <strong className={styles.leaderValue}>
+                        {comparisonConfig.formatValue(currentValue)}
+                      </strong>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className={styles.comparisonEmptyState}>
+                <h3>No station comparison data yet</h3>
+                <p>
+                  Once your stations start processing rider requests, this view will rank them by
+                  {` ${comparisonConfig.title.toLowerCase()}`}.
+                </p>
+              </div>
+            )}
           </article>
         </section>
       ) : null}

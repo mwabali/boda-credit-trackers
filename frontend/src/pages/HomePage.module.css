@@ -390,6 +390,60 @@
   gap: 0.55rem;
 }
 
+.comparisonSummary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding: 0.95rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffdfa 0%, #ffffff 100%);
+}
+
+.comparisonSummary h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.02rem;
+}
+
+.comparisonSummary p {
+  margin: 0.2rem 0 0;
+  color: #4b5563;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.comparisonEyebrow {
+  margin: 0;
+  color: #9a3412;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.comparisonSpotlight {
+  min-width: 11rem;
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fdba74;
+}
+
+.comparisonSpotlight strong {
+  color: #111827;
+  font-size: 0.98rem;
+}
+
+.comparisonSpotlight span:last-child {
+  color: #9a3412;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
 .toggleButton,
 .toggleActive {
   border-radius: 999px;
@@ -470,6 +524,26 @@
   white-space: nowrap;
 }
 
+.comparisonEmptyState {
+  padding: 1rem 1.05rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafaf9 100%);
+}
+
+.comparisonEmptyState h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.comparisonEmptyState p {
+  margin: 0.35rem 0 0;
+  color: #6b7280;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 .tableSection {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -514,6 +588,10 @@
   }
 
   .companyInsightGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparisonSummary {
     grid-template-columns: 1fr;
   }
 
@@ -596,6 +674,10 @@
   .leaderRow {
     grid-template-columns: 1fr;
     gap: 0.45rem;
+  }
+
+  .comparisonSpotlight {
+    min-width: 0;
   }
 }
 
