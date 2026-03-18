@@ -21,7 +21,10 @@ def list_notifications():
     try:
         account = resolve_request_account()
         notifications = (
-            Notification.query.filter_by(recipient_account_id=account.id)
+            Notification.query.filter(
+                Notification.recipient_account_id == account.id,
+                Notification.created_at >= account.created_at,
+            )
             .order_by(Notification.created_at.desc())
             .all()
         )
