@@ -12,6 +12,107 @@ from models import Rider, Station, Transaction
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 
+def build_transaction_analytics(transactions):
+    total_amount = 0
+    paid_amount = 0
+    outstanding_amount = 0
+    approved_count = 0
+    paid_count = 0
+    cancelled_count = 0
+
+    per_station = {}
+
+    for transaction in transactions:
+        amount = float(transaction.amount or 0)
+        total_amount += amount
+
+        if transaction.status == "paid":
+            paid_amount += amount
+            paid_count += 1
+        elif transaction.status in {"pending", "approved"}:
+            outstanding_amount += amount
+
+        if transaction.status == "approved":
+            approved_count += 1
+        elif transaction.status == "cancelled":
+            cancelled_count += 1
+
+        if transaction.station:
+            station_id = transaction.station.id
+            station_bucket = per_station.setdefault(
+                station_id,
+                {
+                    "id": station_id,
+                    "name": transaction.station.name,
+                    "displayName": hydrate_station(transaction.station)["displayName"],
+                    "status": transaction.station.status,
+                    "totalTransactions": 0,
+                    "totalAmount": 0,
+                    "outstandingAmount": 0,
+                    "paidAmount": 0,
+                    "pendingCount": 0,
+                    "approvedCount": 0,
+                    "paidCount": 0,
+                    "cancelledCount": 0,
+                    "activeRiders": set(),
+                },
+            )
+            station_bucket["totalTransactions"] += 1
+            station_bucket["totalAmount"] += amount
+            if transaction.status in {"pending", "approved"}:
+                station_bucket["outstandingAmount"] += amount
+            if transaction.status == "paid":
+                station_bucket["paidAmount"] += amount
+            if transaction.status == "pending":
+                station_bucket["pendingCount"] += 1
+            if transaction.status == "approved":
+                station_bucket["approvedCount"] += 1
+            if transaction.status == "paid":
+                station_bucket["paidCount"] += 1
+            if transaction.status == "cancelled":
+                station_bucket["cancelledCount"] += 1
+            if transaction.rider_id:
+                station_bucket["activeRiders"].add(transaction.rider_id)
+
+    total_count = len(transactions)
+    actionable_count = total_count - cancelled_count
+    approval_rate = ((approved_count + paid_count) / actionable_count * 100) if actionable_count else 0
+    settlement_rate = (paid_count / actionable_count * 100) if actionable_count else 0
+
+    station_performance = []
+    for station_bucket in per_station.values():
+        active_riders = len(station_bucket["activeRiders"])
+        station_performance.append(
+            {
+                **station_bucket,
+                "activeRiders": active_riders,
+                "approvalRate": (
+                    ((station_bucket["approvedCount"] + station_bucket["paidCount"])
+                    / max(
+                        1,
+                        station_bucket["totalTransactions"] - station_bucket["cancelledCount"],
+                    ))
+                    * 100
+                ),
+                "recoveryRate": (
+                    (station_bucket["paidCount"] / max(1, station_bucket["totalTransactions"]))
+                    * 100
+                ),
+            }
+        )
+
+    station_performance.sort(key=lambda item: item["totalAmount"], reverse=True)
+
+    return {
+        "totalAmount": total_amount,
+        "paidAmount": paid_amount,
+        "outstandingAmount": outstanding_amount,
+        "approvalRate": round(approval_rate, 1),
+        "settlementRate": round(settlement_rate, 1),
+        "stationPerformance": station_performance,
+    }
+
+
 @dashboard_bp.get("")
 @approved_access_required
 def get_dashboard_payload():
@@ -57,7 +158,8 @@ def get_dashboard_payload():
 
         riders = riders_query.order_by(Rider.created_at.desc()).all()
         stations = stations_query.order_by(Station.created_at.desc()).all()
-        transactions = transactions_query.order_by(Transaction.created_at.desc()).limit(5).all()
+        all_transactions = transactions_query.order_by(Transaction.created_at.desc()).all()
+        transactions = all_transactions[:5]
 
         balance_map = get_outstanding_balance_map([rider.id for rider in riders])
 
@@ -92,6 +194,11 @@ def get_dashboard_payload():
             "paid": stats_query.filter(Transaction.status == "paid").count(),
         }
 
+        analytics = build_transaction_analytics(all_transactions)
+        analytics["suspendedRiders"] = sum(1 for rider in riders if rider.status == "suspended")
+        analytics["inactiveRiders"] = sum(1 for rider in riders if rider.status == "inactive")
+        analytics["activeStations"] = sum(1 for station in stations if station.status == "active")
+
         return jsonify(
             {
                 "success": True,
@@ -101,6 +208,7 @@ def get_dashboard_payload():
                     "stations": station_data,
                     "transactions": transaction_data,
                     "stats": stats,
+                    "analytics": analytics,
                     "viewer": account.to_session_dict(),
                 },
             }

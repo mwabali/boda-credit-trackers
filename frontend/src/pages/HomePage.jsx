@@ -16,31 +16,24 @@ import styles from './HomePage.module.css'
 const dashboardSections = [
   {
     title: 'Riders',
-    description: 'Manage rider profiles, debt status, and activity tracking.',
+    description: 'Review rider portfolio health and watch credit exposure trends.',
     to: '/riders',
     icon: ridersIcon,
     iconClassName: styles.ridersCardIcon,
   },
   {
     title: 'Fuel Stations',
-    description: 'Organize station records and monitor station credit balances.',
+    description: 'Compare stations, spot underperformance, and enroll new locations.',
     to: '/stations',
     icon: stationsIcon,
     iconClassName: styles.stationsCardIcon,
   },
   {
     title: 'Transactions',
-    description: 'Review credit transactions and reconcile outstanding balances.',
+    description: 'Track company-wide request flow, approvals, and settlement signals.',
     to: '/transactions',
     icon: transactionsIcon,
     iconClassName: styles.transactionsCardIcon,
-  },
-  {
-    title: 'Add Credit',
-    description: 'Prepare manual credit entries before API integration begins.',
-    to: '/add-credit',
-    icon: transactionsIcon,
-    iconClassName: styles.addCreditCardIcon,
   },
 ]
 
@@ -53,6 +46,18 @@ function HomePage() {
   const [stations, setStations] = useState([])
   const [transactions, setTransactions] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
+  const [analytics, setAnalytics] = useState({
+    totalAmount: 0,
+    paidAmount: 0,
+    outstandingAmount: 0,
+    approvalRate: 0,
+    settlementRate: 0,
+    activeStations: 0,
+    suspendedRiders: 0,
+    inactiveRiders: 0,
+    stationPerformance: [],
+  })
+  const [comparisonMetric, setComparisonMetric] = useState('totalAmount')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -68,6 +73,19 @@ function HomePage() {
       setStations(dashboardPayload.data?.stations || [])
       setTransactions(dashboardPayload.data?.transactions || [])
       setStats(dashboardPayload.data?.stats || { total: 0, pending: 0, paid: 0 })
+      setAnalytics(
+        dashboardPayload.data?.analytics || {
+          totalAmount: 0,
+          paidAmount: 0,
+          outstandingAmount: 0,
+          approvalRate: 0,
+          settlementRate: 0,
+          activeStations: 0,
+          suspendedRiders: 0,
+          inactiveRiders: 0,
+          stationPerformance: [],
+        }
+      )
     } catch (loadError) {
       setError(loadError.message)
       showError(loadError.message)
@@ -92,11 +110,6 @@ function HomePage() {
   const tableTransactions = useMemo(
     () => transactions.slice(0, 5).map(mapTransactionToRow),
     [transactions]
-  )
-
-  const visibleDashboardSections = useMemo(
-    () => dashboardSections.filter((section) => section.to !== '/add-credit'),
-    []
   )
 
   const handleQuickCredit = async (formData) => {
@@ -159,10 +172,10 @@ function HomePage() {
     }
 
     return {
-      title: 'Dashboard',
+      title: 'Company Dashboard',
       companyMark: companyLabel,
       description:
-        'Track core workflows from one place with live backend records flowing into the dashboard.',
+        'Monitor service health, compare station performance, and keep a clear view of credit exposure across your company footprint.',
     }
   }, [companyLabel, role])
 
@@ -223,33 +236,54 @@ function HomePage() {
 
     return [
       {
-        title: 'Total Riders',
-        value: riders.length,
-        meta: 'active records loaded',
-        icon: ridersIcon,
-        iconClassName: styles.ridersIcon,
-      },
-      {
-        title: 'Total Stations',
+        title: 'Enrolled Stations',
         value: stations.length,
-        meta: 'partner locations loaded',
-        icon: stationsIcon,
-        iconClassName: styles.stationsIcon,
+        meta: `${analytics.activeStations || 0} currently active`,
+        accent: 'stations',
       },
       {
-        title: 'Credit Activity',
-        value: stats.total,
-        meta: `${stats.pending} pending transactions`,
-        icon: transactionsIcon,
-        iconClassName: styles.transactionsIcon,
+        title: 'Outstanding Exposure',
+        value: formatCurrency(analytics.outstandingAmount || 0),
+        meta: `${stats.pending} unsettled requests`,
+        accent: 'exposure',
+      },
+      {
+        title: 'Approval Rate',
+        value: `${analytics.approvalRate || 0}%`,
+        meta: 'approved or paid requests',
+        accent: 'approval',
+      },
+      {
+        title: 'Service Recovery',
+        value: `${analytics.settlementRate || 0}%`,
+        meta: `${analytics.suspendedRiders || 0} riders suspended`,
+        accent: 'recovery',
         wide: true,
       },
     ]
-  }, [primaryRider?.currentBalance, riders.length, role, stations.length, stats.pending, stats.total])
+  }, [
+    analytics.activeStations,
+    analytics.approvalRate,
+    analytics.outstandingAmount,
+    analytics.settlementRate,
+    analytics.suspendedRiders,
+    primaryRider?.currentBalance,
+    riders.length,
+    role,
+    stations.length,
+    stats.pending,
+    stats.total,
+  ])
 
   const showQuickCredit = role === 'rider'
   const showStationDirectory = role === 'company'
   const showNavCards = role === 'company'
+
+  const companyComparisonRows = useMemo(() => {
+    const rows = [...(analytics.stationPerformance || [])]
+    rows.sort((left, right) => Number(right[comparisonMetric] || 0) - Number(left[comparisonMetric] || 0))
+    return rows.slice(0, 5)
+  }, [analytics.stationPerformance, comparisonMetric])
 
   return (
     <main className={styles.page}>
@@ -269,22 +303,119 @@ function HomePage() {
         {statCards.map((card) => (
           <article
             key={card.title}
-            className={`${styles.statCard} ${card.wide ? styles.statCardWide : ''}`}
+            className={`${styles.statCard} ${card.wide ? styles.statCardWide : ''} ${
+              role === 'company' ? styles.companyStatCard : ''
+            } ${card.accent ? styles[`accent${card.accent[0].toUpperCase()}${card.accent.slice(1)}`] : ''}`}
           >
             <h2>{card.title}</h2>
             <div className={styles.metricRow}>
-              <img
-                src={card.icon}
-                alt=""
-                aria-hidden="true"
-                className={`${styles.metricIcon} ${card.iconClassName}`}
-              />
+              {card.icon ? (
+                <img
+                  src={card.icon}
+                  alt=""
+                  aria-hidden="true"
+                  className={`${styles.metricIcon} ${card.iconClassName}`}
+                />
+              ) : null}
               <p className={styles.statValue}>{card.value}</p>
             </div>
             <span className={styles.statMeta}>{card.meta}</span>
           </article>
         ))}
       </section>
+
+      {role === 'company' ? (
+        <section className={styles.companyInsightGrid} aria-label="Company insights">
+          <article className={styles.extensionCard}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.sectionTag}>Service health</p>
+              <h2>Portfolio health snapshot</h2>
+              <p>Focus on throughput, recovery, and rider risk across the stations enrolled under your company.</p>
+            </div>
+
+            <div className={styles.healthGrid}>
+              <div className={styles.healthItem}>
+                <span className={styles.healthLabel}>Total issued</span>
+                <strong>{formatCurrency(analytics.totalAmount || 0)}</strong>
+              </div>
+              <div className={styles.healthItem}>
+                <span className={styles.healthLabel}>Recovered value</span>
+                <strong>{formatCurrency(analytics.paidAmount || 0)}</strong>
+              </div>
+              <div className={styles.healthItem}>
+                <span className={styles.healthLabel}>Suspended riders</span>
+                <strong>{analytics.suspendedRiders || 0}</strong>
+              </div>
+              <div className={styles.healthItem}>
+                <span className={styles.healthLabel}>Inactive riders</span>
+                <strong>{analytics.inactiveRiders || 0}</strong>
+              </div>
+            </div>
+          </article>
+
+          <article className={styles.extensionCard}>
+            <div className={styles.sectionHeader}>
+              <p className={styles.sectionTag}>Station comparison</p>
+              <h2>Compare company stations</h2>
+              <p>Use the toggles to compare station volume, outstanding exposure, and approval conversion.</p>
+            </div>
+
+            <div className={styles.toggleRow}>
+              <button
+                type="button"
+                className={comparisonMetric === 'totalAmount' ? styles.toggleActive : styles.toggleButton}
+                onClick={() => setComparisonMetric('totalAmount')}
+              >
+                Volume
+              </button>
+              <button
+                type="button"
+                className={comparisonMetric === 'outstandingAmount' ? styles.toggleActive : styles.toggleButton}
+                onClick={() => setComparisonMetric('outstandingAmount')}
+              >
+                Exposure
+              </button>
+              <button
+                type="button"
+                className={comparisonMetric === 'approvalRate' ? styles.toggleActive : styles.toggleButton}
+                onClick={() => setComparisonMetric('approvalRate')}
+              >
+                Approval
+              </button>
+            </div>
+
+            <div className={styles.leaderboard}>
+              {companyComparisonRows.map((station) => {
+                const maxValue = Math.max(
+                  ...companyComparisonRows.map((item) => Number(item[comparisonMetric] || 0)),
+                  1
+                )
+                const currentValue = Number(station[comparisonMetric] || 0)
+                const width = `${Math.max(10, (currentValue / maxValue) * 100)}%`
+                const label =
+                  comparisonMetric === 'approvalRate'
+                    ? `${Math.round(currentValue)}%`
+                    : formatCurrency(currentValue)
+
+                return (
+                  <div key={station.id} className={styles.leaderRow}>
+                    <div className={styles.leaderMeta}>
+                      <strong>{station.displayName}</strong>
+                      <span>
+                        {station.totalTransactions} transactions • {station.activeRiders} riders
+                      </span>
+                    </div>
+                    <div className={styles.leaderBarTrack}>
+                      <span className={styles.leaderBarFill} style={{ width }} />
+                    </div>
+                    <strong className={styles.leaderValue}>{label}</strong>
+                  </div>
+                )
+              })}
+            </div>
+          </article>
+        </section>
+      ) : null}
 
       {showQuickCredit || showStationDirectory ? (
         <section className={styles.extensionGrid} aria-label="Quick entries">
@@ -311,17 +442,15 @@ function HomePage() {
           {showStationDirectory ? (
             <article className={styles.extensionCard}>
               <div className={styles.sectionHeader}>
-                <p className={styles.sectionTag}>Station list</p>
+                <p className={styles.sectionTag}>Company network</p>
                 <h2>Station directory</h2>
                 <p>
-                  Reference every active partner station without leaving the dashboard.
+                  Reference the enrolled stations under your company without leaving the dashboard.
                 </p>
               </div>
               <StationList stations={stationListRows} />
             </article>
           ) : null}
-
-          {role === 'rider' && primaryStation ? null : null}
         </section>
       ) : null}
 
@@ -348,28 +477,11 @@ function HomePage() {
         </section>
       ) : null}
 
-      <section className={styles.tableSection}>
-        <div className={styles.sectionHeader}>
-          <p className={styles.sectionTag}>Recent activity</p>
-          <h2>Credit transactions</h2>
-          <p>
-            The same live transaction feed that powers the Transactions page is
-            surfaced here for quick review.
-          </p>
-        </div>
-        <CreditTable transactions={tableTransactions} showPhone={false} />
-      </section>
-
       {showNavCards ? (
-        <section className={styles.cardGrid} aria-label="Primary navigation">
-          {visibleDashboardSections.map((section) => (
+        <section className={styles.cardGrid} aria-label="Company navigation">
+          {dashboardSections.map((section) => (
             <article key={section.to} className={styles.navCard}>
-              <img
-                src={section.icon}
-                alt=""
-                aria-hidden="true"
-                className={`${styles.navCardIcon} ${section.iconClassName}`}
-              />
+              <img src={section.icon} alt="" aria-hidden="true" className={`${styles.navCardIcon} ${section.iconClassName}`} />
               <h2>{section.title}</h2>
               <p>{section.description}</p>
               <Link to={section.to} className={styles.cardLink}>
@@ -379,6 +491,19 @@ function HomePage() {
           ))}
         </section>
       ) : null}
+
+      <section className={styles.tableSection}>
+        <div className={styles.sectionHeader}>
+          <p className={styles.sectionTag}>Recent activity</p>
+          <h2>Credit transactions</h2>
+          <p>
+            The same live transaction feed that powers the Transactions page is surfaced here for quick review.
+          </p>
+        </div>
+        <CreditTable transactions={tableTransactions} showPhone={false} />
+      </section>
+
+      {error ? <p className={styles.errorMessage}>{error}</p> : null}
     </main>
   )
 }
