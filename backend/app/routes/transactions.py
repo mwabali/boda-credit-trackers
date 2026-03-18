@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload
 from app.database.db import db
 from app.utils.auth import approved_access_required, get_account_company_name, resolve_request_account, roles_required
 from app.utils.db_errors import format_integrity_error
+from app.utils.notifications import create_notification
 from app.utils.rider_balances import sync_rider_balance
 from app.utils.station_company import hydrate_station
 from models import Rider, Station, Transaction
@@ -178,6 +179,17 @@ def create_transaction():
             status="pending",
         )
         db.session.add(transaction)
+
+        station_manager_account = getattr(station, "account", None)
+        if station_manager_account and station_manager_account.is_active:
+            create_notification(
+                station_manager_account.id,
+                "New credit request awaiting review",
+                f"{rider.name} submitted a fuel credit request for {hydrate_station(station)['displayName']}.",
+                notification_type="approval",
+                action_path="/transactions",
+            )
+
         db.session.commit()
         sync_rider_balance(rider_id)
 
