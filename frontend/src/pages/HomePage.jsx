@@ -62,7 +62,32 @@ function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  const resetDashboardState = useCallback(() => {
+    setRiders([])
+    setStations([])
+    setTransactions([])
+    setStats({ total: 0, pending: 0, paid: 0 })
+    setAnalytics({
+      totalAmount: 0,
+      paidAmount: 0,
+      outstandingAmount: 0,
+      approvalRate: 0,
+      settlementRate: 0,
+      activeStations: 0,
+      suspendedRiders: 0,
+      inactiveRiders: 0,
+      stationPerformance: [],
+    })
+    setError('')
+  }, [])
+
   const loadDashboardData = useCallback(async () => {
+    if (!user?.id) {
+      resetDashboardState()
+      setIsLoading(false)
+      return
+    }
+
     try {
       setIsLoading(true)
       setError('')
@@ -92,11 +117,16 @@ function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }, [showError])
+  }, [resetDashboardState, showError, user?.id])
 
   useEffect(() => {
     loadDashboardData()
   }, [loadDashboardData])
+
+  useEffect(() => {
+    resetDashboardState()
+    setIsLoading(Boolean(user?.id))
+  }, [resetDashboardState, user?.id])
 
   const stationListRows = useMemo(
     () =>
