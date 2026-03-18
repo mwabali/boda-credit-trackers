@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
-from sqlalchemy import inspect, text
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 from app.config import Config
 from app.database.db import init_db
@@ -9,9 +9,57 @@ from app.database.db import init_db
 load_dotenv()
 
 
-def _ensure_column(db, inspector, table_name, column_name, ddl):
-    existing_columns = {column["name"] for column in inspector.get_columns(table_name)}
-    if column_name not in existing_columns:
+def _table_exists(db, table_name):
+    dialect = db.engine.dialect.name
+    if dialect == "sqlite":
+        result = db.session.execute(
+            text(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'table' AND name = :table_name
+                """
+            ),
+            {"table_name": table_name},
+        ).scalar()
+        return bool(result)
+
+    result = db.session.execute(
+        text(
+            """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = :table_name
+            """
+        ),
+        {"table_name": table_name},
+    ).scalar()
+    return bool(result)
+
+
+def _column_exists(db, table_name, column_name):
+    dialect = db.engine.dialect.name
+    if dialect == "sqlite":
+        rows = db.session.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+        return any(row[1] == column_name for row in rows)
+
+    result = db.session.execute(
+        text(
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = :table_name
+              AND column_name = :column_name
+            """
+        ),
+        {"table_name": table_name, "column_name": column_name},
+    ).scalar()
+    return bool(result)
+
+
+def _ensure_column(db, table_name, column_name, ddl):
+    if not _column_exists(db, table_name, column_name):
         db.session.execute(text(ddl))
         return True
     return False
@@ -33,34 +81,27 @@ def create_app():
         except OperationalError as error:
             if "already exists" not in str(error).lower():
                 raise
-        inspector = inspect(db.engine)
-
         schema_changed = False
 
-        if inspector.has_table("stations"):
+        if _table_exists(db, "stations"):
             schema_changed = _ensure_column(
                 db,
-                inspector,
                 "stations",
                 "company_id",
                 "ALTER TABLE stations ADD COLUMN company_id INTEGER",
             ) or schema_changed
-            inspector = inspect(db.engine)
 
-        if inspector.has_table("auth_accounts"):
+        if _table_exists(db, "auth_accounts"):
             schema_changed = _ensure_column(
                 db,
-                inspector,
                 "auth_accounts",
                 "company_id",
                 "ALTER TABLE auth_accounts ADD COLUMN company_id INTEGER",
             ) or schema_changed
-            inspector = inspect(db.engine)
 
-        if inspector.has_table("auth_accounts"):
+        if _table_exists(db, "auth_accounts"):
             schema_changed = _ensure_column(
                 db,
-                inspector,
                 "auth_accounts",
                 "approval_status",
                 """
@@ -68,11 +109,9 @@ def create_app():
                 ADD COLUMN approval_status VARCHAR(20) NOT NULL DEFAULT 'approved'
                 """,
             ) or schema_changed
-            inspector = inspect(db.engine)
 
             schema_changed = _ensure_column(
                 db,
-                inspector,
                 "auth_accounts",
                 "approved_at",
                 """
@@ -80,11 +119,9 @@ def create_app():
                 ADD COLUMN approved_at VARCHAR(64)
                 """,
             ) or schema_changed
-            inspector = inspect(db.engine)
 
             schema_changed = _ensure_column(
                 db,
-                inspector,
                 "auth_accounts",
                 "approved_by_account_id",
                 """
@@ -92,7 +129,6 @@ def create_app():
                 ADD COLUMN approved_by_account_id INTEGER
                 """,
             ) or schema_changed
-            inspector = inspect(db.engine)
 
         db.session.execute(
             text(
