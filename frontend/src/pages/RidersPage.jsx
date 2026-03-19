@@ -84,89 +84,142 @@ function RidersPage() {
     switch (companyFocus) {
       case 'standing':
         return {
-          label: 'Access standing',
-          description: 'Highlights riders who may need attention before they create friction in the service.',
+          label: 'Standing mix',
+          description: 'Shows how rider access is currently distributed across your company portfolio.',
         }
       case 'recency':
         return {
-          label: 'Recently updated riders',
-          description: 'Tracks which rider records have changed most recently across your company footprint.',
+          label: 'Profile freshness',
+          description: 'Highlights how recently rider records have been updated across the service.',
         }
       case 'exposure':
       default:
         return {
-          label: 'Highest rider exposure',
-          description: 'Ranks riders by open balance so you can quickly see where portfolio risk is concentrated.',
+          label: 'Exposure bands',
+          description: 'Groups riders by open-balance range so you can quickly read concentration risk.',
         }
     }
   }, [companyFocus])
 
   const companyFocusRows = useMemo(() => {
     if (companyFocus === 'standing') {
-      const priority = { suspended: 0, inactive: 1, active: 2 }
-      return [...riders]
-        .sort((left, right) => {
-          const priorityDelta = (priority[left.status] ?? 3) - (priority[right.status] ?? 3)
-          if (priorityDelta !== 0) {
-            return priorityDelta
-          }
+      const counts = {
+        active: riders.filter((rider) => rider.status === 'active').length,
+        suspended: riders.filter((rider) => rider.status === 'suspended').length,
+        inactive: riders.filter((rider) => rider.status === 'inactive').length,
+      }
+      const maxCount = Math.max(...Object.values(counts), 1)
 
-          return Number(right.currentBalance || 0) - Number(left.currentBalance || 0)
-        })
-        .slice(0, 3)
-        .map((rider) => ({
-          id: rider.id,
-          name: formatRiderLabel(rider.id),
-          subtitle: formatStatus(rider.status),
-          value: formatCurrency(rider.currentBalance),
-          meter: rider.status === 'suspended' ? 100 : rider.status === 'inactive' ? 60 : 25,
-        }))
+      return [
+        {
+          id: 'active',
+          name: 'Clear to fuel',
+          subtitle: 'Riders currently active',
+          value: `${counts.active} rider${counts.active === 1 ? '' : 's'}`,
+          meter: Math.max(12, Math.round((counts.active / maxCount) * 100)),
+        },
+        {
+          id: 'suspended',
+          name: 'Suspended',
+          subtitle: 'Riders temporarily blocked',
+          value: `${counts.suspended} rider${counts.suspended === 1 ? '' : 's'}`,
+          meter: Math.max(12, Math.round((counts.suspended / maxCount) * 100)),
+        },
+        {
+          id: 'inactive',
+          name: 'Inactive',
+          subtitle: 'Profiles not currently in service',
+          value: `${counts.inactive} rider${counts.inactive === 1 ? '' : 's'}`,
+          meter: Math.max(12, Math.round((counts.inactive / maxCount) * 100)),
+        },
+      ]
     }
 
     if (companyFocus === 'recency') {
-      return [...riders]
-        .sort((left, right) => {
-          const leftTime = new Date(left.updatedAt || left.createdAt || 0).getTime()
-          const rightTime = new Date(right.updatedAt || right.createdAt || 0).getTime()
-          return rightTime - leftTime
-        })
-        .slice(0, 3)
-        .map((rider) => {
-          const timestamp = new Date(rider.updatedAt || rider.createdAt || 0)
-          return {
-            id: rider.id,
-            name: formatRiderLabel(rider.id),
-            subtitle: 'Recent account update',
-            value: Number.isNaN(timestamp.getTime())
-              ? 'No timestamp'
-              : timestamp.toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                }),
-            meter: 100,
-          }
-        })
-    }
+      const now = Date.now()
+      const windows = {
+        sevenDays: 0,
+        thirtyDays: 0,
+        older: 0,
+      }
 
-    const maxExposure = riders.reduce(
-      (max, rider) => Math.max(max, Number(rider.currentBalance || 0)),
-      0
-    )
+      riders.forEach((rider) => {
+        const timestamp = new Date(rider.updatedAt || rider.createdAt || 0).getTime()
+        if (!timestamp || Number.isNaN(timestamp)) {
+          windows.older += 1
+          return
+        }
 
-    return [...riders]
-      .sort((left, right) => Number(right.currentBalance || 0) - Number(left.currentBalance || 0))
-      .slice(0, 3)
-      .map((rider) => {
-        const exposure = Number(rider.currentBalance || 0)
-        return {
-          id: rider.id,
-          name: formatRiderLabel(rider.id),
-          subtitle: 'Open rider balance',
-          value: formatCurrency(exposure),
-          meter: maxExposure ? Math.max(12, Math.round((exposure / maxExposure) * 100)) : 12,
+        const ageInDays = (now - timestamp) / (1000 * 60 * 60 * 24)
+        if (ageInDays <= 7) {
+          windows.sevenDays += 1
+        } else if (ageInDays <= 30) {
+          windows.thirtyDays += 1
+        } else {
+          windows.older += 1
         }
       })
+
+      const maxCount = Math.max(...Object.values(windows), 1)
+
+      return [
+        {
+          id: 'seven-days',
+          name: 'Updated this week',
+          subtitle: 'Fresh rider records',
+          value: `${windows.sevenDays} rider${windows.sevenDays === 1 ? '' : 's'}`,
+          meter: Math.max(12, Math.round((windows.sevenDays / maxCount) * 100)),
+        },
+        {
+          id: 'thirty-days',
+          name: 'Updated this month',
+          subtitle: 'Moderately recent changes',
+          value: `${windows.thirtyDays} rider${windows.thirtyDays === 1 ? '' : 's'}`,
+          meter: Math.max(12, Math.round((windows.thirtyDays / maxCount) * 100)),
+        },
+        {
+          id: 'older',
+          name: 'Older records',
+          subtitle: 'May need profile refresh',
+          value: `${windows.older} rider${windows.older === 1 ? '' : 's'}`,
+          meter: Math.max(12, Math.round((windows.older / maxCount) * 100)),
+        },
+      ]
+    }
+
+    const exposureBands = {
+      high: riders.filter((rider) => Number(rider.currentBalance || 0) >= 5000).length,
+      medium: riders.filter((rider) => {
+        const balance = Number(rider.currentBalance || 0)
+        return balance >= 1000 && balance < 5000
+      }).length,
+      low: riders.filter((rider) => Number(rider.currentBalance || 0) < 1000).length,
+    }
+    const maxCount = Math.max(...Object.values(exposureBands), 1)
+
+    return [
+      {
+        id: 'high',
+        name: 'High exposure',
+        subtitle: 'Ksh 5,000 and above',
+        value: `${exposureBands.high} rider${exposureBands.high === 1 ? '' : 's'}`,
+        meter: Math.max(12, Math.round((exposureBands.high / maxCount) * 100)),
+      },
+      {
+        id: 'medium',
+        name: 'Moderate exposure',
+        subtitle: 'Ksh 1,000 to Ksh 4,999',
+        value: `${exposureBands.medium} rider${exposureBands.medium === 1 ? '' : 's'}`,
+        meter: Math.max(12, Math.round((exposureBands.medium / maxCount) * 100)),
+      },
+      {
+        id: 'low',
+        name: 'Low exposure',
+        subtitle: 'Below Ksh 1,000',
+        value: `${exposureBands.low} rider${exposureBands.low === 1 ? '' : 's'}`,
+        meter: Math.max(12, Math.round((exposureBands.low / maxCount) * 100)),
+      },
+    ]
   }, [companyFocus, riders])
 
   const handleStatusChange = async (riderId, status) => {
