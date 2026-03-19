@@ -5,7 +5,7 @@ import CreditTable from '../components/CreditTable'
 import { useToast } from '../components/ToastProvider'
 import { formatCurrency } from '../lib/formatters'
 import { request } from '../lib/api'
-import { getTransactionTimestamp, mapTransactionToRow } from '../lib/mappers'
+import { getStationDisplayName, getTransactionTimestamp, mapTransactionToRow } from '../lib/mappers'
 import styles from './TransactionsPage.module.css'
 
 function formatCompactKes(value) {
@@ -13,6 +13,21 @@ function formatCompactKes(value) {
 
   const roundedThousands = Math.round(Number(value) / 1000)
   return `${roundedThousands}K`
+}
+
+function getTransactionStationLabel(transaction) {
+  if (transaction.stationName) {
+    return transaction.stationName
+  }
+
+  if (transaction.station) {
+    const stationName = getStationDisplayName(transaction.station)
+    if (stationName) {
+      return stationName
+    }
+  }
+
+  return 'Unknown station'
 }
 
 function TransactionsPage() {
@@ -105,10 +120,11 @@ function TransactionsPage() {
     const grouped = new Map()
 
     transactions.forEach((transaction) => {
-      const key = transaction.stationName || transaction.stationId || 'Unassigned'
+      const stationLabel = getTransactionStationLabel(transaction)
+      const key = transaction.stationId || transaction.station?.id || stationLabel || 'Unassigned'
       const current = grouped.get(key) || {
         key,
-        name: transaction.stationName || 'Unknown station',
+        name: stationLabel,
         count: 0,
         amount: 0,
         pending: 0,
