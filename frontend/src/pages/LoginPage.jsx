@@ -39,6 +39,9 @@ function LoginPage() {
   const [portalOptions, setPortalOptions] = useState({ companies: ['Total'], stations: [] })
   const [isLoadingPortalOptions, setIsLoadingPortalOptions] = useState(true)
   const [showAuthorityModal, setShowAuthorityModal] = useState(false)
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
+  const [showSignupPassword, setShowSignupPassword] = useState(false)
+  const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false)
   const authorityConfirmedRef = useRef(false)
 
   const selectedPortal = useMemo(
@@ -292,6 +295,13 @@ function LoginPage() {
                 ? 'Sign in with your registered account details.'
                 : 'Create your account to start using this portal.'}
             </p>
+            <div className={styles.infoAlert}>
+              <strong>Beta stage password note</strong>
+              <span>
+                Password reset is still limited during testing. Save the password you create in
+                your browser or password manager so you can sign back in easily.
+              </span>
+            </div>
           </div>
 
           <div className={styles.modeSwitch}>
@@ -323,7 +333,7 @@ function LoginPage() {
                   onChange={loginFormik.handleChange}
                   onBlur={loginFormik.handleBlur}
                   placeholder="name@example.com"
-                  autoComplete="email"
+                  autoComplete="username"
                 />
                 {loginFormik.touched.email && loginFormik.errors.email ? (
                   <span className={styles.errorText}>{loginFormik.errors.email}</span>
@@ -332,16 +342,26 @@ function LoginPage() {
 
               <label className={styles.field}>
                 Password
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={loginFormik.values.password}
-                  onChange={loginFormik.handleChange}
-                  onBlur={loginFormik.handleBlur}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                />
+                <div className={styles.passwordField}>
+                  <input
+                    id="password"
+                    name="password"
+                    type={showLoginPassword ? 'text' : 'password'}
+                    value={loginFormik.values.password}
+                    onChange={loginFormik.handleChange}
+                    onBlur={loginFormik.handleBlur}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowLoginPassword((current) => !current)}
+                    aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showLoginPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
                 {loginFormik.touched.password && loginFormik.errors.password ? (
                   <span className={styles.errorText}>{loginFormik.errors.password}</span>
                 ) : null}
@@ -536,7 +556,7 @@ function LoginPage() {
                   onChange={signupFormik.handleChange}
                   onBlur={signupFormik.handleBlur}
                   placeholder="name@example.com"
-                  autoComplete="email"
+                  autoComplete="username"
                 />
                 {signupFormik.touched.email && signupFormik.errors.email ? (
                   <span className={styles.errorText}>{signupFormik.errors.email}</span>
@@ -546,16 +566,26 @@ function LoginPage() {
               <div className={styles.fieldRow}>
                 <label className={styles.field}>
                   Password
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={signupFormik.values.password}
-                    onChange={signupFormik.handleChange}
-                    onBlur={signupFormik.handleBlur}
-                    placeholder="Create a password"
-                    autoComplete="new-password"
-                  />
+                  <div className={styles.passwordField}>
+                    <input
+                      id="password"
+                      name="password"
+                      type={showSignupPassword ? 'text' : 'password'}
+                      value={signupFormik.values.password}
+                      onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      placeholder="Create a password"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className={styles.passwordToggle}
+                      onClick={() => setShowSignupPassword((current) => !current)}
+                      aria-label={showSignupPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showSignupPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                   {signupFormik.touched.password && signupFormik.errors.password ? (
                     <span className={styles.errorText}>{signupFormik.errors.password}</span>
                   ) : null}
@@ -563,16 +593,30 @@ function LoginPage() {
 
                 <label className={styles.field}>
                   Confirm password
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={signupFormik.values.confirmPassword}
-                    onChange={signupFormik.handleChange}
-                    onBlur={signupFormik.handleBlur}
-                    placeholder="Repeat password"
-                    autoComplete="new-password"
-                  />
+                  <div className={styles.passwordField}>
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showSignupConfirmPassword ? 'text' : 'password'}
+                      value={signupFormik.values.confirmPassword}
+                      onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      placeholder="Repeat password"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className={styles.passwordToggle}
+                      onClick={() => setShowSignupConfirmPassword((current) => !current)}
+                      aria-label={
+                        showSignupConfirmPassword
+                          ? 'Hide confirmation password'
+                          : 'Show confirmation password'
+                      }
+                    >
+                      {showSignupConfirmPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                   {signupFormik.touched.confirmPassword &&
                   signupFormik.errors.confirmPassword ? (
                     <span className={styles.errorText}>
