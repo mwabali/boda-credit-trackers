@@ -107,6 +107,7 @@ function TransactionsPage() {
     transactions.forEach((transaction) => {
       const key = transaction.stationName || transaction.stationId || 'Unassigned'
       const current = grouped.get(key) || {
+        key,
         name: transaction.stationName || 'Unknown station',
         count: 0,
         amount: 0,
@@ -229,7 +230,7 @@ function TransactionsPage() {
       .sort((left, right) => right.amount - left.amount)
       .slice(0, 3)
       .map((station) => ({
-        id: station.name,
+        id: `station-${station.key}`,
         name: station.name,
         subtitle: `${station.count} requests • ${station.pending} pending`,
         value: formatCompactKes(station.amount),
