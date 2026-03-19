@@ -133,7 +133,7 @@ function TransactionsPage() {
     user?.role === 'rider'
       ? 'Review the credit entries linked to your rider account.'
       : user?.role === 'station'
-        ? 'Review incoming rider requests, approve or decline entries, and keep your station ledger moving cleanly.'
+        ? 'Review rider requests and decide what moves forward.'
         : 'Live transaction table backed by the current backend credit records.'
 
   return (
@@ -157,7 +157,7 @@ function TransactionsPage() {
           </div>
           <span className={styles.statMeta}>
             {user?.role === 'station'
-              ? 'all requests currently attached to your station'
+              ? 'requests at your station'
               : 'credit records in the ledger'}
           </span>
         </article>
@@ -176,7 +176,7 @@ function TransactionsPage() {
           </div>
           <span className={styles.statMeta}>
             {user?.role === 'station'
-              ? 'rounded request volume currently routed through this station'
+              ? 'rounded request value this month'
               : 'rounded monthly amount recorded in KES'}
           </span>
         </article>
@@ -193,7 +193,7 @@ function TransactionsPage() {
           </div>
           <span className={styles.statMeta}>
             {user?.role === 'station'
-              ? 'requests that still need a station decision or settlement'
+              ? 'requests still awaiting action'
               : 'transactions awaiting settlement'}
           </span>
         </article>

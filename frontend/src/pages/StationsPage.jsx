@@ -195,7 +195,7 @@ function StationsPage() {
         </h1>
         <p className={styles.description}>
           {user?.role === 'station'
-            ? 'Keep your branch details accurate, confirm the station is open for requests, and make sure riders are seeing the right location information.'
+            ? 'Keep your branch details current and your station ready for rider requests.'
             : 'Live station directory backed by the current backend station records.'}
         </p>
       </header>
@@ -229,8 +229,8 @@ function StationsPage() {
               </div>
               <span className={styles.statMeta}>
                 {primaryStation?.status === 'active'
-                  ? 'this branch can currently receive rider credit requests'
-                  : 'check this status with your company admin if branch access looks restricted'}
+                  ? 'ready for requests'
+                  : 'check this with your company admin'}
               </span>
             </article>
             <article className={`${styles.statCard} ${styles.statCardWide}`}>
@@ -248,8 +248,8 @@ function StationsPage() {
               </div>
               <span className={styles.statMeta}>
                 {stationLocationParts.length
-                  ? `Location on record: ${stationLocationParts.join(' • ')}`
-                  : 'Station location still needs to be confirmed for riders'}
+                  ? `Location: ${stationLocationParts.join(' • ')}`
+                  : 'Location still needs confirmation'}
               </span>
             </article>
           </>

@@ -90,7 +90,7 @@ function RidersPage() {
         </h1>
         <p className={styles.description}>
           {user?.role === 'station'
-            ? 'Review rider standing at your station, resolve conflicts, and pause access when a rider account needs intervention.'
+            ? 'Monitor rider standing and control access when needed.'
             : 'View riders currently interacting with your company fuel credit service.'}
         </p>
       </header>
@@ -109,7 +109,7 @@ function RidersPage() {
           </div>
           <span className={styles.statMeta}>
             {user?.role === 'station'
-              ? 'rider profiles currently interacting with your station'
+              ? 'riders linked to your station'
               : 'registered rider profiles'}
           </span>
         </article>
@@ -126,7 +126,7 @@ function RidersPage() {
           </div>
           <span className={styles.statMeta}>
             {user?.role === 'station'
-              ? 'accounts that can currently submit or fulfil requests'
+              ? 'accounts currently clear to request'
               : 'currently active riders'}
           </span>
         </article>
@@ -143,7 +143,7 @@ function RidersPage() {
           </div>
           <span className={styles.statMeta}>
             {user?.role === 'station'
-              ? 'open rider balances currently tied to your station'
+              ? 'open rider balances at your station'
               : 'outstanding rider balances'}
           </span>
         </article>
