@@ -1,27 +1,80 @@
-# Boda Credit Tracker Frontend
+# BodaCredit Frontend
 
-This is the Vite + React frontend for Boda Credit Tracker. It is now fully wired to the backend API and no longer represents only a static scaffold.
+This is the Vite + React frontend for BodaCredit. It is no longer a static shell or a single-company prototype. The frontend now supports a role-based, multi-company product experience for company admins, station managers, and riders.
+
+## Frontend Purpose
+
+The frontend is responsible for:
+- rendering role-specific navigation and protected routes
+- presenting company, station, and rider workflows differently
+- surfacing notifications, approval states, and service-health summaries
+- giving each account type a focused view of only the data relevant to them
 
 ## Current Frontend Scope
 
-The frontend currently supports:
+### Shared capabilities
+- role-aware routing
+- login and sign-up portal flow
+- profile page for all roles
+- notifications page for all roles
+- branded toast feedback for errors and successes
+- unread notification badge in sidebar navigation
 
-- Dashboard summary cards and quick-credit workflow
-- Riders registry and rider status updates
-- Station branch management, station creation, and station status updates
-- Credit transaction history and transaction status updates
-- Add Credit flow for both existing and new riders
-- Company-aware station naming under `Total`
+### Company account experience
+- management-focused dashboard
+- company rider portfolio analytics
+- company transaction flow analytics
+- company station comparison modules
+- company station creation and editing
+- company approval of pending station manager access requests
 
-## Routes
+### Station account experience
+- station-specific dashboard
+- approval-queue style transaction view
+- rider-oversight view
+- notifications for incoming rider credit requests
+- no access to other stations in the same company
 
+### Rider account experience
+- mobile-friendly dashboard and request flow
+- request credit page
+- personal activity tracking
+- personal notification stream for request outcomes
+
+## Current Routes
+
+The route set is now role-aware. The same route path can render differently depending on the signed-in account type.
+
+Main routes include:
+- `/login`
 - `/home`
 - `/riders`
 - `/stations`
 - `/transactions`
 - `/add-credit`
+- `/notifications`
+- `/profile`
 
-`/` and unknown routes redirect to `/home`.
+The frontend redirects and guards access based on the current role and approval state.
+
+## UI Approach
+
+The frontend uses a shared visual system, but account types no longer share identical page structures.
+
+Examples:
+- company pages are management dashboards rather than row-level operational tables
+- station pages are operational and approval-oriented
+- rider pages are simplified and mobile-aware
+
+This was an intentional design direction so the product feels role-correct instead of like one reused admin panel.
+
+## Frontend Project Structure
+
+- `src/assets`: logos and UI icons
+- `src/auth`: auth provider and protected route logic
+- `src/components`: reusable UI elements and shared forms
+- `src/lib`: API helpers and formatting utilities
+- `src/pages`: route-level account experiences
 
 ## Local Run
 
@@ -31,7 +84,7 @@ Install dependencies:
 npm install
 ```
 
-Run the frontend:
+Run the development server:
 
 ```bash
 npm run dev
@@ -45,74 +98,41 @@ Set the backend API base URL in `frontend/.env.local`:
 VITE_API_BASE_URL=http://localhost:5050
 ```
 
-For deployed frontend on Vercel, this should point to your Render backend URL instead.
+For Vercel deployment, this should point to the live Render backend.
 
-## Project Structure
+## Build
 
-- `src/assets`: logos and metric icons
-- `src/components`: reusable UI elements
-- `src/layout`: shared app layout
-- `src/lib`: API helpers, mappers, and formatters
-- `src/pages`: route-level pages
-
-## Main Frontend Behaviors
-
-### Dashboard
-
-- Loads riders, stations, transactions, and summary stats from the API
-- Includes a quick-entry credit form
-- Shows recent transactions and station directory snapshot
-
-### Riders Page
-
-- Loads live riders from the backend
-- Displays live debt totals based on outstanding transactions
-- Allows rider status toggling
-
-### Stations Page
-
-- Loads live station records
-- Supports adding a new station branch
-- Uses a collapsible station form
-- Shows management phonelines
-- Allows station status toggling
-
-### Transactions Page
-
-- Loads live transactions and dashboard stats
-- Displays amount, litres, status, and transaction date
-- Allows transaction status updates
-
-### Add Credit
-
-- Supports:
-  - existing rider credit entry
-  - new rider creation + immediate credit entry
-- Blocks submission when no stations exist
-
-## Styling
-
-- CSS Modules are used throughout the frontend
-- Shared visual language includes:
-  - sidebar navigation
-  - metric cards with icons
-  - color-coded status tags/selects
+```bash
+npm run build
+```
 
 ## Deployment Notes
 
-- Vercel should use `frontend/` as the root directory
+Recommended Vercel setup:
+- Root directory: `frontend`
 - Framework preset: `Vite`
 - Build command: `npm run build`
 - Output directory: `dist`
 
-Required Vercel environment variable:
+Required environment variable:
 
 ```env
 VITE_API_BASE_URL=https://your-render-backend-url.onrender.com
 ```
 
-## Notes For Future Work
+## Auth Note
 
-- The frontend currently expects the backend API to remain the source of truth
-- Supabase should stay behind the backend rather than being called directly from the frontend
-- Additional auth/role separation can be layered in later without replacing the current page structure
+The frontend currently works with the Flask-managed role-based auth layer rather than Supabase Auth.
+
+This is intentional for the current beta/testing phase because it keeps account setup and testing friction low while still allowing:
+- protected routes
+- role-aware navigation
+- approval states
+- tenant-scoped UI experiences
+
+## Frontend-Focused Future Improvements
+
+1. Add richer visual analytics for company users, including line and trend charts.
+2. Replace native selects in a few mobile-heavy flows with more resilient custom combobox components.
+3. Add deeper loading skeletons and optimistic UI treatment for long-running actions.
+4. Introduce accessibility and keyboard-navigation refinements across the role-based dashboards.
