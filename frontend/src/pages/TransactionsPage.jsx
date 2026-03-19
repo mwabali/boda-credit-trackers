@@ -363,8 +363,8 @@ function TransactionsPage() {
       </section>
 
       {user?.role === 'company' ? (
-        <section className={styles.analyticsGrid} aria-label="Transaction analytics">
-          <article className={styles.insightPanel}>
+        <section className={`${styles.analyticsGrid} ${styles.companyAnalyticsGrid}`} aria-label="Transaction analytics">
+          <article className={`${styles.insightPanel} ${styles.flowPanel}`}>
             <div className={styles.panelHeader}>
               <div>
                 <p className={styles.panelEyebrow}>Flow health</p>
@@ -397,7 +397,7 @@ function TransactionsPage() {
             </div>
           </article>
 
-          <article className={styles.insightPanel}>
+          <article className={`${styles.insightPanel} ${styles.signalPanel}`}>
             <div className={styles.panelHeader}>
               <div>
                 <p className={styles.panelEyebrow}>Live view</p>

@@ -10,6 +10,10 @@ function formatRiderId(id) {
   return `R${String(id).padStart(3, '0')}`
 }
 
+function formatRiderLabel(id) {
+  return `Rider ${formatRiderId(id)}`
+}
+
 function RidersPage() {
   const { user } = useAuth()
   const { showError, showSuccess } = useToast()
@@ -112,7 +116,7 @@ function RidersPage() {
         .slice(0, 3)
         .map((rider) => ({
           id: rider.id,
-          name: rider.name,
+          name: formatRiderLabel(rider.id),
           subtitle: formatStatus(rider.status),
           value: formatCurrency(rider.currentBalance),
           meter: rider.status === 'suspended' ? 100 : rider.status === 'inactive' ? 60 : 25,
@@ -131,8 +135,8 @@ function RidersPage() {
           const timestamp = new Date(rider.updatedAt || rider.createdAt || 0)
           return {
             id: rider.id,
-            name: rider.name,
-            subtitle: rider.licensePlate,
+            name: formatRiderLabel(rider.id),
+            subtitle: 'Recent account update',
             value: Number.isNaN(timestamp.getTime())
               ? 'No timestamp'
               : timestamp.toLocaleDateString('en-GB', {
@@ -157,8 +161,8 @@ function RidersPage() {
         const exposure = Number(rider.currentBalance || 0)
         return {
           id: rider.id,
-          name: rider.name,
-          subtitle: rider.licensePlate,
+          name: formatRiderLabel(rider.id),
+          subtitle: 'Open rider balance',
           value: formatCurrency(exposure),
           meter: maxExposure ? Math.max(12, Math.round((exposure / maxExposure) * 100)) : 12,
         }
@@ -255,7 +259,7 @@ function RidersPage() {
       </section>
 
       {user?.role === 'company' ? (
-        <section className={styles.analyticsGrid} aria-label="Rider analytics">
+        <section className={`${styles.analyticsGrid} ${styles.companyAnalyticsGrid}`} aria-label="Rider analytics">
           <article className={styles.insightPanel}>
             <div className={styles.panelHeader}>
               <div>
@@ -285,7 +289,7 @@ function RidersPage() {
             </div>
           </article>
 
-          <article className={styles.insightPanel}>
+          <article className={`${styles.insightPanel} ${styles.signalPanel}`}>
             <div className={styles.panelHeader}>
               <div>
                 <p className={styles.panelEyebrow}>Live view</p>
