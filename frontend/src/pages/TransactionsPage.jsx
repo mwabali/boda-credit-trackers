@@ -19,6 +19,7 @@ function TransactionsPage() {
   const { showError, showSuccess } = useToast()
   const [transactions, setTransactions] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
+  const [companyFocus, setCompanyFocus] = useState('stations')
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isDeletingTransaction, setIsDeletingTransaction] = useState(false)
@@ -74,6 +75,167 @@ function TransactionsPage() {
     [currentMonthAmount]
   )
 
+  const averageRequestValue = useMemo(() => {
+    if (!transactions.length) {
+      return 0
+    }
+
+    const total = transactions.reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0)
+    return total / transactions.length
+  }, [transactions])
+
+  const settledValue = useMemo(
+    () =>
+      transactions.reduce((sum, transaction) => {
+        return transaction.status === 'paid' ? sum + Number(transaction.amount || 0) : sum
+      }, 0),
+    [transactions]
+  )
+
+  const approvedOrPaidCount = useMemo(
+    () =>
+      transactions.filter((transaction) =>
+        transaction.status === 'approved' || transaction.status === 'paid'
+      ).length,
+    [transactions]
+  )
+
+  const stationBreakdown = useMemo(() => {
+    const grouped = new Map()
+
+    transactions.forEach((transaction) => {
+      const key = transaction.stationName || transaction.stationId || 'Unassigned'
+      const current = grouped.get(key) || {
+        name: transaction.stationName || 'Unknown station',
+        count: 0,
+        amount: 0,
+        pending: 0,
+        approvedOrPaid: 0,
+      }
+
+      current.count += 1
+      current.amount += Number(transaction.amount || 0)
+      if (transaction.status === 'pending') {
+        current.pending += 1
+      }
+      if (transaction.status === 'approved' || transaction.status === 'paid') {
+        current.approvedOrPaid += 1
+      }
+
+      grouped.set(key, current)
+    })
+
+    return [...grouped.values()]
+  }, [transactions])
+
+  const transactionFocusSummary = useMemo(() => {
+    switch (companyFocus) {
+      case 'status':
+        return {
+          label: 'Status flow',
+          description: 'Shows where requests are sitting in the operating flow right now.',
+        }
+      case 'value':
+        return {
+          label: 'Request size bands',
+          description: 'Helps you see whether demand is clustering around smaller or larger tickets.',
+        }
+      case 'stations':
+      default:
+        return {
+          label: 'Station contribution',
+          description: 'Compares how much transaction volume each station is carrying.',
+        }
+    }
+  }, [companyFocus])
+
+  const transactionFocusRows = useMemo(() => {
+    if (companyFocus === 'status') {
+      const rows = [
+        {
+          id: 'pending',
+          name: 'Pending',
+          subtitle: 'Awaiting station action',
+          value: `${stats.pending}`,
+          meter: transactions.length ? Math.max(10, Math.round((stats.pending / transactions.length) * 100)) : 0,
+        },
+        {
+          id: 'approved',
+          name: 'Approved / Paid',
+          subtitle: 'Moved forward successfully',
+          value: `${approvedOrPaidCount}`,
+          meter: transactions.length
+            ? Math.max(10, Math.round((approvedOrPaidCount / transactions.length) * 100))
+            : 0,
+        },
+        {
+          id: 'cancelled',
+          name: 'Declined',
+          subtitle: 'Stopped before fulfilment',
+          value: `${transactions.filter((transaction) => transaction.status === 'cancelled').length}`,
+          meter: transactions.length
+            ? Math.max(
+                10,
+                Math.round(
+                  (transactions.filter((transaction) => transaction.status === 'cancelled').length /
+                    transactions.length) *
+                    100
+                )
+              )
+            : 0,
+        },
+      ]
+
+      return rows
+    }
+
+    if (companyFocus === 'value') {
+      const low = transactions.filter((transaction) => Number(transaction.amount || 0) < 3000).length
+      const mid = transactions.filter((transaction) => {
+        const amount = Number(transaction.amount || 0)
+        return amount >= 3000 && amount < 8000
+      }).length
+      const high = transactions.filter((transaction) => Number(transaction.amount || 0) >= 8000).length
+
+      return [
+        {
+          id: 'low',
+          name: 'Below Ksh 3,000',
+          subtitle: 'Smaller routine requests',
+          value: `${low}`,
+          meter: transactions.length ? Math.max(10, Math.round((low / transactions.length) * 100)) : 0,
+        },
+        {
+          id: 'mid',
+          name: 'Ksh 3,000 to 7,999',
+          subtitle: 'Mid-ticket requests',
+          value: `${mid}`,
+          meter: transactions.length ? Math.max(10, Math.round((mid / transactions.length) * 100)) : 0,
+        },
+        {
+          id: 'high',
+          name: 'Ksh 8,000 and above',
+          subtitle: 'Higher exposure requests',
+          value: `${high}`,
+          meter: transactions.length ? Math.max(10, Math.round((high / transactions.length) * 100)) : 0,
+        },
+      ]
+    }
+
+    const maxAmount = stationBreakdown.reduce((max, station) => Math.max(max, station.amount), 0)
+
+    return [...stationBreakdown]
+      .sort((left, right) => right.amount - left.amount)
+      .slice(0, 3)
+      .map((station) => ({
+        id: station.name,
+        name: station.name,
+        subtitle: `${station.count} requests • ${station.pending} pending`,
+        value: formatCompactKes(station.amount),
+        meter: maxAmount ? Math.max(12, Math.round((station.amount / maxAmount) * 100)) : 12,
+      }))
+  }, [approvedOrPaidCount, companyFocus, stationBreakdown, stats.pending, transactions])
+
   const handleStatusChange = async (transactionId, status) => {
     try {
       setIsUpdatingStatus(true)
@@ -128,13 +290,13 @@ function TransactionsPage() {
       ? 'My Credit Activity'
       : user?.role === 'station'
         ? 'Approval Queue'
-        : 'Credit Transaction Log'
+        : 'Transaction Performance'
   const pageDescription =
     user?.role === 'rider'
       ? 'Review the credit entries linked to your rider account.'
       : user?.role === 'station'
         ? 'Review rider requests and decide what moves forward.'
-        : 'Live transaction table backed by the current backend credit records.'
+        : 'Monitor company-wide request flow, settlement quality, and station load distribution.'
 
   return (
     <main className={styles.page}>
@@ -199,8 +361,100 @@ function TransactionsPage() {
         </article>
       </section>
 
-      {isLoading ? <p className={styles.stateMessage}>Loading transactions...</p> : null}
-      {!isLoading && !error ? (
+      {user?.role === 'company' ? (
+        <section className={styles.analyticsGrid} aria-label="Transaction analytics">
+          <article className={styles.insightPanel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelEyebrow}>Flow health</p>
+                <h2 className={styles.panelTitle}>Settlement posture</h2>
+              </div>
+              <span className={styles.panelBadge}>{transactions.length} requests</span>
+            </div>
+
+            <div className={styles.panelStatsGrid}>
+              <div className={styles.panelStat}>
+                <span>Approval conversion</span>
+                <strong>
+                  {transactions.length
+                    ? `${Math.round((approvedOrPaidCount / transactions.length) * 100)}%`
+                    : '0%'}
+                </strong>
+              </div>
+              <div className={styles.panelStat}>
+                <span>Settled value</span>
+                <strong>{formatCompactKes(settledValue)}</strong>
+              </div>
+              <div className={styles.panelStat}>
+                <span>Avg request</span>
+                <strong>{formatCurrency(averageRequestValue)}</strong>
+              </div>
+              <div className={styles.panelStat}>
+                <span>Active stations</span>
+                <strong>{stationBreakdown.length}</strong>
+              </div>
+            </div>
+          </article>
+
+          <article className={styles.insightPanel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelEyebrow}>Live view</p>
+                <h2 className={styles.panelTitle}>Request signals</h2>
+              </div>
+            </div>
+
+            <div className={styles.toggleRow} role="tablist" aria-label="Transaction analytics focus">
+              {[
+                ['stations', 'Stations'],
+                ['status', 'Status'],
+                ['value', 'Value bands'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={companyFocus === value ? styles.toggleActive : styles.toggleButton}
+                  onClick={() => setCompanyFocus(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.focusSummary}>
+              <div>
+                <p className={styles.focusEyebrow}>Now tracking</p>
+                <h3 className={styles.focusTitle}>{transactionFocusSummary.label}</h3>
+                <p className={styles.focusDescription}>{transactionFocusSummary.description}</p>
+              </div>
+            </div>
+
+            <div className={styles.focusList}>
+              {transactionFocusRows.length ? (
+                transactionFocusRows.map((row) => (
+                  <article key={`${companyFocus}-${row.id}`} className={styles.focusRow}>
+                    <div className={styles.focusRowHeader}>
+                      <div>
+                        <h4>{row.name}</h4>
+                        <p>{row.subtitle}</p>
+                      </div>
+                      <strong>{row.value}</strong>
+                    </div>
+                    <div className={styles.meterTrack}>
+                      <span className={styles.meterFill} style={{ width: `${row.meter}%` }} />
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <p className={styles.stateMessage}>No transaction analytics available yet.</p>
+              )}
+            </div>
+          </article>
+        </section>
+      ) : null}
+
+      {user?.role !== 'company' && isLoading ? <p className={styles.stateMessage}>Loading transactions...</p> : null}
+      {user?.role !== 'company' && !error ? (
         <CreditTable
           transactions={tableTransactions}
           showPhone={false}

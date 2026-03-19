@@ -16,6 +16,7 @@ function RidersPage() {
   const [riders, setRiders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [companyFocus, setCompanyFocus] = useState('exposure')
   const [error, setError] = useState('')
 
   const loadRiders = useCallback(async () => {
@@ -60,6 +61,110 @@ function RidersPage() {
     [riders]
   )
 
+  const watchlistRiders = useMemo(
+    () => riders.filter((rider) => rider.status === 'suspended' || rider.status === 'inactive').length,
+    [riders]
+  )
+
+  const averageExposure = useMemo(
+    () => (riders.length ? totalDebt / riders.length : 0),
+    [riders.length, totalDebt]
+  )
+
+  const highestExposure = useMemo(
+    () => riders.reduce((max, rider) => Math.max(max, Number(rider.currentBalance || 0)), 0),
+    [riders]
+  )
+
+  const riderFocusSummary = useMemo(() => {
+    switch (companyFocus) {
+      case 'standing':
+        return {
+          label: 'Access standing',
+          description: 'Highlights riders who may need attention before they create friction in the service.',
+        }
+      case 'recency':
+        return {
+          label: 'Recently updated riders',
+          description: 'Tracks which rider records have changed most recently across your company footprint.',
+        }
+      case 'exposure':
+      default:
+        return {
+          label: 'Highest rider exposure',
+          description: 'Ranks riders by open balance so you can quickly see where portfolio risk is concentrated.',
+        }
+    }
+  }, [companyFocus])
+
+  const companyFocusRows = useMemo(() => {
+    if (companyFocus === 'standing') {
+      const priority = { suspended: 0, inactive: 1, active: 2 }
+      return [...riders]
+        .sort((left, right) => {
+          const priorityDelta = (priority[left.status] ?? 3) - (priority[right.status] ?? 3)
+          if (priorityDelta !== 0) {
+            return priorityDelta
+          }
+
+          return Number(right.currentBalance || 0) - Number(left.currentBalance || 0)
+        })
+        .slice(0, 3)
+        .map((rider) => ({
+          id: rider.id,
+          name: rider.name,
+          subtitle: formatStatus(rider.status),
+          value: formatCurrency(rider.currentBalance),
+          meter: rider.status === 'suspended' ? 100 : rider.status === 'inactive' ? 60 : 25,
+        }))
+    }
+
+    if (companyFocus === 'recency') {
+      return [...riders]
+        .sort((left, right) => {
+          const leftTime = new Date(left.updatedAt || left.createdAt || 0).getTime()
+          const rightTime = new Date(right.updatedAt || right.createdAt || 0).getTime()
+          return rightTime - leftTime
+        })
+        .slice(0, 3)
+        .map((rider) => {
+          const timestamp = new Date(rider.updatedAt || rider.createdAt || 0)
+          return {
+            id: rider.id,
+            name: rider.name,
+            subtitle: rider.licensePlate,
+            value: Number.isNaN(timestamp.getTime())
+              ? 'No timestamp'
+              : timestamp.toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                }),
+            meter: 100,
+          }
+        })
+    }
+
+    const maxExposure = riders.reduce(
+      (max, rider) => Math.max(max, Number(rider.currentBalance || 0)),
+      0
+    )
+
+    return [...riders]
+      .sort((left, right) => Number(right.currentBalance || 0) - Number(left.currentBalance || 0))
+      .slice(0, 3)
+      .map((rider) => {
+        const exposure = Number(rider.currentBalance || 0)
+        return {
+          id: rider.id,
+          name: rider.name,
+          subtitle: rider.licensePlate,
+          value: formatCurrency(exposure),
+          meter: maxExposure ? Math.max(12, Math.round((exposure / maxExposure) * 100)) : 12,
+        }
+      })
+  }, [companyFocus, riders])
+
   const handleStatusChange = async (riderId, status) => {
     try {
       setIsUpdatingStatus(true)
@@ -86,12 +191,12 @@ function RidersPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>
-          {user?.role === 'station' ? 'Rider Oversight' : 'Riders Management'}
+          {user?.role === 'station' ? 'Rider Oversight' : 'Rider Portfolio'}
         </h1>
         <p className={styles.description}>
           {user?.role === 'station'
             ? 'Monitor rider standing and control access when needed.'
-            : 'View riders currently interacting with your company fuel credit service.'}
+            : 'Track rider health, exposure, and access quality across your company service.'}
         </p>
       </header>
 
@@ -149,6 +254,95 @@ function RidersPage() {
         </article>
       </section>
 
+      {user?.role === 'company' ? (
+        <section className={styles.analyticsGrid} aria-label="Rider analytics">
+          <article className={styles.insightPanel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelEyebrow}>Rider health</p>
+                <h2 className={styles.panelTitle}>Portfolio posture</h2>
+              </div>
+              <span className={styles.panelBadge}>{riders.length} riders</span>
+            </div>
+
+            <div className={styles.panelStatsGrid}>
+              <div className={styles.panelStat}>
+                <span>Clear to fuel</span>
+                <strong>{riders.length ? `${Math.round((activeRiders / riders.length) * 100)}%` : '0%'}</strong>
+              </div>
+              <div className={styles.panelStat}>
+                <span>Watchlist riders</span>
+                <strong>{watchlistRiders}</strong>
+              </div>
+              <div className={styles.panelStat}>
+                <span>Avg exposure</span>
+                <strong>{formatCurrency(averageExposure)}</strong>
+              </div>
+              <div className={styles.panelStat}>
+                <span>Peak exposure</span>
+                <strong>{formatCurrency(highestExposure)}</strong>
+              </div>
+            </div>
+          </article>
+
+          <article className={styles.insightPanel}>
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.panelEyebrow}>Live view</p>
+                <h2 className={styles.panelTitle}>Rider signals</h2>
+              </div>
+            </div>
+
+            <div className={styles.toggleRow} role="tablist" aria-label="Rider analytics focus">
+              {[
+                ['exposure', 'Exposure'],
+                ['standing', 'Standing'],
+                ['recency', 'Recency'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={companyFocus === value ? styles.toggleActive : styles.toggleButton}
+                  onClick={() => setCompanyFocus(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.focusSummary}>
+              <div>
+                <p className={styles.focusEyebrow}>Now tracking</p>
+                <h3 className={styles.focusTitle}>{riderFocusSummary.label}</h3>
+                <p className={styles.focusDescription}>{riderFocusSummary.description}</p>
+              </div>
+            </div>
+
+            <div className={styles.focusList}>
+              {companyFocusRows.length ? (
+                companyFocusRows.map((row) => (
+                  <article key={`${companyFocus}-${row.id}`} className={styles.focusRow}>
+                    <div className={styles.focusRowHeader}>
+                      <div>
+                        <h4>{row.name}</h4>
+                        <p>{row.subtitle}</p>
+                      </div>
+                      <strong>{row.value}</strong>
+                    </div>
+                    <div className={styles.meterTrack}>
+                      <span className={styles.meterFill} style={{ width: `${row.meter}%` }} />
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <p className={styles.stateMessage}>No rider analytics available yet.</p>
+              )}
+            </div>
+          </article>
+        </section>
+      ) : null}
+
+      {user?.role !== 'company' ? (
       <section className={styles.tableShell} aria-label="Riders list">
         {isLoading ? <p className={styles.stateMessage}>Loading riders...</p> : null}
         {!isLoading && !error && !riderRows.length ? (
@@ -210,6 +404,7 @@ function RidersPage() {
           </table>
         ) : null}
       </section>
+      ) : null}
     </main>
   )
 }

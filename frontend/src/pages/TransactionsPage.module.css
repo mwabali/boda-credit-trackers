@@ -102,6 +102,187 @@
   line-height: 1.32;
 }
 
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.insightPanel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 237, 0.72));
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panelEyebrow,
+.focusEyebrow {
+  margin: 0 0 0.18rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.panelTitle,
+.focusTitle {
+  margin: 0;
+  color: #111827;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.panelBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.panelStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.panelStat {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.panelStat span {
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panelStat strong {
+  color: #111827;
+  font-size: 1.55rem;
+  line-height: 1.05;
+}
+
+.toggleRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.toggleButton,
+.toggleActive {
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.toggleButton {
+  border: 1px solid #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.toggleActive {
+  border: 1px solid #d97706;
+  background: linear-gradient(135deg, #d97706, #c2410c);
+  color: #fff7ed;
+  box-shadow: 0 14px 28px rgba(180, 83, 9, 0.18);
+}
+
+.focusSummary {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.focusDescription {
+  margin: 0.3rem 0 0;
+  color: #4b5563;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.focusList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.focusRow {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.focusRowHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.focusRowHeader h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.1rem;
+}
+
+.focusRowHeader p {
+  margin: 0.18rem 0 0;
+  color: #6b7280;
+  font-size: 0.86rem;
+}
+
+.focusRowHeader strong {
+  color: #9a3412;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.meterTrack {
+  width: 100%;
+  height: 0.56rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+.meterFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #fb923c, #ea580c);
+}
+
 .stateMessage,
 .errorMessage {
   margin: 0;
@@ -252,7 +433,8 @@
 }
 
 @media (max-width: 900px) {
-  .statsGrid {
+  .statsGrid,
+  .analyticsGrid {
     grid-template-columns: 1fr;
   }
 }
@@ -279,6 +461,14 @@
     min-height: 7.55rem;
     grid-template-rows: minmax(2.25rem, auto) auto auto;
     gap: 0.22rem;
+  }
+
+  .insightPanel {
+    padding: 0.95rem;
+  }
+
+  .panelStatsGrid {
+    grid-template-columns: 1fr;
   }
 
   .statCard h2 {
@@ -319,6 +509,11 @@
 
   .table {
     min-width: 700px;
+  }
+
+  .focusRowHeader {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .table th,
