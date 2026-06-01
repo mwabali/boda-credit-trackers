@@ -1,0 +1,17 @@
+ALTER TABLE riders
+  ALTER COLUMN status DROP DEFAULT,
+  ALTER COLUMN status TYPE VARCHAR(20) USING status::TEXT,
+  ALTER COLUMN status SET DEFAULT 'active';
+
+ALTER TABLE stations
+  ALTER COLUMN status DROP DEFAULT,
+  ALTER COLUMN status TYPE VARCHAR(20) USING status::TEXT,
+  ALTER COLUMN status SET DEFAULT 'active';
+
+ALTER TABLE transactions
+  ALTER COLUMN status DROP DEFAULT,
+  ALTER COLUMN status TYPE VARCHAR(20) USING status::TEXT,
+  ALTER COLUMN status SET DEFAULT 'pending',
+  ALTER COLUMN payment_method DROP DEFAULT,
+  ALTER COLUMN payment_method TYPE VARCHAR(30) USING payment_method::TEXT,
+  ALTER COLUMN payment_method SET DEFAULT 'credit';

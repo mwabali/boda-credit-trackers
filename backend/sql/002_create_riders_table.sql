@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS riders (
   national_id VARCHAR(50),
   credit_limit NUMERIC(12, 2) NOT NULL DEFAULT 100000.00,
   current_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
-  status rider_status NOT NULL DEFAULT 'active',
+  status VARCHAR(20) NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'suspended', 'inactive')),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

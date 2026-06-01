@@ -6,8 +6,10 @@ CREATE TABLE IF NOT EXISTS transactions (
   fuel_type VARCHAR(20) NOT NULL DEFAULT 'petrol',
   liters NUMERIC(8, 2),
   price_per_liter NUMERIC(8, 2),
-  status transaction_status NOT NULL DEFAULT 'pending',
-  payment_method payment_method NOT NULL DEFAULT 'credit',
+  status VARCHAR(20) NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'approved', 'paid', 'cancelled')),
+  payment_method VARCHAR(30) NOT NULL DEFAULT 'credit'
+    CHECK (payment_method IN ('credit', 'cash', 'mobile_money', 'card')),
   payment_date TIMESTAMP,
   receipt_number VARCHAR(50) UNIQUE,
   notes TEXT,

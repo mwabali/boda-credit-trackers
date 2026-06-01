@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS stations (
   location VARCHAR(200) NOT NULL,
   manager_name VARCHAR(100),
   manager_phone VARCHAR(20),
-  status station_status NOT NULL DEFAULT 'active',
+  status VARCHAR(20) NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'closed', 'maintenance')),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
