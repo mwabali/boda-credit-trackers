@@ -69,7 +69,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    CORS(app, max_age=86400)
+    CORS(app, origins=app.config["CORS_ORIGINS"], max_age=86400)
     init_db(app)
     import models  # noqa: F401
 
@@ -91,12 +91,27 @@ def create_app():
                 "ALTER TABLE stations ADD COLUMN company_id INTEGER",
             ) or schema_changed
 
+        if _table_exists(db, "riders"):
+            schema_changed = _ensure_column(
+                db,
+                "riders",
+                "sacco_id",
+                "ALTER TABLE riders ADD COLUMN sacco_id INTEGER",
+            ) or schema_changed
+
         if _table_exists(db, "auth_accounts"):
             schema_changed = _ensure_column(
                 db,
                 "auth_accounts",
                 "company_id",
                 "ALTER TABLE auth_accounts ADD COLUMN company_id INTEGER",
+            ) or schema_changed
+
+            schema_changed = _ensure_column(
+                db,
+                "auth_accounts",
+                "sacco_id",
+                "ALTER TABLE auth_accounts ADD COLUMN sacco_id INTEGER",
             ) or schema_changed
 
         if _table_exists(db, "auth_accounts"):
@@ -183,11 +198,16 @@ def create_app():
         else:
             db.session.commit()
 
+        from app.utils.station_bootstrap import ensure_default_station_directory
+
+        ensure_default_station_directory()
+
     from app.routes.auth import auth_bp
     from app.routes.health import health_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.notifications import notifications_bp
     from app.routes.riders import riders_bp
+    from app.routes.saccos import saccos_bp
     from app.routes.stations import stations_bp
     from app.routes.transactions import transactions_bp
 
@@ -196,6 +216,7 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(riders_bp)
+    app.register_blueprint(saccos_bp)
     app.register_blueprint(stations_bp)
     app.register_blueprint(transactions_bp)
 

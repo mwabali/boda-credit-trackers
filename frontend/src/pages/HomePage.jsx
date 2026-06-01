@@ -45,6 +45,7 @@ function HomePage() {
     user?.role !== 'rider' && user?.companyName ? `.${user.companyName}` : ''
   const [riders, setRiders] = useState([])
   const [stations, setStations] = useState([])
+  const [creditStations, setCreditStations] = useState([])
   const [transactions, setTransactions] = useState([])
   const [stats, setStats] = useState({ total: 0, pending: 0, paid: 0 })
   const [analytics, setAnalytics] = useState({
@@ -67,6 +68,7 @@ function HomePage() {
   const resetDashboardState = useCallback(() => {
     setRiders([])
     setStations([])
+    setCreditStations([])
     setTransactions([])
     setStats({ total: 0, pending: 0, paid: 0 })
     setAnalytics({
@@ -94,10 +96,14 @@ function HomePage() {
       setIsLoading(true)
       setError('')
 
-      const dashboardPayload = await request('/dashboard')
+      const [dashboardPayload, formOptionsPayload] = await Promise.all([
+        request('/dashboard'),
+        user?.role === 'rider' ? request('/dashboard/form-options') : Promise.resolve(null),
+      ])
 
       setRiders(dashboardPayload.data?.riders || [])
       setStations(dashboardPayload.data?.stations || [])
+      setCreditStations(formOptionsPayload?.data?.stations || [])
       setTransactions(dashboardPayload.data?.transactions || [])
       setStats(dashboardPayload.data?.stats || { total: 0, pending: 0, paid: 0 })
       setAnalytics(
@@ -119,7 +125,7 @@ function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }, [resetDashboardState, showError, user?.id])
+  }, [resetDashboardState, showError, user?.id, user?.role])
 
   useEffect(() => {
     loadDashboardData()
@@ -205,6 +211,15 @@ function HomePage() {
         companyMark: '',
         description:
           'Request fuel credit, track your balance, and review recent activity from your phone.',
+      }
+    }
+
+    if (role === 'sacco') {
+      return {
+        title: 'SACCO Dashboard',
+        companyMark: '',
+        description:
+          'Monitor member riders, repayment history, outstanding balances, and fuel-credit activity.',
       }
     }
 
@@ -575,7 +590,7 @@ function HomePage() {
               </div>
               <CreditForm
                 riders={riders}
-                stations={stations}
+                stations={creditStations}
                 onSubmit={handleQuickCredit}
                 submitLabel="Submit Request"
                 isSubmitting={isSubmitting}

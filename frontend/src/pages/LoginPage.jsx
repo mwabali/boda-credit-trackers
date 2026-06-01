@@ -10,6 +10,12 @@ import styles from './LoginPage.module.css'
 
 const PORTALS = [
   {
+    role: 'sacco',
+    eyebrow: 'SACCO portal',
+    title: 'SACCO oversight',
+    description: 'Monitor member riders, balances, repayments, and fuel-credit activity.',
+  },
+  {
     role: 'company',
     eyebrow: 'Company portal',
     title: 'Company access',
@@ -36,7 +42,7 @@ function LoginPage() {
   const location = useLocation()
   const [activeRole, setActiveRole] = useState('company')
   const [activeMode, setActiveMode] = useState('login')
-  const [portalOptions, setPortalOptions] = useState({ companies: ['Total'], stations: [] })
+  const [portalOptions, setPortalOptions] = useState({ companies: ['Total'], saccos: [], stations: [] })
   const [isLoadingPortalOptions, setIsLoadingPortalOptions] = useState(true)
   const [showAuthorityModal, setShowAuthorityModal] = useState(false)
   const [showLoginPassword, setShowLoginPassword] = useState(false)
@@ -57,7 +63,7 @@ function LoginPage() {
         setIsLoadingPortalOptions(true)
         const payload = await request('/auth/portal-options')
         if (isMounted) {
-          setPortalOptions(payload.data || { companies: ['Total'], stations: [] })
+          setPortalOptions(payload.data || { companies: ['Total'], saccos: [], stations: [] })
         }
       } catch (error) {
         if (isMounted) {
@@ -114,6 +120,11 @@ function LoginPage() {
     initialValues: {
       fullName: '',
       companyName: '',
+      saccoName: '',
+      saccoRegistrationNumber: '',
+      saccoContactPhone: '',
+      saccoLocation: '',
+      saccoId: '',
       stationName: '',
       stationLocation: '',
       email: '',
@@ -128,6 +139,11 @@ function LoginPage() {
       companyName: Yup.string().when([], {
         is: () => activeRole === 'station' || activeRole === 'company',
         then: (schema) => schema.required('Company is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      saccoName: Yup.string().when([], {
+        is: () => activeRole === 'sacco',
+        then: (schema) => schema.trim().required('SACCO name is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
       stationName: Yup.string().when([], {
@@ -184,6 +200,13 @@ function LoginPage() {
           payload.authorityConfirmed = true
         }
 
+        if (activeRole === 'sacco') {
+          payload.saccoName = values.saccoName
+          payload.saccoRegistrationNumber = values.saccoRegistrationNumber
+          payload.saccoContactPhone = values.saccoContactPhone
+          payload.saccoLocation = values.saccoLocation
+        }
+
         if (activeRole === 'station') {
           payload.stationId = Number(values.stationId)
         }
@@ -191,6 +214,7 @@ function LoginPage() {
         if (activeRole === 'rider') {
           payload.phone = values.phone
           payload.licensePlate = values.licensePlate
+          payload.saccoId = values.saccoId ? Number(values.saccoId) : null
         }
 
         const sessionUser = await register(payload)
@@ -222,6 +246,11 @@ function LoginPage() {
       values: {
         fullName: '',
         companyName: activeRole === 'station' ? portalOptions.companies[0] || '' : '',
+        saccoName: '',
+        saccoRegistrationNumber: '',
+        saccoContactPhone: '',
+        saccoLocation: '',
+        saccoId: '',
         stationName: '',
         stationLocation: '',
         email: '',
@@ -387,6 +416,7 @@ function LoginPage() {
                   onChange={signupFormik.handleChange}
                   onBlur={signupFormik.handleBlur}
                   placeholder="Your full name"
+                  autoComplete="name"
                 />
                 {signupFormik.touched.fullName && signupFormik.errors.fullName ? (
                   <span className={styles.errorText}>{signupFormik.errors.fullName}</span>
@@ -405,6 +435,7 @@ function LoginPage() {
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
                       placeholder="Company legal or trading name"
+                      autoComplete="organization"
                     />
                     {signupFormik.touched.companyName && signupFormik.errors.companyName ? (
                       <span className={styles.errorText}>{signupFormik.errors.companyName}</span>
@@ -422,6 +453,7 @@ function LoginPage() {
                         onChange={signupFormik.handleChange}
                         onBlur={signupFormik.handleBlur}
                         placeholder="Buruburu"
+                        autoComplete="organization"
                       />
                       {signupFormik.touched.stationName && signupFormik.errors.stationName ? (
                         <span className={styles.errorText}>{signupFormik.errors.stationName}</span>
@@ -438,6 +470,7 @@ function LoginPage() {
                         onChange={signupFormik.handleChange}
                         onBlur={signupFormik.handleBlur}
                         placeholder="Nairobi, Buruburu"
+                        autoComplete="address-level2"
                       />
                       {signupFormik.touched.stationLocation &&
                       signupFormik.errors.stationLocation ? (
@@ -466,6 +499,7 @@ function LoginPage() {
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
                       disabled={isLoadingPortalOptions}
+                      autoComplete="organization"
                     >
                       <option value="">Select company</option>
                       {portalOptions.companies.map((companyName) => (
@@ -488,6 +522,7 @@ function LoginPage() {
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
                       disabled={isLoadingPortalOptions || stationsForSelectedCompany.length === 0}
+                      autoComplete="off"
                     >
                       <option value="">Select station</option>
                       {stationsForSelectedCompany.map((station) => (
@@ -510,8 +545,87 @@ function LoginPage() {
                 </>
               ) : null}
 
+              {activeRole === 'sacco' ? (
+                <>
+                  <label className={styles.field}>
+                    SACCO name
+                    <input
+                      id="saccoName"
+                      name="saccoName"
+                      type="text"
+                      value={signupFormik.values.saccoName}
+                      onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      placeholder="Rongai Riders SACCO"
+                      autoComplete="organization"
+                    />
+                    {signupFormik.touched.saccoName && signupFormik.errors.saccoName ? (
+                      <span className={styles.errorText}>{signupFormik.errors.saccoName}</span>
+                    ) : null}
+                  </label>
+
+                  <div className={styles.fieldRow}>
+                    <label className={styles.field}>
+                      Registration number
+                      <input
+                        id="saccoRegistrationNumber"
+                        name="saccoRegistrationNumber"
+                        type="text"
+                        value={signupFormik.values.saccoRegistrationNumber}
+                        onChange={signupFormik.handleChange}
+                        placeholder="Optional"
+                        autoComplete="off"
+                      />
+                    </label>
+                    <label className={styles.field}>
+                      SACCO phone
+                      <input
+                        id="saccoContactPhone"
+                        name="saccoContactPhone"
+                        type="tel"
+                        value={signupFormik.values.saccoContactPhone}
+                        onChange={signupFormik.handleChange}
+                        placeholder="+254712345678"
+                        autoComplete="tel"
+                      />
+                    </label>
+                  </div>
+
+                  <label className={styles.field}>
+                    SACCO location
+                    <input
+                      id="saccoLocation"
+                      name="saccoLocation"
+                      type="text"
+                      value={signupFormik.values.saccoLocation}
+                      onChange={signupFormik.handleChange}
+                      placeholder="Rongai, Kajiado"
+                      autoComplete="address-level2"
+                    />
+                  </label>
+                </>
+              ) : null}
+
               {activeRole === 'rider' ? (
                 <>
+                  <label className={styles.field}>
+                    SACCO membership
+                    <select
+                      id="saccoId"
+                      name="saccoId"
+                      value={signupFormik.values.saccoId}
+                      onChange={signupFormik.handleChange}
+                      autoComplete="organization"
+                    >
+                      <option value="">Independent rider</option>
+                      {portalOptions.saccos.map((sacco) => (
+                        <option key={sacco.id} value={sacco.id}>
+                          {sacco.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
                   <label className={styles.field}>
                     Phone number
                     <input
@@ -522,6 +636,7 @@ function LoginPage() {
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
                       placeholder="Your active phone number"
+                      autoComplete="tel"
                     />
                     {signupFormik.touched.phone && signupFormik.errors.phone ? (
                       <span className={styles.errorText}>{signupFormik.errors.phone}</span>
@@ -538,6 +653,7 @@ function LoginPage() {
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
                       placeholder="UAB 123X"
+                      autoComplete="off"
                     />
                     {signupFormik.touched.licensePlate && signupFormik.errors.licensePlate ? (
                       <span className={styles.errorText}>{signupFormik.errors.licensePlate}</span>

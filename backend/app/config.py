@@ -19,6 +19,11 @@ class Config:
     PORT = int(os.getenv("PORT", "5050"))
     SECRET_KEY = os.getenv("SECRET_KEY", "boda-credit-dev-secret")
     AUTH_TOKEN_MAX_AGE_SECONDS = int(os.getenv("AUTH_TOKEN_MAX_AGE_SECONDS", "604800"))
+    CORS_ORIGINS = [
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+        if origin.strip()
+    ]
 
     DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL"))
     SQLITE_STORAGE_PATH = os.getenv("SQLITE_STORAGE_PATH", "./database.sqlite")
@@ -38,6 +43,6 @@ class Config:
             "pool_pre_ping": True,
             "connect_args": {"sslmode": "require"},
         }
-        if DATABASE_URL
+        if DATABASE_URL and DATABASE_URL.startswith("postgresql")
         else {}
     )

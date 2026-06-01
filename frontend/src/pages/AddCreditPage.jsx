@@ -12,20 +12,17 @@ function AddCreditPage() {
   const [stations, setStations] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     async function loadFormOptions() {
       try {
         setIsLoading(true)
-        setError('')
 
         const optionsPayload = await request('/dashboard/form-options')
 
         setRiders(optionsPayload.data?.riders || [])
         setStations(optionsPayload.data?.stations || [])
       } catch (loadError) {
-        setError(loadError.message)
         showError(loadError.message)
       } finally {
         setIsLoading(false)
@@ -38,7 +35,6 @@ function AddCreditPage() {
   const handleSubmit = async (formData) => {
     try {
       setIsSubmitting(true)
-      setError('')
 
       const activeUser = await refreshSession()
       if (!activeUser || activeUser.role !== 'rider') {
@@ -56,7 +52,6 @@ function AddCreditPage() {
 
       showSuccess('Your fuel credit request has been sent successfully.', 'Request submitted')
     } catch (submitError) {
-      setError(submitError.message)
       showError(submitError.message)
     } finally {
       setIsSubmitting(false)

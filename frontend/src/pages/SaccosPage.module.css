@@ -1,0 +1,98 @@
+.page {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.hero,
+.panel,
+.statsGrid article {
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(17, 24, 39, 0.06);
+}
+
+.hero,
+.panel {
+  padding: 1.5rem;
+}
+
+.hero h1,
+.panel h2 {
+  margin: 0.35rem 0;
+}
+
+.hero p {
+  max-width: 760px;
+  color: #4b5563;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #b45309;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.statsGrid article {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.1rem;
+}
+
+.statsGrid span,
+.panelHeading span {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.statsGrid strong {
+  color: #111827;
+  font-size: 1.45rem;
+}
+
+.panelHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableWrap th,
+.tableWrap td {
+  padding: 0.85rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.tableWrap th {
+  color: #6b7280;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1rem;
+  }
+}

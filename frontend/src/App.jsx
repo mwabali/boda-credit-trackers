@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'
 import NotificationsPage from './pages/NotificationsPage'
 import ProfilePage from './pages/ProfilePage'
 import RidersPage from './pages/RidersPage'
+import SaccosPage from './pages/SaccosPage'
 import StationsPage from './pages/StationsPage'
 import TransactionsPage from './pages/TransactionsPage'
 
@@ -31,9 +32,15 @@ function App() {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['company', 'station']} />}>
+      <Route element={<ProtectedRoute allowedRoles={['company', 'station', 'sacco']} />}>
         <Route element={<MainLayout />}>
           <Route path="/riders" element={<RidersPage />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={['sacco']} />}>
+        <Route element={<MainLayout />}>
+          <Route path="/saccos" element={<SaccosPage />} />
         </Route>
       </Route>
 

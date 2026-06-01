@@ -158,6 +158,16 @@ def get_dashboard_payload():
             )
             stations_query = stations_query.filter(station_scope)
             transactions_query = transactions_query.join(Station).filter(station_scope)
+        elif account.role == "sacco":
+            riders_query = riders_query.filter(Rider.sacco_id == account.sacco_id)
+            stations_query = stations_query.filter(
+                Station.transactions.any(
+                    Transaction.rider.has(Rider.sacco_id == account.sacco_id)
+                )
+            )
+            transactions_query = transactions_query.join(Rider).filter(
+                Rider.sacco_id == account.sacco_id
+            )
         elif account.role == "station":
             riders_query = riders_query.filter(
                 Rider.transactions.any(Transaction.station_id == account.station_id)
@@ -214,6 +224,8 @@ def get_dashboard_payload():
                 else Station.company_name == get_account_company_name(account)
             )
             stats_query = stats_query.join(Station).filter(station_scope)
+        elif account.role == "sacco":
+            stats_query = stats_query.join(Rider).filter(Rider.sacco_id == account.sacco_id)
         elif account.role == "station":
             stats_query = stats_query.filter(Transaction.station_id == account.station_id)
         elif account.role == "rider":
@@ -269,6 +281,9 @@ def get_form_options():
                 )
             )
             stations_query = stations_query.filter(station_scope)
+        elif account.role == "sacco":
+            riders_query = riders_query.filter(Rider.sacco_id == account.sacco_id)
+            stations_query = stations_query.filter(Station.status == "active")
         elif account.role == "station":
             stations_query = stations_query.filter(Station.id == account.station_id)
             riders_query = riders_query.filter(

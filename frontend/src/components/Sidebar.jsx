@@ -36,6 +36,18 @@ function getLinksForRole(user, notificationCount = 0) {
     ]
   }
 
+  if (role === 'sacco') {
+    return [
+      { to: '/home', label: 'Dashboard' },
+      { to: '/saccos', label: 'SACCO Oversight' },
+      { to: '/riders', label: 'Member Riders' },
+      { to: '/transactions', label: 'Credit Ledger' },
+      { to: '/stations', label: 'Fuel Stations' },
+      { to: '/notifications', label: 'Notifications', badge: notificationCount },
+      { to: '/profile', label: 'Profile' },
+    ]
+  }
+
   return [
     { to: '/home', label: 'Dashboard' },
     { to: '/add-credit', label: 'Request Credit' },
@@ -52,10 +64,6 @@ function Sidebar() {
   const [notificationCount, setNotificationCount] = useState(0)
   const location = useLocation()
   const links = getLinksForRole(user, notificationCount)
-
-  useEffect(() => {
-    setIsMenuOpen(false)
-  }, [location.pathname])
 
   useEffect(() => {
     let isActive = true
@@ -76,7 +84,7 @@ function Sidebar() {
           payload.data?.notifications?.filter((notification) => !notification.isRead).length || 0
         const pendingApprovals = payload.data?.pendingStationApprovals?.length || 0
         setNotificationCount(unreadNotifications + pendingApprovals)
-      } catch (_error) {
+      } catch {
         if (isActive) {
           setNotificationCount(0)
         }
@@ -123,6 +131,7 @@ function Sidebar() {
           <NavLink
             key={link.to}
             to={link.to}
+            onClick={() => setIsMenuOpen(false)}
             className={({ isActive }) =>
               isActive ? `${styles.navLink} ${styles.active}` : styles.navLink
             }

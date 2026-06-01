@@ -3,7 +3,8 @@ from datetime import datetime
 
 from sqlalchemy import CheckConstraint, Numeric
 from sqlalchemy.orm import validates
-from werkzeug.security import check_password_hash, generate_password_hash
+from bcrypt import checkpw, gensalt, hashpw
+from werkzeug.security import check_password_hash
 from app.database.db import db
 
 
@@ -12,9 +13,10 @@ VALID_RIDER_STATUSES = {"active", "suspended", "inactive"}
 VALID_STATION_STATUSES = {"active", "closed", "maintenance"}
 VALID_TRANSACTION_STATUSES = {"pending", "approved", "paid", "cancelled"}
 VALID_PAYMENT_METHODS = {"credit", "cash", "mobile_money", "card"}
-VALID_ACCOUNT_ROLES = {"company", "station", "rider"}
+VALID_ACCOUNT_ROLES = {"company", "sacco", "station", "rider"}
 VALID_ACCOUNT_APPROVAL_STATUSES = {"pending", "approved", "rejected"}
 VALID_NOTIFICATION_TYPES = {"info", "success", "warning", "approval"}
+VALID_SMS_STATUSES = {"queued", "sent", "failed"}
 
 
 def serialize_datetime(value):
@@ -66,6 +68,53 @@ class Company(db.Model):
         }
 
 
+class Sacco(db.Model):
+    __tablename__ = "saccos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, unique=True)
+    registration_number = db.Column(db.String(80), unique=True)
+    contact_phone = db.Column(db.String(20))
+    location = db.Column(db.String(200))
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
+
+    riders = db.relationship("Rider", back_populates="sacco", lazy="select")
+    accounts = db.relationship("AuthAccount", back_populates="sacco", lazy="select")
+
+    @validates("name")
+    def validate_name(self, key, value):
+        cleaned_value = (value or "").strip()
+        if not cleaned_value:
+            raise ValueError("SACCO name is required")
+        return cleaned_value
+
+    @validates("contact_phone")
+    def validate_contact_phone(self, key, value):
+        if not value:
+            return None
+        cleaned_value = value.strip().replace(" ", "")
+        if not PHONE_PATTERN.match(cleaned_value):
+            raise ValueError("SACCO contact phone must be a valid number")
+        return cleaned_value
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "registrationNumber": self.registration_number,
+            "contactPhone": self.contact_phone,
+            "location": self.location,
+            "created_at": serialize_datetime(self.created_at),
+            "updated_at": serialize_datetime(self.updated_at),
+        }
+
+
 class Rider(db.Model):
     __tablename__ = "riders"
     __table_args__ = (
@@ -84,6 +133,7 @@ class Rider(db.Model):
     phone = db.Column(db.String(20), nullable=False, unique=True)
     license_plate = db.Column(db.String(20), nullable=False)
     national_id = db.Column(db.String(50))
+    sacco_id = db.Column(db.Integer, db.ForeignKey("saccos.id"))
     credit_limit = db.Column(Numeric(12, 2), nullable=False, default=100000.00)
     current_balance = db.Column(Numeric(12, 2), nullable=False, default=0.00)
     status = db.Column(db.String(20), nullable=False, default="active")
@@ -96,6 +146,7 @@ class Rider(db.Model):
     )
 
     transactions = db.relationship("Transaction", back_populates="rider", lazy="select")
+    sacco = db.relationship("Sacco", back_populates="riders", lazy="joined")
     account = db.relationship(
         "AuthAccount",
         back_populates="rider",
@@ -134,6 +185,8 @@ class Rider(db.Model):
             "licensePlate": self.license_plate,
             "license_plate": self.license_plate,
             "nationalId": self.national_id,
+            "saccoId": self.sacco_id,
+            "sacco": self.sacco.to_dict() if self.sacco else None,
             "creditLimit": float(self.credit_limit or 0),
             "currentBalance": float(self.current_balance or 0),
             "status": self.status,
@@ -343,7 +396,7 @@ class AuthAccount(db.Model):
     __tablename__ = "auth_accounts"
     __table_args__ = (
         CheckConstraint(
-            "role IN ('company', 'station', 'rider')",
+            "role IN ('company', 'sacco', 'station', 'rider')",
             name="check_auth_accounts_role_valid",
         ),
         CheckConstraint(
@@ -362,6 +415,7 @@ class AuthAccount(db.Model):
     role = db.Column(db.String(20), nullable=False)
     full_name = db.Column(db.String(120), nullable=False)
     company_id = db.Column(db.Integer, db.ForeignKey("companies.id"))
+    sacco_id = db.Column(db.Integer, db.ForeignKey("saccos.id"))
     company_name = db.Column(db.String(100), nullable=False, default="Total")
     station_id = db.Column(db.Integer, db.ForeignKey("stations.id"), unique=True)
     rider_id = db.Column(db.Integer, db.ForeignKey("riders.id"), unique=True)
@@ -378,6 +432,7 @@ class AuthAccount(db.Model):
     )
 
     company = db.relationship("Company", back_populates="accounts", lazy="joined")
+    sacco = db.relationship("Sacco", back_populates="accounts", lazy="joined")
     station = db.relationship("Station", back_populates="account", lazy="joined")
     rider = db.relationship("Rider", back_populates="account", lazy="joined")
     approved_by = db.relationship("AuthAccount", remote_side=[id], lazy="joined")
@@ -418,9 +473,11 @@ class AuthAccount(db.Model):
         trimmed_password = (raw_password or "").strip()
         if len(trimmed_password) < 8:
             raise ValueError("Password must be at least 8 characters long")
-        self.password_hash = generate_password_hash(trimmed_password)
+        self.password_hash = hashpw(trimmed_password.encode("utf-8"), gensalt()).decode("utf-8")
 
     def check_password(self, raw_password):
+        if self.password_hash.startswith("$2"):
+            return checkpw((raw_password or "").encode("utf-8"), self.password_hash.encode("utf-8"))
         return check_password_hash(self.password_hash, raw_password or "")
 
     def to_dict(self):
@@ -432,6 +489,8 @@ class AuthAccount(db.Model):
             "fullName": self.full_name,
             "companyId": self.company_id,
             "companyName": company_name,
+            "saccoId": self.sacco_id,
+            "sacco": self.sacco.to_dict() if self.sacco else None,
             "stationId": self.station_id,
             "riderId": self.rider_id,
             "isActive": self.is_active,
@@ -455,6 +514,9 @@ class AuthAccount(db.Model):
 
         if self.company:
             payload["company"] = self.company.to_dict()
+
+        if self.sacco:
+            payload["sacco"] = self.sacco.to_dict()
 
         if self.rider:
             payload["rider"] = {
@@ -524,3 +586,48 @@ class Notification(db.Model):
             "created_at": serialize_datetime(self.created_at),
             "updated_at": serialize_datetime(self.updated_at),
         }
+
+
+class SmsOutbox(db.Model):
+    __tablename__ = "sms_outbox"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('queued', 'sent', 'failed')",
+            name="check_sms_outbox_status_valid",
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    rider_id = db.Column(db.Integer, db.ForeignKey("riders.id"))
+    transaction_id = db.Column(db.Integer, db.ForeignKey("transactions.id"))
+    recipient_phone = db.Column(db.String(20), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="queued")
+    provider_response = db.Column(db.Text)
+    created_at = db.Column(db.String(64), nullable=False, default=current_timestamp)
+    updated_at = db.Column(
+        db.String(64),
+        nullable=False,
+        default=current_timestamp,
+        onupdate=current_timestamp,
+    )
+
+    @validates("recipient_phone")
+    def validate_recipient_phone(self, key, value):
+        cleaned_value = (value or "").strip().replace(" ", "")
+        if not PHONE_PATTERN.match(cleaned_value):
+            raise ValueError("SMS recipient phone must be a valid number")
+        return cleaned_value
+
+    @validates("message")
+    def validate_message(self, key, value):
+        cleaned_value = (value or "").strip()
+        if not cleaned_value:
+            raise ValueError("SMS message is required")
+        return cleaned_value
+
+    @validates("status")
+    def validate_status(self, key, value):
+        if value not in VALID_SMS_STATUSES:
+            raise ValueError("SMS outbox status is invalid")
+        return value

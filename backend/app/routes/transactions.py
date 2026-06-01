@@ -7,6 +7,7 @@ from app.utils.auth import approved_access_required, get_account_company_name, r
 from app.utils.db_errors import format_integrity_error
 from app.utils.notifications import create_notification
 from app.utils.rider_balances import sync_rider_balance
+from app.utils.sms import queue_sms_alert
 from app.utils.station_company import hydrate_station
 from models import Rider, Station, Transaction
 
@@ -47,6 +48,8 @@ def transaction_dashboard_stats():
                 else Station.company_name == get_account_company_name(account)
             )
             query = query.join(Station).filter(station_scope)
+        elif account.role == "sacco":
+            query = query.join(Rider).filter(Rider.sacco_id == account.sacco_id)
         elif account.role == "station":
             query = query.filter_by(station_id=account.station_id)
         elif account.role == "rider":
@@ -87,6 +90,8 @@ def list_transactions():
                 else Station.company_name == get_account_company_name(account)
             )
             query = query.join(Station).filter(station_scope)
+        elif account.role == "sacco":
+            query = query.join(Rider).filter(Rider.sacco_id == account.sacco_id)
         elif account.role == "station":
             query = query.filter(Transaction.station_id == account.station_id)
         elif account.role == "rider":
@@ -118,6 +123,8 @@ def list_transactions():
                     else Station.company_name == get_account_company_name(account)
                 )
                 stats_query = stats_query.join(Station).filter(station_scope)
+            elif account.role == "sacco":
+                stats_query = stats_query.join(Rider).filter(Rider.sacco_id == account.sacco_id)
             elif account.role == "station":
                 stats_query = stats_query.filter(Transaction.station_id == account.station_id)
             elif account.role == "rider":
@@ -179,6 +186,13 @@ def create_transaction():
             status="pending",
         )
         db.session.add(transaction)
+        db.session.flush()
+        queue_sms_alert(
+            rider.phone,
+            f"BodaCredit: Your fuel credit request of Ksh {float(transaction.amount):,.0f} at {hydrate_station(station)['displayName']} is awaiting review.",
+            rider_id=rider.id,
+            transaction_id=transaction.id,
+        )
 
         station_manager_account = getattr(station, "account", None)
         if station_manager_account and station_manager_account.is_active:
@@ -227,6 +241,13 @@ def patch_transaction_status(transaction_id):
 
         previous_status = transaction.status
         transaction.status = status
+        if previous_status != status and transaction.rider:
+            queue_sms_alert(
+                transaction.rider.phone,
+                f"BodaCredit: Your fuel credit request of Ksh {float(transaction.amount):,.0f} is now {status}.",
+                rider_id=transaction.rider_id,
+                transaction_id=transaction.id,
+            )
 
         rider_account = getattr(transaction.rider, "account", None) if transaction.rider else None
         if rider_account and rider_account.is_active and previous_status != status:

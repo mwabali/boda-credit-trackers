@@ -10,10 +10,6 @@ function formatRiderId(id) {
   return `R${String(id).padStart(3, '0')}`
 }
 
-function formatRiderLabel(id) {
-  return `Rider ${formatRiderId(id)}`
-}
-
 function RidersPage() {
   const { user } = useAuth()
   const { showError, showSuccess } = useToast()
@@ -253,6 +249,8 @@ function RidersPage() {
         <p className={styles.description}>
           {user?.role === 'station'
             ? 'Monitor rider standing and control access when needed.'
+            : user?.role === 'sacco'
+              ? 'Review member rider profiles, outstanding balances, and access standing.'
             : 'Track rider health, exposure, and access quality across your company service.'}
         </p>
       </header>

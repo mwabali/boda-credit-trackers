@@ -345,6 +345,7 @@ function StationsPage() {
                 onBlur={formik.handleBlur}
                 placeholder="e.g. Kampala Road"
                 className={showFieldError('name') ? styles.fieldInputError : ''}
+                autoComplete="organization"
               />
               {showFieldError('name') ? (
                 <span className={styles.fieldError}>{formik.errors.name}</span>
@@ -361,6 +362,7 @@ function StationsPage() {
                 onBlur={formik.handleBlur}
                 placeholder="e.g. Nairobi CBD"
                 className={showFieldError('location') ? styles.fieldInputError : ''}
+                autoComplete="address-level2"
               />
               {showFieldError('location') ? (
                 <span className={styles.fieldError}>{formik.errors.location}</span>

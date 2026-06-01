@@ -4,6 +4,7 @@ import styles from './ProfilePage.module.css'
 
 function formatRoleLabel(role) {
   if (role === 'company') return 'Company administrator'
+  if (role === 'sacco') return 'SACCO administrator'
   if (role === 'station') return 'Station manager'
   return 'Rider account'
 }
@@ -110,6 +111,16 @@ function ProfilePage() {
             <p className={styles.companySummary}>
               Your company account can enlist stations, review station manager approval requests,
               and oversee company-wide credit operations.
+            </p>
+          </article>
+        ) : null}
+
+        {user?.role === 'sacco' ? (
+          <article className={styles.detailCard}>
+            <h2>SACCO oversight access</h2>
+            <p className={styles.companySummary}>
+              Your SACCO account can monitor member riders, repayment history, outstanding
+              balances, and fuel-credit records across participating stations.
             </p>
           </article>
         ) : null}

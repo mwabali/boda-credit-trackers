@@ -81,7 +81,7 @@ function CreditForm({
           .positive('Litres must be greater than 0')
           .required('Litres are required'),
       }),
-    [isLockedToRider]
+    []
   )
 
   const formik = useFormik({
@@ -95,7 +95,7 @@ function CreditForm({
       phone: isLockedToRider ? defaultRiderPhone : initialValues.phone,
     },
     validationSchema,
-    validate: (values) => {
+    validate: () => {
       const errors = {}
 
       if (!hasStations) {
@@ -212,7 +212,7 @@ function CreditForm({
         {isLockedToRider ? (
           <label className={styles.field} htmlFor="riderName">
             Rider
-            <input id="riderName" name="riderName" type="text" value={defaultRiderName} readOnly />
+            <input id="riderName" name="riderName" type="text" value={defaultRiderName} autoComplete="name" readOnly />
           </label>
         ) : formik.values.riderMode === 'existing' ? (
           <label className={styles.field} htmlFor="riderId">
@@ -224,6 +224,7 @@ function CreditForm({
               onChange={handleRiderSelectionChange}
               onBlur={formik.handleBlur}
               className={showFieldError('riderId') ? styles.fieldInputError : ''}
+              autoComplete="off"
             >
               <option value="">Select rider</option>
               {riders.map((rider) => (
@@ -248,6 +249,7 @@ function CreditForm({
               onBlur={formik.handleBlur}
               placeholder="Enter new rider name"
               className={showFieldError('riderName') ? styles.fieldInputError : ''}
+              autoComplete="name"
             />
             {showFieldError('riderName') ? (
               <span className={styles.fieldError}>{formik.errors.riderName}</span>
@@ -271,6 +273,7 @@ function CreditForm({
                 : 'Enter rider number plate'
             }
             className={showFieldError('number_plate') ? styles.fieldInputError : ''}
+            autoComplete="off"
           />
           {showFieldError('number_plate') ? (
             <span className={styles.fieldError}>{formik.errors.number_plate}</span>
@@ -293,6 +296,7 @@ function CreditForm({
                 : '+254712345678'
             }
             className={showFieldError('phone') ? styles.fieldInputError : ''}
+            autoComplete="tel"
           />
           {showFieldError('phone') ? (
             <span className={styles.fieldError}>{formik.errors.phone}</span>
@@ -309,6 +313,7 @@ function CreditForm({
             onBlur={formik.handleBlur}
             disabled={!hasStations}
             className={showFieldError('stationId') ? styles.fieldInputError : ''}
+            autoComplete="off"
           >
             <option value="">Select station</option>
             {stations.map((station) => (
@@ -334,6 +339,7 @@ function CreditForm({
             onBlur={formik.handleBlur}
             placeholder="e.g. 1500"
             className={showFieldError('amount') ? styles.fieldInputError : ''}
+            autoComplete="off"
           />
           {showFieldError('amount') ? (
             <span className={styles.fieldError}>{formik.errors.amount}</span>
@@ -353,6 +359,7 @@ function CreditForm({
             onBlur={formik.handleBlur}
             placeholder="e.g. 5"
             className={showFieldError('litres') ? styles.fieldInputError : ''}
+            autoComplete="off"
           />
           {showFieldError('litres') ? (
             <span className={styles.fieldError}>{formik.errors.litres}</span>

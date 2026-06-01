@@ -31,6 +31,8 @@ def list_riders():
                 if account.company_id
                 else Station.company_name == get_account_company_name(account)
             )
+        elif account.role == "sacco":
+            query = query.filter(Rider.sacco_id == account.sacco_id)
             query = query.filter(
                 Rider.transactions.any(
                     Transaction.station.has(station_scope)
@@ -104,6 +106,9 @@ def get_rider(rider_id):
             if not has_company_transaction:
                 return jsonify({"success": False, "message": "Access denied"}), 403
 
+        if account.role == "sacco" and rider.sacco_id != account.sacco_id:
+            return jsonify({"success": False, "message": "Access denied"}), 403
+
         if account.role == "rider" and account.rider_id != rider_id:
             return jsonify({"success": False, "message": "Access denied"}), 403
 
@@ -163,7 +168,7 @@ def get_rider(rider_id):
 
 
 @riders_bp.post("")
-@roles_required("company", "station")
+@roles_required("company", "station", "sacco")
 def create_rider():
     try:
         payload = request.get_json() or {}
@@ -182,7 +187,12 @@ def create_rider():
                 400,
             )
 
-        rider = Rider(name=name, phone=phone, license_plate=license_plate)
+        account = resolve_request_account()
+        sacco_id = payload.get("saccoId") or payload.get("sacco_id")
+        if account.role == "sacco":
+            sacco_id = account.sacco_id
+
+        rider = Rider(name=name, phone=phone, license_plate=license_plate, sacco_id=sacco_id)
         db.session.add(rider)
         db.session.commit()
 

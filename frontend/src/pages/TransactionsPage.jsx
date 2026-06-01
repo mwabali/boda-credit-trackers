@@ -308,12 +308,16 @@ function TransactionsPage() {
       ? 'My Credit Activity'
       : user?.role === 'station'
         ? 'Approval Queue'
+        : user?.role === 'sacco'
+          ? 'Member Credit Ledger'
         : 'Transaction Performance'
   const pageDescription =
     user?.role === 'rider'
       ? 'Review the credit entries linked to your rider account.'
       : user?.role === 'station'
         ? 'Review rider requests and decide what moves forward.'
+        : user?.role === 'sacco'
+          ? 'Monitor member fuel-credit records, repayments, and outstanding balances.'
         : 'Monitor company-wide request flow, settlement quality, and station load distribution.'
 
   return (

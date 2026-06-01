@@ -1,6 +1,6 @@
 # BodaCredit
 
-BodaCredit is a full-stack fuel credit management platform designed for boda boda ecosystems. It digitizes how fuel credit is requested, approved, and tracked across companies, stations, and riders.
+BodaCredit is a full-stack fuel credit management platform designed for boda boda ecosystems. It digitizes how fuel credit is requested, approved, and tracked across fuel companies, stations, SACCOs, and riders.
 
 ## 🚀 Features
 
@@ -16,6 +16,12 @@ BodaCredit is a full-stack fuel credit management platform designed for boda bod
 - Monitor riders linked to the station
 - Handle branch-level operational oversight
 
+### SACCO Dashboard
+- Register a SACCO oversight account
+- Monitor member riders and their access standing
+- Review outstanding fuel-credit balances and repayments
+- Track member transaction history across participating stations
+
 ### Rider Interface
 - Request fuel credit
 - View personal balance and transaction history
@@ -23,6 +29,7 @@ BodaCredit is a full-stack fuel credit management platform designed for boda bod
 
 ### Notifications
 - Real-time updates on requests, approvals, and system activity
+- Automated SMS alert outbox with optional provider webhook delivery
 - Unread notification badges in the sidebar
 - Role-aware notification delivery for company, station, and rider users
 
@@ -39,6 +46,7 @@ BodaCredit is a full-stack fuel credit management platform designed for boda bod
 The platform uses a **multi-tenant architecture**.
 
 - A **Company** has many **Stations**
+- A **SACCO** has many member **Riders**
 - A **Station** manages many **Transactions**
 - A **Rider** interacts with Stations through **Transactions**
 
@@ -54,7 +62,7 @@ This makes the transaction ledger the source of truth for credit activity across
 ## 🔐 Authentication
 
 - Role-based authentication handled by Flask
-- Supports three roles: `company`, `station`, `rider`
+- Supports four roles: `company`, `sacco`, `station`, `rider`
 - Designed for simplicity during testing and grading
 - **Not yet integrated with Supabase Auth by design**
 
@@ -71,7 +79,7 @@ This decision was made to allow:
 Even without Supabase Auth integration, the application still enforces:
 - authenticated access
 - role-based route protection
-- company/station/rider access scoping
+- company/SACCO/station/rider access scoping
 
 ## 📁 Project Structure
 
@@ -116,6 +124,8 @@ VITE_API_BASE_URL=http://localhost:5050
 ### Backend
 - Hosted on Render
 - Uses Supabase PostgreSQL in production
+- Set `DATABASE_URL`, `SECRET_KEY`, and `CORS_ORIGINS`
+- Apply the ordered scripts in `backend/sql`, including `010_add_saccos_module.sql`
 
 ### Frontend
 - Hosted on Vercel
@@ -148,6 +158,11 @@ VITE_API_BASE_URL=http://localhost:5050
 - Requests fuel credit
 - Views personal transaction activity and balance
 - Receives request outcome notifications
+
+### SACCO
+- Oversees member rider profiles
+- Reviews repayment history and outstanding balances
+- Tracks fuel-credit activity across participating stations
 
 ## 🔒 Security Notes
 

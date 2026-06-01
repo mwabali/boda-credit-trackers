@@ -1,3 +1,8 @@
 node_modules/
 ._*
 database.sqlite
+.env
+*.local
+*-firebase-adminsdk-*.json
+service-account*.json
+*.log

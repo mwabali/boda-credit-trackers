@@ -9,3 +9,19 @@ services:
     envVars:
       - key: FLASK_DEBUG
         value: "0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SMS_WEBHOOK_URL
+        sync: false
+      - key: SMS_WEBHOOK_TOKEN
+        sync: false
+      - key: AFRICASTALKING_USERNAME
+        value: sandbox
+      - key: AFRICASTALKING_API_KEY
+        sync: false
+      - key: AFRICASTALKING_SMS_URL
+        value: https://api.sandbox.africastalking.com/version1/messaging

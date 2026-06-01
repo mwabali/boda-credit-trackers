@@ -61,7 +61,7 @@ function AuthProvider({ children }) {
 
       setUser(payload.data || null)
       return payload.data || null
-    } catch (_error) {
+    } catch {
       logout()
       return null
     } finally {
@@ -124,4 +124,5 @@ function useAuth() {
   return context
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { AUTH_STORAGE_KEY, AuthProvider, useAuth }

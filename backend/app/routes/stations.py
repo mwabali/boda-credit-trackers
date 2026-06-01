@@ -34,6 +34,8 @@ def list_stations():
                 query = query.filter(Station.company_name == get_account_company_name(account))
         elif account.role == "station":
             query = query.filter(Station.id == account.station_id)
+        elif account.role == "sacco":
+            query = query.filter(Station.status == "active")
         elif account.role == "rider" and not status:
             query = query.filter(Station.status == "active")
 
