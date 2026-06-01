@@ -4,7 +4,7 @@
 
 1. Create a Supabase project.
 2. Open the SQL editor.
-3. Run the files in `backend/sql` in numeric order.
+3. Run the files in `backend/sql` in numeric order, skipping `006_import_current_sqlite_snapshot.sql` for a clean production database. That file exists only for an intentional legacy demo-data import.
 4. Copy the PostgreSQL connection string from Supabase and use the transaction pooler URL when deploying the Flask API.
 
 The browser never connects directly to Supabase. The SQL scripts enable Row Level Security and deny direct `anon` and `authenticated` table access because the Flask API is the application access layer.

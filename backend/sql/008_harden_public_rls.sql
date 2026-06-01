@@ -6,7 +6,7 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'companies'
   ) THEN
     EXECUTE 'ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY';
-    EXECUTE 'ALTER TABLE public.companies FORCE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.companies NO FORCE ROW LEVEL SECURITY';
     EXECUTE 'REVOKE ALL ON TABLE public.companies FROM anon, authenticated';
     EXECUTE 'DROP POLICY IF EXISTS companies_deny_direct_api ON public.companies';
     EXECUTE $policy$
@@ -25,7 +25,7 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'riders'
   ) THEN
     EXECUTE 'ALTER TABLE public.riders ENABLE ROW LEVEL SECURITY';
-    EXECUTE 'ALTER TABLE public.riders FORCE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.riders NO FORCE ROW LEVEL SECURITY';
     EXECUTE 'REVOKE ALL ON TABLE public.riders FROM anon, authenticated';
     EXECUTE 'DROP POLICY IF EXISTS riders_deny_direct_api ON public.riders';
     EXECUTE $policy$
@@ -44,7 +44,7 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'stations'
   ) THEN
     EXECUTE 'ALTER TABLE public.stations ENABLE ROW LEVEL SECURITY';
-    EXECUTE 'ALTER TABLE public.stations FORCE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.stations NO FORCE ROW LEVEL SECURITY';
     EXECUTE 'REVOKE ALL ON TABLE public.stations FROM anon, authenticated';
     EXECUTE 'DROP POLICY IF EXISTS stations_deny_direct_api ON public.stations';
     EXECUTE $policy$
@@ -63,7 +63,7 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'transactions'
   ) THEN
     EXECUTE 'ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY';
-    EXECUTE 'ALTER TABLE public.transactions FORCE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.transactions NO FORCE ROW LEVEL SECURITY';
     EXECUTE 'REVOKE ALL ON TABLE public.transactions FROM anon, authenticated';
     EXECUTE 'DROP POLICY IF EXISTS transactions_deny_direct_api ON public.transactions';
     EXECUTE $policy$
@@ -82,7 +82,7 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'notifications'
   ) THEN
     EXECUTE 'ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY';
-    EXECUTE 'ALTER TABLE public.notifications FORCE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.notifications NO FORCE ROW LEVEL SECURITY';
     EXECUTE 'REVOKE ALL ON TABLE public.notifications FROM anon, authenticated';
     EXECUTE 'DROP POLICY IF EXISTS notifications_deny_direct_api ON public.notifications';
     EXECUTE $policy$
@@ -101,7 +101,7 @@ BEGIN
     WHERE table_schema = 'public' AND table_name = 'auth_accounts'
   ) THEN
     EXECUTE 'ALTER TABLE public.auth_accounts ENABLE ROW LEVEL SECURITY';
-    EXECUTE 'ALTER TABLE public.auth_accounts FORCE ROW LEVEL SECURITY';
+    EXECUTE 'ALTER TABLE public.auth_accounts NO FORCE ROW LEVEL SECURITY';
     EXECUTE 'REVOKE ALL ON TABLE public.auth_accounts FROM anon, authenticated';
     EXECUTE 'DROP POLICY IF EXISTS auth_accounts_deny_direct_api ON public.auth_accounts';
     EXECUTE $policy$

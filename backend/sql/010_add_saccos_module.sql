@@ -28,8 +28,20 @@ ALTER TABLE auth_accounts
   ADD CONSTRAINT auth_accounts_sacco_id_fkey
   FOREIGN KEY (sacco_id) REFERENCES saccos(id);
 
-ALTER TABLE auth_accounts
-  DROP CONSTRAINT IF EXISTS check_auth_accounts_role_valid;
+DO $$
+DECLARE
+  constraint_name TEXT;
+BEGIN
+  FOR constraint_name IN
+    SELECT conname
+    FROM pg_constraint
+    WHERE conrelid = 'auth_accounts'::regclass
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) ILIKE '%role%'
+  LOOP
+    EXECUTE format('ALTER TABLE auth_accounts DROP CONSTRAINT %I', constraint_name);
+  END LOOP;
+END $$;
 
 ALTER TABLE auth_accounts
   ADD CONSTRAINT check_auth_accounts_role_valid
@@ -39,7 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_riders_sacco_id ON riders(sacco_id);
 CREATE INDEX IF NOT EXISTS idx_auth_accounts_sacco_id ON auth_accounts(sacco_id);
 
 ALTER TABLE public.saccos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.saccos FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.saccos NO FORCE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.saccos FROM anon, authenticated;
 DROP POLICY IF EXISTS saccos_deny_direct_api ON public.saccos;
 CREATE POLICY saccos_deny_direct_api
@@ -64,7 +76,7 @@ CREATE TABLE IF NOT EXISTS sms_outbox (
 );
 
 ALTER TABLE public.sms_outbox ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.sms_outbox FORCE ROW LEVEL SECURITY;
+ALTER TABLE public.sms_outbox NO FORCE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.sms_outbox FROM anon, authenticated;
 DROP POLICY IF EXISTS sms_outbox_deny_direct_api ON public.sms_outbox;
 CREATE POLICY sms_outbox_deny_direct_api

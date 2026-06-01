@@ -63,3 +63,14 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS idx_stations_company_id ON stations(company_id);
 CREATE INDEX IF NOT EXISTS idx_auth_accounts_company_id ON auth_accounts(company_id);
+
+ALTER TABLE public.companies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.companies NO FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.companies FROM anon, authenticated;
+DROP POLICY IF EXISTS companies_deny_direct_api ON public.companies;
+CREATE POLICY companies_deny_direct_api
+  ON public.companies
+  FOR ALL
+  TO anon, authenticated
+  USING (false)
+  WITH CHECK (false);

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS auth_accounts (
   id BIGSERIAL PRIMARY KEY,
   email VARCHAR(120) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL CHECK (role IN ('company', 'station', 'rider')),
+  role VARCHAR(20) NOT NULL,
   full_name VARCHAR(120) NOT NULL,
   company_name VARCHAR(100) NOT NULL DEFAULT 'Total',
   station_id BIGINT UNIQUE REFERENCES stations(id) ON DELETE SET NULL,
@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS auth_accounts (
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT check_auth_accounts_role_valid
+    CHECK (role IN ('company', 'station', 'rider')),
   CONSTRAINT auth_accounts_single_profile_link
     CHECK ((station_id IS NULL) OR (rider_id IS NULL))
 );
