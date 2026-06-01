@@ -6,3 +6,4 @@ database.sqlite
 *-firebase-adminsdk-*.json
 service-account*.json
 *.log
+.firebase/
