@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS riders (
   current_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
   status VARCHAR(20) NOT NULL DEFAULT 'active'
     CHECK (status IN ('active', 'suspended', 'inactive')),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_riders_status ON riders(status);

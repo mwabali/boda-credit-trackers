@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS stations (
   manager_phone VARCHAR(20),
   status VARCHAR(20) NOT NULL DEFAULT 'active'
     CHECK (status IN ('active', 'closed', 'maintenance')),
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_stations_status ON stations(status);

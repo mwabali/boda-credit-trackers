@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS auth_accounts (
   approval_status VARCHAR(20) NOT NULL DEFAULT 'approved',
   approved_at VARCHAR(64),
   approved_by_account_id BIGINT REFERENCES auth_accounts(id) ON DELETE SET NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT check_auth_accounts_role_valid
     CHECK (role IN ('company', 'station', 'rider')),
   CONSTRAINT check_auth_accounts_approval_status_valid

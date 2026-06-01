@@ -10,11 +10,11 @@ CREATE TABLE IF NOT EXISTS transactions (
     CHECK (status IN ('pending', 'approved', 'paid', 'cancelled')),
   payment_method VARCHAR(30) NOT NULL DEFAULT 'credit'
     CHECK (payment_method IN ('credit', 'cash', 'mobile_money', 'card')),
-  payment_date TIMESTAMP,
+  payment_date VARCHAR(64),
   receipt_number VARCHAR(50) UNIQUE,
   notes TEXT,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at VARCHAR(64) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_transactions_rider_id ON transactions(rider_id);
