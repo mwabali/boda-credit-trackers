@@ -27,6 +27,11 @@ def serialize_transaction(transaction, include_all=False):
                 "name": transaction.rider.name,
                 "phone": transaction.rider.phone,
                 "licensePlate": transaction.rider.license_plate,
+                "sacco": (
+                    transaction.rider.sacco.to_dict()
+                    if transaction.rider.sacco
+                    else None
+                ),
             }
         if transaction.station:
             payload["station"] = hydrate_station(transaction.station)

@@ -220,22 +220,26 @@ def register():
             ).strip()
             sacco_id = payload.get("saccoId") or payload.get("sacco_id")
 
-            if not phone or not license_plate:
+            if not phone or not license_plate or not sacco_id:
                 return (
                     jsonify(
                         {
                             "success": False,
-                            "message": "Phone number and number plate are required",
+                            "message": "Phone number, number plate, and SACCO membership are required",
                         }
                     ),
                     400,
                 )
 
+            sacco = Sacco.query.get(sacco_id)
+            if not sacco:
+                return jsonify({"success": False, "message": "Selected SACCO was not found"}), 404
+
             rider = Rider(
                 name=full_name,
                 phone=phone,
                 license_plate=license_plate,
-                sacco_id=sacco_id or None,
+                sacco_id=sacco.id,
                 status="active",
             )
             db.session.add(rider)
@@ -245,12 +249,12 @@ def register():
             account.company_name = "Total"
             account.approval_status = "approved"
         else:
-            if not company_name or not station_name or not station_location:
+            if not company_name:
                 return (
                     jsonify(
                         {
                             "success": False,
-                            "message": "Company name, station name, and station location are required",
+                            "message": "Company name is required",
                         }
                     ),
                     400,
@@ -267,14 +271,26 @@ def register():
                     400,
                 )
 
-            station = Station(
-                name=station_name,
-                company_id=account_company.id,
-                company_name=company_name,
-                location=station_location,
-                status="active",
-            )
-            db.session.add(station)
+            if bool(station_name) != bool(station_location):
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Station name and location must be provided together",
+                        }
+                    ),
+                    400,
+                )
+
+            if station_name and station_location:
+                station = Station(
+                    name=station_name,
+                    company_id=account_company.id,
+                    company_name=company_name,
+                    location=station_location,
+                    status="active",
+                )
+                db.session.add(station)
             account.approval_status = "approved"
 
         account.set_password(password)

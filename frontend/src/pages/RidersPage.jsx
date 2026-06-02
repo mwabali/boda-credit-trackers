@@ -44,6 +44,7 @@ function RidersPage() {
         name: rider.name,
         plate: rider.licensePlate,
         phone: rider.phone,
+        sacco: rider.sacco?.name || 'Not assigned',
         debt: formatCurrency(rider.currentBalance),
         status: formatStatus(rider.status),
         statusValue: rider.status,
@@ -412,6 +413,7 @@ function RidersPage() {
                 <th>Name</th>
                 <th>Number Plate</th>
                 <th>Phone</th>
+                {user?.role === 'station' ? <th>SACCO</th> : null}
                 <th>{user?.role === 'station' ? 'Exposure' : 'Debt'}</th>
                 <th>{user?.role === 'station' ? 'Access Control' : 'Status'}</th>
               </tr>
@@ -431,6 +433,7 @@ function RidersPage() {
                   </td>
                   <td>{rider.plate}</td>
                   <td>{rider.phone}</td>
+                  {user?.role === 'station' ? <td>{rider.sacco}</td> : null}
                   <td>{rider.debt}</td>
                   <td>
                     {canManageRiders ? (

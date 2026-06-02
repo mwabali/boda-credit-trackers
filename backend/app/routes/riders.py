@@ -33,11 +33,6 @@ def list_riders():
             )
         elif account.role == "sacco":
             query = query.filter(Rider.sacco_id == account.sacco_id)
-            query = query.filter(
-                Rider.transactions.any(
-                    Transaction.station.has(station_scope)
-                )
-            )
         elif account.role == "station":
             query = query.filter(
                 Rider.transactions.any(Transaction.station_id == account.station_id)

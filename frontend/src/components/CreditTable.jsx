@@ -6,6 +6,7 @@ function CreditTable({
   transactions = [],
   showPhone = true,
   showNumberPlate = true,
+  showSacco = false,
   onStatusChange,
   onDeleteTransaction,
   isUpdatingStatus = false,
@@ -23,6 +24,7 @@ function CreditTable({
             <th>Rider</th>
             {showPhone && <th>Phone</th>}
             {showNumberPlate && <th>Number Plate</th>}
+            {showSacco && <th>SACCO</th>}
             <th>Station</th>
             <th>Amount</th>
             <th>Litres</th>
@@ -49,6 +51,7 @@ function CreditTable({
                 </td>
                 {showPhone && <td>{tx.phone}</td>}
                 {showNumberPlate && <td>{tx.number_plate}</td>}
+                {showSacco && <td>{tx.sacco}</td>}
                 <td>{tx.station}</td>
                 <td>{tx.amount}</td>
                 <td>{tx.litres}</td>

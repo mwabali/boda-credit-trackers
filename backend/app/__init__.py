@@ -199,8 +199,10 @@ def create_app():
             db.session.commit()
 
         from app.utils.station_bootstrap import ensure_default_station_directory
+        from app.utils.sacco_bootstrap import ensure_default_sacco_directory
 
         ensure_default_station_directory()
+        ensure_default_sacco_directory()
 
     from app.routes.auth import auth_bp
     from app.routes.health import health_bp

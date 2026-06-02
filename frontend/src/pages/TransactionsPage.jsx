@@ -480,6 +480,7 @@ function TransactionsPage() {
         <CreditTable
           transactions={tableTransactions}
           showPhone={false}
+          showSacco={user?.role === 'station'}
           onStatusChange={canManageTransactions ? handleStatusChange : undefined}
           onDeleteTransaction={canManageTransactions ? requestDeleteTransaction : undefined}
           isUpdatingStatus={isUpdatingStatus}

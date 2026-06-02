@@ -34,6 +34,7 @@ function mapTransactionToRow(transaction) {
     rider: `${transaction.rider.name} (${formatRiderId(transaction.rider.id)})`,
     phone: transaction.rider.phone,
     number_plate: transaction.rider.licensePlate,
+    sacco: transaction.rider.sacco?.name || 'Not assigned',
     station: `${getStationDisplayName(transaction.station)} (${formatStationId(transaction.station.id)})`,
     amount: formatCurrency(transaction.amount),
     litres: formatLitres(transaction.liters),

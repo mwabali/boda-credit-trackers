@@ -35,6 +35,8 @@ const PORTALS = [
   },
 ]
 
+const NEW_COMPANY_VALUE = '__new_company__'
+
 function LoginPage() {
   const { isAuthenticated, login, register } = useAuth()
   const { showError, showSuccess } = useToast()
@@ -120,6 +122,7 @@ function LoginPage() {
     initialValues: {
       fullName: '',
       companyName: '',
+      newCompanyName: '',
       saccoName: '',
       saccoRegistrationNumber: '',
       saccoContactPhone: '',
@@ -141,19 +144,14 @@ function LoginPage() {
         then: (schema) => schema.required('Company is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
+      newCompanyName: Yup.string().when('companyName', {
+        is: (companyName) => activeRole === 'company' && companyName === NEW_COMPANY_VALUE,
+        then: (schema) => schema.trim().required('New company name is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
       saccoName: Yup.string().when([], {
         is: () => activeRole === 'sacco',
         then: (schema) => schema.trim().required('SACCO name is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-      stationName: Yup.string().when([], {
-        is: () => activeRole === 'company',
-        then: (schema) => schema.trim().required('First station name is required'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
-      stationLocation: Yup.string().when([], {
-        is: () => activeRole === 'company',
-        then: (schema) => schema.trim().required('Station location is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
       email: Yup.string().email('Enter a valid email').required('Email is required'),
@@ -166,6 +164,11 @@ function LoginPage() {
       stationId: Yup.string().when([], {
         is: () => activeRole === 'station',
         then: (schema) => schema.required('Station is required'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+      saccoId: Yup.string().when([], {
+        is: () => activeRole === 'rider',
+        then: (schema) => schema.required('SACCO membership is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
       phone: Yup.string().when([], {
@@ -181,10 +184,14 @@ function LoginPage() {
     }),
     onSubmit: async (values, { setSubmitting }) => {
       try {
+        const selectedCompanyName =
+          values.companyName === NEW_COMPANY_VALUE
+            ? values.newCompanyName.trim()
+            : values.companyName.trim()
         const payload = {
           role: activeRole,
           fullName: values.fullName,
-          companyName: activeRole === 'rider' ? 'Total' : values.companyName.trim(),
+          companyName: activeRole === 'rider' ? 'Total' : selectedCompanyName,
           email: values.email,
           password: values.password,
         }
@@ -195,8 +202,6 @@ function LoginPage() {
             setSubmitting(false)
             return
           }
-          payload.stationName = values.stationName
-          payload.stationLocation = values.stationLocation
           payload.authorityConfirmed = true
         }
 
@@ -245,7 +250,8 @@ function LoginPage() {
     signupFormik.resetForm({
       values: {
         fullName: '',
-        companyName: activeRole === 'station' ? portalOptions.companies[0] || '' : '',
+        companyName: '',
+        newCompanyName: '',
         saccoName: '',
         saccoRegistrationNumber: '',
         saccoContactPhone: '',
@@ -264,12 +270,6 @@ function LoginPage() {
     setShowAuthorityModal(false)
     authorityConfirmedRef.current = false
   }, [activeRole, portalOptions.companies]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (activeRole === 'station' && !signupFormik.values.companyName && portalOptions.companies[0]) {
-      signupFormik.setFieldValue('companyName', portalOptions.companies[0], false)
-    }
-  }, [activeRole, portalOptions.companies, signupFormik])
 
   const stationsForSelectedCompany = portalOptions.stations.filter(
     (station) => station.companyName === signupFormik.values.companyName
@@ -426,64 +426,51 @@ function LoginPage() {
               {activeRole === 'company' ? (
                 <>
                   <label className={styles.field}>
-                    Company name
-                    <input
+                    Company
+                    <select
                       id="companyName"
                       name="companyName"
-                      type="text"
                       value={signupFormik.values.companyName}
                       onChange={signupFormik.handleChange}
                       onBlur={signupFormik.handleBlur}
-                      placeholder="Company legal or trading name"
+                      disabled={isLoadingPortalOptions}
                       autoComplete="organization"
-                    />
+                    >
+                      <option value="">Select company</option>
+                      {portalOptions.companies.map((companyName) => (
+                        <option key={companyName} value={companyName}>
+                          {companyName}
+                        </option>
+                      ))}
+                      <option value={NEW_COMPANY_VALUE}>Add a new company</option>
+                    </select>
                     {signupFormik.touched.companyName && signupFormik.errors.companyName ? (
                       <span className={styles.errorText}>{signupFormik.errors.companyName}</span>
                     ) : null}
                   </label>
 
-                  <div className={styles.fieldRow}>
+                  {signupFormik.values.companyName === NEW_COMPANY_VALUE ? (
                     <label className={styles.field}>
-                      First station name
+                      New company name
                       <input
-                        id="stationName"
-                        name="stationName"
+                        id="newCompanyName"
+                        name="newCompanyName"
                         type="text"
-                        value={signupFormik.values.stationName}
+                        value={signupFormik.values.newCompanyName}
                         onChange={signupFormik.handleChange}
                         onBlur={signupFormik.handleBlur}
-                        placeholder="Buruburu"
+                        placeholder="Company legal or trading name"
                         autoComplete="organization"
                       />
-                      {signupFormik.touched.stationName && signupFormik.errors.stationName ? (
-                        <span className={styles.errorText}>{signupFormik.errors.stationName}</span>
+                      {signupFormik.touched.newCompanyName && signupFormik.errors.newCompanyName ? (
+                        <span className={styles.errorText}>{signupFormik.errors.newCompanyName}</span>
                       ) : null}
                     </label>
-
-                    <label className={styles.field}>
-                      Station location
-                      <input
-                        id="stationLocation"
-                        name="stationLocation"
-                        type="text"
-                        value={signupFormik.values.stationLocation}
-                        onChange={signupFormik.handleChange}
-                        onBlur={signupFormik.handleBlur}
-                        placeholder="Nairobi, Buruburu"
-                        autoComplete="address-level2"
-                      />
-                      {signupFormik.touched.stationLocation &&
-                      signupFormik.errors.stationLocation ? (
-                        <span className={styles.errorText}>
-                          {signupFormik.errors.stationLocation}
-                        </span>
-                      ) : null}
-                    </label>
-                  </div>
+                  ) : null}
 
                   <p className={styles.helperText}>
-                    Your first station is listed during company onboarding so your team can begin
-                    assigning station managers immediately.
+                    After signing in, use the Stations page to add your company branches. Station
+                    managers can then select a listed branch and request access.
                   </p>
                 </>
               ) : null}
@@ -538,8 +525,9 @@ function LoginPage() {
 
                   {stationsForSelectedCompany.length === 0 ? (
                     <p className={styles.helperText}>
-                      No stations have been listed under this company yet. Ask the company team to
-                      create the station first.
+                      {signupFormik.values.companyName
+                        ? 'No stations have been listed under this company yet. Ask the company admin to create the branch first.'
+                        : 'Choose your company first, then select the branch where you work.'}
                     </p>
                   ) : null}
                 </>
@@ -615,16 +603,28 @@ function LoginPage() {
                       name="saccoId"
                       value={signupFormik.values.saccoId}
                       onChange={signupFormik.handleChange}
+                      onBlur={signupFormik.handleBlur}
+                      disabled={isLoadingPortalOptions}
                       autoComplete="organization"
                     >
-                      <option value="">Independent rider</option>
+                      <option value="">Select your SACCO</option>
                       {portalOptions.saccos.map((sacco) => (
                         <option key={sacco.id} value={sacco.id}>
                           {sacco.name}
                         </option>
                       ))}
                     </select>
+                    {signupFormik.touched.saccoId && signupFormik.errors.saccoId ? (
+                      <span className={styles.errorText}>{signupFormik.errors.saccoId}</span>
+                    ) : null}
                   </label>
+
+                  {!isLoadingPortalOptions && portalOptions.saccos.length === 0 ? (
+                    <p className={styles.helperText}>
+                      No SACCOs are currently available. Please ask the platform team to add your
+                      SACCO before creating a rider account.
+                    </p>
+                  ) : null}
 
                   <label className={styles.field}>
                     Phone number
