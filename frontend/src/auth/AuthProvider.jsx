@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { API_BASE_URL, request } from '../lib/api'
+import { request } from '../lib/api'
 
 const AUTH_STORAGE_KEY = 'boda_credit_auth_token'
 const AuthContext = createContext(null)
@@ -46,17 +46,10 @@ function AuthProvider({ children }) {
     try {
       setIsLoading(true)
 
-      const payload = await fetch(`${API_BASE_URL}/auth/me`, {
+      const payload = await request('/auth/me', {
         headers: {
-          Accept: 'application/json',
           Authorization: `Bearer ${activeToken}`,
         },
-      }).then(async (response) => {
-        const data = await response.json().catch(() => null)
-        if (!response.ok) {
-          throw new Error(data?.message || 'Request failed')
-        }
-        return data
       })
 
       setUser(payload.data || null)
