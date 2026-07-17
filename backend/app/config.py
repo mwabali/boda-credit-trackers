@@ -53,6 +53,6 @@ class Config:
     )
     AUTO_BOOTSTRAP_DATABASE = os.getenv(
         "AUTO_BOOTSTRAP_DATABASE",
-        "0" if DATABASE_URL else "1",
+        "1",
     ) == "1"
     REQUIRE_DATABASE_ON_STARTUP = os.getenv("REQUIRE_DATABASE_ON_STARTUP", "0") == "1"

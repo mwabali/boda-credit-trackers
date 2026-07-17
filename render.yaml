@@ -19,7 +19,7 @@ services:
       - key: DATABASE_CONNECT_TIMEOUT_SECONDS
         value: "5"
       - key: AUTO_BOOTSTRAP_DATABASE
-        value: "0"
+        value: "1"
       - key: REQUIRE_DATABASE_ON_STARTUP
         value: "0"
       - key: SMS_WEBHOOK_URL
