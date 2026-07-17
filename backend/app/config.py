@@ -26,6 +26,7 @@ class Config:
     ]
 
     DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL"))
+    DATABASE_CONNECT_TIMEOUT_SECONDS = int(os.getenv("DATABASE_CONNECT_TIMEOUT_SECONDS", "5"))
     SQLITE_STORAGE_PATH = os.getenv("SQLITE_STORAGE_PATH", "./database.sqlite")
     SQLITE_STORAGE_ABSOLUTE_PATH = str(
         (
@@ -41,8 +42,17 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = (
         {
             "pool_pre_ping": True,
-            "connect_args": {"sslmode": "require"},
+            "pool_timeout": DATABASE_CONNECT_TIMEOUT_SECONDS,
+            "connect_args": {
+                "sslmode": "require",
+                "connect_timeout": DATABASE_CONNECT_TIMEOUT_SECONDS,
+            },
         }
         if DATABASE_URL and DATABASE_URL.startswith("postgresql")
         else {}
     )
+    AUTO_BOOTSTRAP_DATABASE = os.getenv(
+        "AUTO_BOOTSTRAP_DATABASE",
+        "0" if DATABASE_URL else "1",
+    ) == "1"
+    REQUIRE_DATABASE_ON_STARTUP = os.getenv("REQUIRE_DATABASE_ON_STARTUP", "0") == "1"

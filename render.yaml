@@ -16,6 +16,12 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      - key: DATABASE_CONNECT_TIMEOUT_SECONDS
+        value: "5"
+      - key: AUTO_BOOTSTRAP_DATABASE
+        value: "0"
+      - key: REQUIRE_DATABASE_ON_STARTUP
+        value: "0"
       - key: SMS_WEBHOOK_URL
         sync: false
       - key: SMS_WEBHOOK_TOKEN
